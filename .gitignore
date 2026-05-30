@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js build output and cache
+.next/
+out/
+
+# Medusa backend dependencies/build
+.medusa/
+build/
+dist/
+
+# Logs
+*.log
+*.log*
+.storefront.log
+.medusa-backend.log
+.storefront.err.log
+.medusa-backend.err.log
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
