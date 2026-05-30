@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 
 // Inline lightweight custom SVG icons for maximum compatibility, performance, and zero dependency issues
 const SearchIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -226,89 +227,152 @@ export default function Home() {
             />
           </div>
           <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
-            <div className="max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8">
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b]">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, type: "spring", stiffness: 50 }}
+              className="max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8"
+            >
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.8 }}
+                className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b]"
+              >
                 МЕНЯЙ СЕБЯ.<br />
                 ВЫРАЖАЙ СЕБЯ.
-              </h1>
-              <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md">
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md"
+              >
                 Аксессуары для очков,<br className="hidden sm:inline" />
                 которые становятся частью вашего стиля.
-              </p>
-              <a 
+              </motion.p>
+              <motion.a 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 href="#collection" 
                 className="inline-flex items-center justify-center px-8 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg hover:translate-y-[-2px] group"
               >
                 СМОТРЕТЬ КОЛЛЕКЦИЮ
                 <ArrowRightIcon className="w-4 h-4 ml-3 group-hover:translate-x-1.5 transition-transform" />
-              </a>
-            </div>
+              </motion.a>
+            </motion.div>
           </div>
         </div>
       </section>
       {/* 3. Editorial Grid Section */}
       <section className="relative pt-0 pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
-          <div className="max-w-[1600px] mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
-              {/* 3 Models Container with 5px padding and 5px gap */}
-              <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-[5px] p-[5px]">
-                {/* Model 1 */}
-                <div className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm">
-                  <div 
-                    role="img"
-                    aria-label="Эстетичный образ" 
-                    className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                    style={{ backgroundImage: "url('/images/model1.png')" }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                {/* Model 2 */}
-                <div className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm">
-                  <div 
-                    role="img"
-                    aria-label="Элегантный стиль" 
-                    className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                    style={{ backgroundImage: "url('/images/model2.png')" }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                {/* Model 3 */}
-                <div className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm">
-                  <div 
-                    role="img"
-                    aria-label="Лаконичная деталь" 
-                    className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                    style={{ backgroundImage: "url('/images/model3.png')" }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
+        <div className="max-w-[1600px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
+            {/* 3 Models Container with 5px padding and 5px gap */}
+            <motion.div 
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.15
+                  }
+                }
+              }}
+              className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-[5px] p-[5px]"
+            >
+              {/* Model 1 */}
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 30 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              >
+                <div 
+                  role="img"
+                  aria-label="Эстетичный образ" 
+                  className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  style={{ backgroundImage: "url('/images/model1.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </motion.div>
+              {/* Model 2 */}
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 30 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              >
+                <div 
+                  role="img"
+                  aria-label="Элегантный стиль" 
+                  className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  style={{ backgroundImage: "url('/images/model2.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </motion.div>
+              {/* Model 3 */}
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 30 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              >
+                <div 
+                  role="img"
+                  aria-label="Лаконичная деталь" 
+                  className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  style={{ backgroundImage: "url('/images/model3.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </motion.div>
+            </motion.div>
+            {/* Text Editorial block without container wrapper */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="lg:col-span-1 flex flex-col justify-between py-4"
+            >
+              <div className="flex flex-col gap-4">
+                <h3 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
+                  НОСИ ПО-СВОЕМУ
+                </h3>
+                <p className="text-sm sm:text-base leading-relaxed text-[#2c211b]/80 mt-2">
+                  SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.
+                </p>
               </div>
-              {/* Text Editorial block without container wrapper */}
-              <div className="lg:col-span-1 flex flex-col justify-between py-4">
-                <div className="flex flex-col gap-4">
-                  <h3 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
-                    НОСИ ПО-СВОЕМУ
-                  </h3>
-                  <p className="text-sm sm:text-base leading-relaxed text-[#2c211b]/80 mt-2">
-                    SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.
-                  </p>
-                </div>
-                <a 
-                  href="#collection" 
-                  className="inline-flex items-center text-xs font-medium tracking-widest uppercase text-[#5a3828] hover:text-[#2c211b] mt-6 group"
-                >
-                  СМОТРЕТЬ КОЛЛЕКЦИЮ
-                  <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </div>
-            </div>
+              <a 
+                href="#collection" 
+                className="inline-flex items-center text-xs font-medium tracking-widest uppercase text-[#5a3828] hover:text-[#2c211b] mt-6 group"
+              >
+                СМОТРЕТЬ КОЛЛЕКЦИЮ
+                <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </motion.div>
           </div>
+        </div>
       </section>
       {/* 4. Collection Section */}
       <section id="collection" className="pt-20 sm:pt-32 pb-10 sm:pb-16 bg-[#f4ebe6]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
-          
-          <div className="max-w-xl mx-auto mb-16 sm:mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-xl mx-auto mb-16 sm:mb-20"
+          >
             <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78] block mb-3">
               ИЗЫСКАННЫЙ ВЫБОР
             </span>
@@ -316,12 +380,30 @@ export default function Home() {
               КОЛЛЕКЦИЯ SUNLUK
             </h2>
             <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mt-4" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            
+          </motion.div>
+          <motion.div 
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
+          >
             {/* Card 1: Бирюза */}
-            <div className="group flex flex-col text-left bg-transparent transition-all duration-300">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+              }}
+              className="group flex flex-col text-left bg-transparent transition-all duration-300"
+            >
               <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
                 <div 
                   role="img"
@@ -338,10 +420,15 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-xs text-[#2c211b]/70 font-medium">Акцентный цвет и природные мотивы</p>
-            </div>
-
+            </motion.div>
             {/* Card 2: Leather Loop */}
-            <div className="group flex flex-col text-left bg-transparent transition-all duration-300">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+              }}
+              className="group flex flex-col text-left bg-transparent transition-all duration-300"
+            >
               <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
                 <div 
                   role="img"
@@ -358,10 +445,15 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-xs text-[#2c211b]/70 font-medium">Натуральная кожа и премиальный металл</p>
-            </div>
-
+            </motion.div>
             {/* Card 3: Silver Chain */}
-            <div className="group flex flex-col text-left bg-transparent transition-all duration-300">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+              }}
+              className="group flex flex-col text-left bg-transparent transition-all duration-300"
+            >
               <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
                 <div 
                   role="img"
@@ -378,10 +470,15 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-xs text-[#2c211b]/70 font-medium">Минимализм, строгость и лёгкий блеск</p>
-            </div>
-
+            </motion.div>
             {/* Card 4: Sand Chain */}
-            <div className="group flex flex-col text-left bg-transparent transition-all duration-300">
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+              }}
+              className="group flex flex-col text-left bg-transparent transition-all duration-300"
+            >
               <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
                 <div 
                   role="img"
@@ -398,25 +495,48 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-xs text-[#2c211b]/70 font-medium">Тёплый металл и морской песчаный оттенок</p>
-            </div>
-
-          </div>
-
-          <button className="inline-flex items-center justify-center px-10 py-4 border-2 border-[#2c211b] text-[#2c211b] hover:bg-[#2c211b] hover:text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none">
+            </motion.div>
+          </motion.div>
+          <motion.button 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center justify-center px-10 py-4 border-2 border-[#2c211b] text-[#2c211b] hover:bg-[#2c211b] hover:text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none cursor-pointer"
+          >
             ВЫБРАТЬ АКСЕССУАР
-          </button>
+          </motion.button>
         </div>
       </section>
-
       {/* 5. Features/Value Section */}
       <section className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            
             {/* Left 2x2 grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
+            <motion.div 
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-0"
+            >
               {/* Feature 1 */}
-              <div className="border-b sm:border-r border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="border-b sm:border-r border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6"
+              >
                 <div className="w-16 h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
                   <span className="font-serif text-5xl sm:text-6xl font-light leading-none">S</span>
                 </div>
@@ -424,9 +544,15 @@ export default function Home() {
                   <h4 className="font-serif text-lg font-bold text-[#2c211b]">S-элемент</h4>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Фирменная деталь SUNLUK</p>
                 </div>
-              </div>
+              </motion.div>
               {/* Feature 2 */}
-              <div className="border-b border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="border-b border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6"
+              >
                 <div className="w-16 h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
                   <GemIcon className="w-12 h-12" />
                 </div>
@@ -434,9 +560,15 @@ export default function Home() {
                   <h4 className="font-serif text-lg font-bold text-[#2c211b]">Премиальные материалы</h4>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Отборные материалы, которые служат долго.</p>
                 </div>
-              </div>
+              </motion.div>
               {/* Feature 3 */}
-              <div className="border-b sm:border-b-0 sm:border-r border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="border-b sm:border-b-0 sm:border-r border-[#2c211b]/15 p-8 sm:p-12 flex items-start gap-6"
+              >
                 <div className="w-16 h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
                   <LeafIcon className="w-12 h-12" />
                 </div>
@@ -444,9 +576,15 @@ export default function Home() {
                   <h4 className="font-serif text-lg font-bold text-[#2c211b]">Лёгкие</h4>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Комфортные на весь день.</p>
                 </div>
-              </div>
+              </motion.div>
               {/* Feature 4 */}
-              <div className="p-8 sm:p-12 flex items-start gap-6">
+              <motion.div 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                }}
+                className="p-8 sm:p-12 flex items-start gap-6"
+              >
                 <div className="w-16 h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
                   <ShieldIcon className="w-12 h-12" />
                 </div>
@@ -454,11 +592,16 @@ export default function Home() {
                   <h4 className="font-serif text-lg font-bold text-[#2c211b]">Надёжные</h4>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Прочное крепление для ваших очков.</p>
                 </div>
-              </div>
-            </div>
-
+              </motion.div>
+            </motion.div>
             {/* Right text content */}
-            <div className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12"
+            >
               <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
                 ФИЛОСОФИЯ ДЕТАЛЕЙ
               </span>
@@ -469,28 +612,36 @@ export default function Home() {
                 Форма, фактура, металл и цвет подобраны так, чтобы аксессуар выглядел естественно рядом с очками.
               </p>
               <div className="w-20 h-0.5 bg-[#2c211b]/20 mt-2" />
-            </div>
-
+            </motion.div>
           </div>
         </div>
       </section>
-
       {/* 6. About / Order split section */}
-      <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-white">
-        
+      <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-white overflow-hidden">
         {/* Left packaging/beach image */}
-        <div className="relative h-96 lg:h-auto overflow-hidden bg-[#f4ebe6]">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+          className="relative h-96 lg:h-auto overflow-hidden bg-[#f4ebe6]"
+        >
           <div 
             role="img"
             aria-label="SUNLUK эксклюзивные упаковочные коробки и аксессуары" 
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: "url('/images/about-packaging.png')" }}
           />
-        </div>
-
+        </motion.div>
         {/* Right text and button */}
         <div className="bg-[#f4ebe6] py-20 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 border-l border-[#2c211b]/5">
-          <div className="flex flex-col items-start gap-6 lg:-translate-y-12">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col items-start gap-6 lg:-translate-y-12"
+          >
             <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
               О БРЕНДЕ
             </span>
@@ -500,10 +651,14 @@ export default function Home() {
             <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-lg">
               SUNLUK — это больше, чем аксессуар. Это свобода выражать себя каждый день — в путешествиях, в городе, в моменты, которые важны.
             </p>
-            <button className="inline-flex items-center justify-center px-10 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg mt-4 rounded-none">
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center justify-center px-10 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg mt-4 rounded-none cursor-pointer"
+            >
               ЗАКАЗАТЬ АКСЕССУАР
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
 
       </section>
@@ -523,7 +678,13 @@ export default function Home() {
         <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
             {/* Left Column: Text Content */}
-            <div className="text-center lg:text-left flex flex-col items-center lg:items-start gap-4">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="text-center lg:text-left flex flex-col items-center lg:items-start gap-4"
+            >
               <span className="text-[10px] font-medium tracking-[0.4em] uppercase text-white/90 block">
                 ЭКСКЛЮЗИВНЫЕ ПРЕДЛОЖЕНИЯ
               </span>
@@ -533,9 +694,15 @@ export default function Home() {
               <p className="text-sm sm:text-base text-white/80 max-w-lg leading-relaxed">
                 Подпишитесь и узнавайте о новинках, лимитированных дропах и специальных предложениях.
               </p>
-            </div>
+            </motion.div>
             {/* Right Column: Form */}
-            <div className="w-full max-w-md mx-auto lg:mr-0 flex flex-col gap-4">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="w-full max-w-md mx-auto lg:mr-0 flex flex-col gap-4"
+            >
               {subscribed ? (
                 <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-none border border-white/20 animate-fade-in flex flex-col items-center lg:items-start text-center lg:text-left gap-3">
                   <CheckCircleIcon className="w-10 h-10 text-white" />
@@ -554,7 +721,7 @@ export default function Home() {
                   />
                   <button 
                     type="submit" 
-                    className="px-8 py-4 bg-[#5a3828] hover:bg-white hover:text-[#5a3828] text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none shrink-0"
+                    className="px-8 py-4 bg-[#5a3828] hover:bg-white hover:text-[#5a3828] text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none shrink-0 cursor-pointer"
                   >
                     ПОДПИСАТЬСЯ
                   </button>
@@ -563,11 +730,10 @@ export default function Home() {
               <p className="text-[10px] text-white/60 text-center lg:text-left">
                 Никакого спама. Отписаться можно в любой момент.
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
-
       {/* 8. Footer Section */}
       <footer id="contacts" className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
