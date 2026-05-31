@@ -232,11 +232,26 @@ export function VariantSelector({
 
       {/* Variant price */}
       {resolved?.calculated_price && (
-        <div className="flex items-center gap-2 pt-2 border-t border-[#2c211b]/10">
-          <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
-            Цена
-          </span>
-          <PriceDisplay price={resolved.calculated_price} />
+        <div className="flex flex-col gap-1.5 pt-4 border-t border-[#2c211b]/10">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
+              {quantity > 1 ? "Стоимость" : "Цена"}
+            </span>
+            <div className="flex items-baseline gap-2">
+              {quantity > 1 && (
+                <span className="text-xs text-[#2c211b]/40 font-mono mr-1">
+                  {quantity} × <PriceDisplay price={resolved.calculated_price} className="text-xs text-[#2c211b]/60" /> =
+                </span>
+              )}
+              <PriceDisplay
+                price={{
+                  calculated_amount: resolved.calculated_price.calculated_amount * quantity,
+                  currency_code: resolved.calculated_price.currency_code,
+                }}
+                className={quantity > 1 ? "text-lg font-bold text-[#2f6f78]" : "text-base"}
+              />
+            </div>
+          </div>
         </div>
       )}
 
