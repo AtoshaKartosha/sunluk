@@ -112,18 +112,23 @@ export default async function ProductDetailPage({
       <main className="flex-1">
         <section className="pt-20 sm:pt-32 pb-16">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-              {/* Gallery */}
-              <ProductGallery
-                images={product.images}
-                thumbnail={product.thumbnail}
-                title={product.title}
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-[42%_1fr] gap-12 lg:gap-20 items-start">
+              {/* Gallery Wrapper with max-width to avoid oversized images */}
+              <div className="w-full max-w-[460px] sm:max-w-[500px] mx-auto lg:mx-0">
+                <ProductGallery
+                  images={product.images}
+                  thumbnail={product.thumbnail}
+                  title={product.title}
+                />
+              </div>
 
               {/* Product Info */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 lg:pt-4">
                 <div>
-                  <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#2c211b] mb-2">
+                  <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
+                    АКСЕССУАРЫ SUNLUK
+                  </span>
+                  <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
                     {product.title}
                   </h1>
                 </div>
