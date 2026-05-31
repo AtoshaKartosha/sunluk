@@ -151,9 +151,6 @@ export default function RegisterPage() {
           >
             SUNLUK
           </Link>
-          <p className="mt-1 text-xs tracking-[0.2em] text-[#2c211b]/60">
-            АКСЕССУАРЫ ДЛЯ ОЧКОВ
-          </p>
           <h1 className="mt-8 text-2xl font-semibold text-[#2c211b]">
             {T.title}
           </h1>
