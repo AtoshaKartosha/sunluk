@@ -5,9 +5,61 @@ import type { StoreProduct, CalculatedPrice } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 
+export interface ProductInfoBlockLabels {
+  brand: string;
+  vatIncluded: string;
+  handmade: string;
+  delivery: string;
+  giftWrap: string;
+  materialsHeading: string;
+  materialsText: string;
+  materialsItem1: string;
+  materialsItem2: string;
+  materialsItem3: string;
+  materialsCare: string;
+  shippingHeading: string;
+  shippingText: string;
+  shippingItem1: string;
+  shippingItem2: string;
+  shippingItem3: string;
+  shippingItem4: string;
+  materialNames: Record<string, string>;
+}
+
+export const DEFAULT_LABELS: ProductInfoBlockLabels = {
+  brand: "АКСЕССУАРЫ SUNLUK",
+  vatIncluded: "НДС включен",
+  handmade: "Ручная работа",
+  delivery: "Доставка в DE и РФ",
+  giftWrap: "Упаковка в подарок",
+  materialsHeading: "МАТЕРИАЛЫ И УХОД",
+  materialsText: "Каждое изделие SUNLUK создается вручную нашими мастерами из премиальных сертифицированных материалов:",
+  materialsItem1: "Износостойкий и гипоаллергенный шнур/цепочка.",
+  materialsItem2: "Итальянская премиум фурнитура и фурнитурные карабины.",
+  materialsItem3: "Регулируемые силиконовые петли для дужек очков любого размера.",
+  materialsCare: "Рекомендация: Избегайте прямого контакта с парфюмерией, лаком для волос и водой. Протирайте мягкой салфеткой без химии.",
+  shippingHeading: "ДОСТАВКА И ВОЗВРАТ",
+  shippingText: "Мы отправляем заказы по всему миру из складов в Мюнхене (Германия) и Москве (Россия):",
+  shippingItem1: "Отправка в течение 24 часов после оплаты.",
+  shippingItem2: "Бесплатная стандартная доставка при сумме заказа от 5 000 руб или 50 EUR.",
+  shippingItem3: "Возможность экспресс-доставки курьером до двери за 2-4 рабочих дня.",
+  shippingItem4: "Простой возврат или обмен в течение 14 дней с момента получения.",
+  materialNames: {
+    turquoise: "Бирюза",
+    leather: "Кожа",
+    silver: "Сталь",
+    "gold-plated": "Золото",
+    Turquoise: "Бирюза",
+    Leather: "Кожа",
+    Silver: "Сталь",
+    "Gold-plated": "Золото",
+  },
+};
+
 interface ProductInfoBlockProps {
   product: StoreProduct;
   price: CalculatedPrice | null;
+  labels?: ProductInfoBlockLabels;
 }
 
 /* ------------------------------------------------------------------ */
@@ -70,7 +122,7 @@ function AccordionItem({
 /*  ProductInfoBlock main component                                    */
 /* ------------------------------------------------------------------ */
 
-export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
+export function ProductInfoBlock({ product, price, labels = DEFAULT_LABELS }: ProductInfoBlockProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
   const handleSelectionChange = useCallback((selection: {
@@ -98,7 +150,7 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
       {/* Title block */}
       <div>
         <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
-          АКСЕССУАРЫ SUNLUK
+          {labels.brand}
         </span>
         <div className="flex justify-between items-baseline gap-4 flex-wrap pb-2 border-b border-[#2c211b]/10">
           <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
@@ -114,17 +166,8 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
                 <div key={opt.id} className="flex gap-3">
                   {values.map((val) => {
                     const isSelected = selectedOptions[opt.id] === val;
-                    const translations: Record<string, string> = {
-                      turquoise: "Бирюза",
-                      leather: "Кожа",
-                      silver: "Сталь",
-                      "gold-plated": "Золото",
-                      Turquoise: "Бирюза",
-                      Leather: "Кожа",
-                      Silver: "Сталь",
-                      "Gold-plated": "Золото",
-                    };
-                    const displayVal = translations[val] || val;
+                    const displayVal = labels.materialNames[val] || val;
+
                     return (
                       <button
                         key={val}
@@ -151,7 +194,7 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
       <div className="flex items-baseline gap-3">
         <PriceDisplay price={price} className="text-2xl font-light font-serif text-[#2c211b]" />
         <span className="text-[10px] tracking-wide text-[#2c211b]/50 uppercase font-medium">
-          НДС включен
+          {labels.vatIncluded}
         </span>
       </div>
       {/* Brief description */}
@@ -165,19 +208,19 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
         <div className="flex items-center gap-3">
           <SparklesIcon />
           <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            Ручная работа
+            {labels.handmade}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <TruckIcon />
           <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            Доставка в DE и РФ
+            {labels.delivery}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <GiftIcon />
           <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            Упаковка в подарок
+            {labels.giftWrap}
           </span>
         </div>
       </div>
@@ -192,39 +235,25 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
       </div>
       {/* Collapsible Sections (UX Details) */}
       <div className="mt-4 border-t border-[#2c211b]/10">
-        <AccordionItem title="МАТЕРИАЛЫ И УХОД">
-          <p>
-            Каждое изделие SUNLUK создается вручную нашими мастерами из
-            премиальных сертифицированных материалов:
-          </p>
+        <AccordionItem title={labels.materialsHeading}>
+          <p>{labels.materialsText}</p>
           <ul className="list-disc pl-4 space-y-1 mt-2">
-            <li>Износостойкий и гипоаллергенный шнур/цепочка.</li>
-            <li>Итальянская премиум фурнитура и фурнитурные карабины.</li>
-            <li>Регулируемые силиконовые петли для дужек очков любого размера.</li>
+            <li>{labels.materialsItem1}</li>
+            <li>{labels.materialsItem2}</li>
+            <li>{labels.materialsItem3}</li>
           </ul>
           <p className="mt-2 text-[#2c211b]/50 italic">
-            Рекомендация: Избегайте прямого контакта с парфюмерией, лаком для
-            волос и водой. Протирайте мягкой салфеткой без химии.
+            {labels.materialsCare}
           </p>
         </AccordionItem>
 
-        <AccordionItem title="ДОСТАВКА И ВОЗВРАТ">
-          <p>
-            Мы отправляем заказы по всему миру из складов в Мюнхене (Германия) и
-            Москве (Россия):
-          </p>
+        <AccordionItem title={labels.shippingHeading}>
+          <p>{labels.shippingText}</p>
           <ul className="list-disc pl-4 space-y-1 mt-2">
-            <li>Отправка в течение 24 часов после оплаты.</li>
-            <li>
-              Бесплатная стандартная доставка при сумме заказа от 5 000 руб или
-              50 EUR.
-            </li>
-            <li>
-              Возможность экспресс-доставки курьером до двери за 2-4 рабочих дня.
-            </li>
-            <li>
-              Простой возврат или обмен в течение 14 дней с момента получения.
-            </li>
+            <li>{labels.shippingItem1}</li>
+            <li>{labels.shippingItem2}</li>
+            <li>{labels.shippingItem3}</li>
+            <li>{labels.shippingItem4}</li>
           </ul>
         </AccordionItem>
       </div>

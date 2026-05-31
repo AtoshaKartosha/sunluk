@@ -1,0 +1,61 @@
+{
+  "catalog": {
+    "breadcrumb": "CATALOG",
+    "heading": "ALL PRODUCTS",
+    "empty": "No products found",
+    "regionUnsupported": "REGION NOT SUPPORTED",
+    "regionUnsupportedDesc": "Unfortunately, delivery to {countryCode} is temporarily unavailable.",
+    "errorHeading": "LOADING ERROR",
+    "errorDesc": "Failed to load the catalog. Please try again later.",
+    "retry": "TRY AGAIN",
+    "backToCatalog": "BACK TO CATALOG",
+    "notFound": "PRODUCT NOT FOUND",
+    "notFoundDesc": "The requested product was not found or is unavailable in your region."
+  },
+  "product": {
+    "brand": "SUNLUK ACCESSORIES",
+    "vatIncluded": "VAT included",
+    "handmade": "Handmade",
+    "delivery": "Delivery to DE & Worldwide",
+    "giftWrap": "Gift wrapping available",
+    "materialsHeading": "MATERIALS & CARE",
+    "materialsText": "Each SUNLUK piece is handcrafted by our artisans using premium certified materials:",
+    "materialsItem1": "Durable and hypoallergenic cord/chain.",
+    "materialsItem2": "Premium Italian hardware and clasps.",
+    "materialsItem3": "Adjustable silicone loops for any eyewear temple size.",
+    "materialsCare": "Care: Avoid direct contact with perfume, hairspray, and water. Wipe gently with a soft, chemical-free cloth.",
+    "shippingHeading": "SHIPPING & RETURNS",
+    "shippingText": "We ship worldwide from our warehouses in Munich (Germany) and Moscow (Russia):",
+    "shippingItem1": "Orders shipped within 24 hours of payment.",
+    "shippingItem2": "Free standard shipping on orders over 5,000 RUB or 50 EUR.",
+    "shippingItem3": "Express courier delivery to your door in 2–4 business days.",
+    "shippingItem4": "Easy returns or exchanges within 14 days of receipt.",
+    "turquoise": "Turquoise",
+    "leather": "Leather",
+    "silver": "Steel",
+    "gold-plated": "Gold"
+  },
+  "header": {
+    "catalog": "CATALOG",
+    "collection": "COLLECTION",
+    "about": "ABOUT",
+    "contacts": "CONTACTS"
+  },
+  "footer": {
+    "copyright": "© 2026 SUNLUK. All rights reserved.",
+    "serviceClients": "CUSTOMER SERVICE",
+    "ourStory": "Our Story",
+    "shippingReturns": "Shipping & Returns",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "shop": "SHOP",
+    "allProducts": "All Products",
+    "giftCards": "Gift Cards",
+    "questions": "QUESTIONS",
+    "contactUs": "Contact Us"
+  },
+  "localeSwitcher": {
+    "ru": "RU",
+    "en": "EN"
+  }
+}

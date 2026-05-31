@@ -2,12 +2,13 @@
 
 ## 1. Intent
 
-Let a storefront visitor discover sellable products for their selected region, inspect product details, choose a valid variant, and hand the chosen item to the cart flow.
+Let a storefront visitor discover sellable products for their selected region, read the active locale's product content, inspect product details, choose a valid variant, and hand the chosen item to the cart flow.
 
 Success criteria:
 
 - Visitor sees only published products available through the storefront sales channel.
-- Prices and availability are region-aware.
+- Product cards and product detail pages render localized content prepared by `flows/features/catalog-localization.md`.
+- Prices and availability are region-aware and stay independent from locale.
 - Variant selection produces a concrete `{ productId, variantId, quantity, regionId }` handoff.
 - Missing region, unavailable product, or invalid variant selection is rejected before cart mutation.
 
@@ -17,6 +18,7 @@ In scope:
 
 - Region-aware product listing.
 - Product detail viewing from the product list.
+- Rendering localized catalog content supplied by `flows/features/catalog-localization.md`.
 - Variant display and local variant selection on product detail.
 - Quantity selection and cart handoff when the cart flow is implemented.
 
@@ -28,7 +30,7 @@ Out of scope:
 
 Deferred decisions:
 
-- Explicit geolocation/locale-based region selection. v0 uses `NEXT_PUBLIC_DEFAULT_REGION` and falls back to `dk`; unsupported configured values render an unsupported-region state.
+- Explicit region selection UI and geolocation-based region inference. v0 still uses `NEXT_PUBLIC_DEFAULT_REGION` and falls back to `dk`; unsupported configured values render an unsupported-region state. Locale-prefixed routing is covered separately by `flows/features/catalog-localization.md`.
 - Whether out-of-stock products are hidden or displayed as unavailable. v0 displays Store API sellable products returned by Medusa and disables purchase actions when a selected variant is not available.
 - Final SUNLUK production product data. v0 renders whatever published Store API products Medusa returns for the configured region/sales channel.
 
@@ -125,6 +127,7 @@ Storefront projection:
 | Direction | Name | Target flow | Payload | Allowed when | Reject reason |
 |---|---|---|---|---|---|
 | Incoming | `catalog:published` | Catalog Browsing | `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }` | Admin publishes catalog data in Medusa | Not applicable to storefront |
+| Incoming | `catalog:localized-content-ready` | Catalog Browsing | `{ locale, medusaLocale, fallbackProductIds? }` | Catalog localization has resolved locale-aware content for rendering | Localized read failed upstream |
 | Internal | `catalog:region-selected` | None | `{ regionId, countryCode }` | Configured country belongs to supported region | Unsupported country |
 | Internal | `catalog:product-opened` | None | `{ productHandle, regionId }` | Region known and product handle exists | Missing region or product not sellable |
 | Outgoing | `cart:item-selected` | Cart and Checkout | `{ productId, variantId, quantity, regionId }` | Variant is valid, quantity is positive, and cart UI is enabled | Missing variant, invalid quantity, unavailable product |
@@ -139,11 +142,13 @@ Storefront projection:
 - Quantity is zero, negative, or not an integer: reject locally before any cart handoff.
 - Product/variant becomes unavailable between detail load and cart handoff: cart flow must revalidate through Medusa.
 - Store API request fails: show retryable error without mutating cart state.
+- Requested locale has partial or missing translations: render the fallback content produced by catalog-localization and keep catalog pricing/variant behavior unchanged.
 
 ## 8. Side Effects
 
-- Storefront navigation from `/products` list to `/products/[handle]` detail.
-- Region selection/config affects product prices and cart compatibility.
+- Storefront navigation from localized product list routes to localized product detail routes.
+- Region selection/config affects product prices and cart compatibility, while locale affects only content projection.
+- `catalog:localized-content-ready` feeds localized title/description into catalog list/detail rendering.
 - `cart:item-selected` begins cart mutation in the cart flow once the cart UI is wired; current product-screen slice may render disabled/pending add-to-cart if cart flow is not yet implemented.
 
 ## 9. Schemas Touched
@@ -222,6 +227,7 @@ Notes:
 
 - Should production default region remain Denmark (`dk`) or use a different first market for Sunluk? v0 proceeds with `NEXT_PUBLIC_DEFAULT_REGION ?? "dk"` until product chooses otherwise.
 - Should region selection later be explicit, inferred, or both? v0 defers selector UI.
+- Should localized product attributes beyond title/description (for example option labels or merchandising copy) be part of catalog browsing v1 or remain in `flows/features/catalog-localization.md` as a follow-up?
 - Should unavailable products be hidden or shown with disabled purchase actions? v0 follows Store API product visibility and disables impossible variant/cart actions.
 
 ## 14. Review Checklist
@@ -232,3 +238,4 @@ Notes:
 - [x] Cross-flow `cart:item-selected` appears in architecture and cart flow.
 - [x] Product list -> detail route is explicit for the current implementation slice.
 - [x] v0 region fallback is explicit and does not silently mask unsupported configured regions.
+- [x] Localized product content dependency is explicit via `catalog:localized-content-ready`.

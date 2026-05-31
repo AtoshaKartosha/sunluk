@@ -18,6 +18,12 @@ flowchart LR
     C2[Product detail viewed]
   end
 
+  subgraph Localization["Catalog Localization\nflows/features/catalog-localization.md"]
+    L0[Locale selected]
+    L1[Localized content requested]
+    L2[Fallback or localized content rendered]
+  end
+
   subgraph Cart["Cart and Checkout\nflows/features/cart-checkout.md"]
     K0[Cart active]
     K1[Checkout complete]
@@ -33,6 +39,9 @@ flowchart LR
     U2[Order history browsed]
   end
   Admin -- "catalog:published" --> Catalog
+  Admin -- "catalog:published" --> Localization
+  Admin -- "catalog:translation-published" --> Localization
+  Localization -- "catalog:localized-content-ready" --> Catalog
   Admin -- "commerce:settings-updated" --> Cart
   Catalog -- "cart:item-selected" --> Cart
   Cart -- "order:placed" --> Admin
@@ -42,6 +51,9 @@ flowchart LR
 | Source | Event/data | Target | Notes |
 |---|---|---|---|
 | Admin Operations | `catalog:published` | Catalog Browsing | Payload: `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }`. Medusa is the authority; storefront reads only published, sales-channel-visible data. |
+| Admin Operations | `catalog:published` | Catalog Localization | Payload: `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }`. Publishing product source content makes it eligible for localized storefront reads. |
+| Admin Operations | `catalog:translation-published` | Catalog Localization | Payload: `{ productIds, locales }`. Admin saves localized product content in Medusa for supported storefront locales. |
+| Catalog Localization | `catalog:localized-content-ready` | Catalog Browsing | Payload: `{ locale, medusaLocale, fallbackProductIds? }`. Catalog UI renders localized product content or explicit source fallback. |
 | Admin Operations | `commerce:settings-updated` | Cart and Checkout | Payload: `{ regionIds?, shippingOptionIds?, paymentProviderIds?, priceListIds? }`. Cart and checkout revalidate through Medusa before mutation/completion. |
 | Catalog Browsing | `cart:item-selected` | Cart and Checkout | Payload: `{ productId, variantId, quantity, regionId }`. |
 | Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |

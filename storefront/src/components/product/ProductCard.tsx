@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import type { StoreProduct } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
+import type { Locale } from "@/i18n/routing";
 
 interface ProductCardProps {
   product: StoreProduct;
+  locale?: Locale;
 }
 
 /**
@@ -29,13 +31,17 @@ function cheapestPrice(product: StoreProduct) {
   return bestPrice;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, locale }: ProductCardProps) {
   const src = product.thumbnail ?? product.images?.[0]?.url;
   const price = cheapestPrice(product);
 
+  const href = locale
+    ? `/${locale}/products/${product.handle}`
+    : `/products/${product.handle}`;
+
   return (
     <Link
-      href={`/products/${product.handle}`}
+      href={href}
       className="group flex flex-col text-left bg-transparent transition-all duration-300"
     >
       {/* Image */}

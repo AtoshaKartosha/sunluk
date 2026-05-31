@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BRAND, NAV_LINKS } from "@/lib/landing-data";
+import type { NavLinkData } from "@/lib/landing-data";
 import { NavLink } from "@/components/landing/NavLink";
 import { useCart } from "@/components/cart/CartContext";
 
@@ -46,7 +47,8 @@ const XIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-export default function SiteHeader() {
+export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
+  const links = navLinks ?? NAV_LINKS;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { itemCount, openCart } = useCart();
@@ -72,7 +74,7 @@ export default function SiteHeader() {
 
         {/* Centered Navigation – desktop */}
         <nav className="hidden md:flex items-center gap-12 text-xs font-medium tracking-widest text-[#2c211b]">
-          {NAV_LINKS.map((link) => (
+          {links.map((link) => (
             <NavLink key={link.href} href={link.href} label={link.label} />
           ))}
         </nav>
@@ -114,7 +116,7 @@ export default function SiteHeader() {
       {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-[#f4ebe6] border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in">
-          {NAV_LINKS.map((link) => (
+          {links.map((link) => (
             <NavLink
               key={link.href}
               href={link.href}

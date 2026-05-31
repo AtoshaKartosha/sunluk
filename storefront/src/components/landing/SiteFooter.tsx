@@ -1,14 +1,24 @@
 import Link from "next/link";
 import { InstagramIcon, SendIcon, YoutubeIcon } from "./icons";
 import { BRAND, FOOTER_GROUPS } from "@/lib/landing-data";
+import type { FooterGroupData } from "@/lib/landing-data";
 
-export function SiteFooter() {
+export function SiteFooter({
+  footerGroups,
+  copyright,
+}: {
+  footerGroups?: FooterGroupData[];
+  copyright?: string;
+}) {
+  const groups = footerGroups ?? FOOTER_GROUPS;
+  const copy = copyright ?? "© 2026 SUNLUK. Все права защищены.";
+
   return (
     <footer id="contacts" className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 sm:gap-16 mb-16 sm:mb-20">
-          
+
           {/* Column 1: Logo and social */}
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <Link href="/" className="flex flex-col group">
@@ -37,7 +47,7 @@ export function SiteFooter() {
             </div>
           </div>
 
-          {FOOTER_GROUPS.map((group, i) => (
+          {groups.map((group, i) => (
             <div key={i} className="flex flex-col gap-4 sm:gap-5">
               <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
                 {group.title}
@@ -53,7 +63,7 @@ export function SiteFooter() {
         </div>
 
         <div className="pt-8 border-t border-[#2c211b]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#2c211b]/60">
-          <p>© 2026 SUNLUK. Все права защищены.</p>
+          <p>{copy}</p>
         </div>
 
       </div>

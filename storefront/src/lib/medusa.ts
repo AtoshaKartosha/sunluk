@@ -22,6 +22,25 @@ export function getMedusaClient(): Medusa {
   }
   return _sdk;
 }
+// ---------------------------------------------------------------------------
+// Per-request public client — locale-scoped, no singleton leak
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a fresh Medusa storefront client with the given locale header.
+ *
+ * Each call returns a new instance so that `x-medusa-locale` cannot leak
+ * across concurrent requests.  Set `globalHeaders` because the SDK's
+ * `setLocale()` method is a no-op in non-browser environments.
+ */
+export function getMedusaClientWithLocale(medusaLocale: string): Medusa {
+  return new Medusa({
+    baseUrl,
+    publishableKey,
+    globalHeaders: { "x-medusa-locale": medusaLocale },
+    debug: process.env.NODE_ENV === "development",
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Authenticated client (client-side) — uses cookie-based JWT storage

@@ -1,4 +1,4 @@
-import { getMedusaClient } from "../medusa";
+import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
 
 // ---- Types ----
@@ -118,10 +118,13 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
  */
 export async function listProducts(
   region: ResolvedRegion,
+  medusaLocale?: string,
 ): Promise<ProductListResult> {
   ensureRegion(region);
 
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
 
   const data = (await sdk.store.product.list({
     region_id: region.regionId,
@@ -144,10 +147,13 @@ export async function listProducts(
 export async function getProduct(
   handle: string,
   region: ResolvedRegion,
+  medusaLocale?: string,
 ): Promise<ProductDetail | null> {
   ensureRegion(region);
 
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
 
   const data = (await sdk.store.product.list({
     handle,

@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/routing";
+
 export const BRAND = {
   name: "SUNLUK",
   subtitle: "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
@@ -138,3 +140,71 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
     ],
   },
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Locale-aware helpers for catalog pages
+// ---------------------------------------------------------------------------
+
+
+
+export function getNavLinks(locale: Locale): NavLinkData[] {
+  switch (locale) {
+    case "en":
+      return [
+        { href: "/en/products", label: "CATALOG" },
+        { href: "#collection", label: "COLLECTION" },
+        { href: "#about", label: "ABOUT" },
+        { href: "#contacts", label: "CONTACTS" },
+      ];
+    default:
+      return [
+        { href: "/ru/products", label: "КАТАЛОГ" },
+        { href: "#collection", label: "КОЛЛЕКЦИЯ" },
+        { href: "#about", label: "О НАС" },
+        { href: "#contacts", label: "КОНТАКТЫ" },
+      ];
+  }
+}
+
+export function getFooterGroups(locale: Locale): FooterGroupData[] {
+  if (locale === "en") {
+    return [
+      {
+        title: "CUSTOMER SERVICE",
+        links: [
+          { label: "Our Story", href: "#" },
+          { label: "Shipping & Returns", href: "#" },
+          { label: "Terms & Conditions", href: "#" },
+          { label: "Privacy Policy", href: "#" },
+        ],
+      },
+      {
+        title: "SHOP",
+        links: [
+          { label: "All Products", href: "#" },
+          { label: "Gift Cards", href: "#" },
+        ],
+      },
+      {
+        title: "QUESTIONS",
+        links: [
+          { label: "Contact Us", href: "#" },
+          { label: "Telegram", href: "#" },
+          { label: "Instagram", href: "#" },
+          { label: "Email", href: "mailto:info@sunluk.ru" },
+        ],
+      },
+    ];
+  }
+
+  return FOOTER_GROUPS;
+}
+
+export function getCopyright(locale: Locale): string {
+  switch (locale) {
+    case "en":
+      return "© 2026 SUNLUK. All rights reserved.";
+    default:
+      return "© 2026 SUNLUK. Все права защищены.";
+  }
+}

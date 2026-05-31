@@ -18,8 +18,10 @@ import {
   createStockLocationsWorkflow,
   createStoresWorkflow,
   createTaxRegionsWorkflow,
+  createTranslationsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
+  updateStoresWorkflow,
 } from "@medusajs/medusa/core-flows";
 
 export default async function initial_data_seed({
@@ -97,6 +99,28 @@ export default async function initial_data_seed({
       ],
     },
   });
+
+  logger.info("Seeding locales...");
+  const translationModuleService = container.resolve(Modules.TRANSLATION);
+
+  await translationModuleService.createLocales([
+    { code: "ru-RU", name: "Russian (Russia)" },
+    { code: "en-US", name: "English (United States)" },
+  ]);
+
+  await updateStoresWorkflow(container).run({
+    input: {
+      selector: { id: store.id },
+      update: {
+        supported_locales: [
+          { locale_code: "ru-RU" },
+          { locale_code: "en-US" },
+        ],
+      },
+    },
+  });
+  logger.info("Finished seeding locales.");
+
   logger.info("Seeding region data...");
   const { result: regionResult } = await createRegionsWorkflow(container).run({
     input: {
@@ -320,7 +344,7 @@ export default async function initial_data_seed({
 
   const accessoriesCategory = categoryResult[0];
 
-  await createProductsWorkflow(container).run({
+  const { result: productResults } = await createProductsWorkflow(container).run({
     input: {
       products: [
         {
@@ -524,6 +548,86 @@ export default async function initial_data_seed({
   });
   logger.info("Finished seeding product data.");
 
+  logger.info("Seeding product translations...");
+  await createTranslationsWorkflow(container).run({
+    input: {
+      translations: [
+        {
+          reference_id: productResults[0].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Бирюза",
+            description: "Акцентный цвет и природные мотивы",
+          },
+        },
+        {
+          reference_id: productResults[0].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Turquoise Chain",
+            description: "Accent color and natural motifs",
+          },
+        },
+        {
+          reference_id: productResults[1].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Leather Loop",
+            description: "Натуральная кожа и премиальный металл",
+          },
+        },
+        {
+          reference_id: productResults[1].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Leather Loop",
+            description: "Genuine leather and premium metal",
+          },
+        },
+        {
+          reference_id: productResults[2].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Silver Chain",
+            description: "Минимализм, строгость и лёгкий блеск",
+          },
+        },
+        {
+          reference_id: productResults[2].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Silver Chain",
+            description: "Minimalism, rigor, and a light sheen",
+          },
+        },
+        {
+          reference_id: productResults[3].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Sand Chain",
+            description: "Тёплый металл и морской песчаный оттенок",
+          },
+        },
+        {
+          reference_id: productResults[3].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Sand Chain",
+            description: "Warm metal and sea-sand shade",
+          },
+        },
+      ],
+    },
+  });
+  logger.info("Finished seeding product translations.");
 
   logger.info("Seeding inventory levels.");
 
