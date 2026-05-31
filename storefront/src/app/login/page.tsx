@@ -8,6 +8,7 @@ import {
   loginCustomer,
   setAuthCookie,
   getAuthCookie,
+  removeAuthCookie,
   getClientMedusaClient,
 } from "@/lib/medusa/customer";
 
@@ -67,14 +68,24 @@ export default function LoginPage() {
 
   // Redirect already logged-in users
   useEffect(() => {
-    if (getAuthCookie()) {
-      router.replace("/cabinet");
-    } else {
-      const timer = setTimeout(() => {
-        setCheckingAuth(false);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
+    const checkSession = async () => {
+      const cookie = getAuthCookie();
+      if (cookie) {
+        try {
+          const sdk = getClientMedusaClient();
+          const { customer } = await sdk.store.customer.retrieve();
+          if (customer) {
+            router.replace("/cabinet");
+            return;
+          }
+        } catch {
+          // Token is expired or invalid, clear it to break any redirect loop
+          removeAuthCookie();
+        }
+      }
+      setCheckingAuth(false);
+    };
+    checkSession();
   }, [router]);
 
   const validate = useCallback((): boolean => {
