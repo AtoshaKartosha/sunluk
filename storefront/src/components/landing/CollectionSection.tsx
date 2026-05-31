@@ -3,8 +3,8 @@
 import { PRODUCTS } from "@/lib/landing-data";
 
 import { motion } from "framer-motion";
-
 export function CollectionSection() {
+
   return (
     <section id="collection" className="pt-20 sm:pt-32 pb-10 sm:pb-16 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
@@ -66,16 +66,17 @@ export function CollectionSection() {
             </motion.div>
           ))}
         </motion.div>
-        <motion.button 
+        <motion.a
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          href="/products"
           className="inline-flex items-center justify-center px-10 py-4 border-2 border-[#2c211b] text-[#2c211b] hover:bg-[#2c211b] hover:text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none cursor-pointer"
         >
           ВЫБРАТЬ АКСЕССУАР
-        </motion.button>
+        </motion.a>
       </div>
     </section>
   );

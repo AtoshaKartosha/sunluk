@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface NavLinkProps {
@@ -14,7 +15,7 @@ const NAV_LINK_BASE =
 
 export function NavLink({ href, label, onClick, variant = "desktop" }: NavLinkProps) {
   return (
-    <a
+    <Link
       href={href}
       onClick={onClick}
       className={cn(
@@ -23,6 +24,6 @@ export function NavLink({ href, label, onClick, variant = "desktop" }: NavLinkPr
       )}
     >
       {label}
-    </a>
+    </Link>
   );
 }

@@ -6,7 +6,7 @@ Sunluk Commerce is a Medusa + Next.js commerce project.
 
 - `backend/apps/backend` is the Medusa backend and admin surface.
 - `storefront` is the Next.js customer storefront.
-- Current storefront implementation is still the default Next.js landing page; the commerce behavior below is the intended project flow baseline for implementing the storefront against Medusa.
+- Current storefront implementation includes the SUNLUK landing page plus Medusa-backed product list/detail routes; cart and checkout behavior below remains the intended next flow baseline.
 
 ## Flow map
 
@@ -55,4 +55,4 @@ flowchart LR
 - Backend config: `backend/apps/backend/medusa-config.ts`.
 - Seeded commerce data: `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
 - Placeholder custom routes: `backend/apps/backend/src/api/store/custom/route.ts`, `backend/apps/backend/src/api/admin/custom/route.ts`.
-- Storefront entry point: `storefront/src/app/page.tsx` currently contains the default Next.js starter page.
+- Storefront entry points: `storefront/src/app/page.tsx`, `storefront/src/app/products/page.tsx`, `storefront/src/app/products/[handle]/page.tsx`.

@@ -9,6 +9,7 @@ export interface NavLinkData {
 }
 
 export const NAV_LINKS: NavLinkData[] = [
+  { href: "/products", label: "КАТАЛОГ" },
   { href: "#collection", label: "КОЛЛЕКЦИЯ" },
   { href: "#about", label: "О НАС" },
   { href: "#contacts", label: "КОНТАКТЫ" },
