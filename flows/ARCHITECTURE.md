@@ -27,20 +27,24 @@ flowchart LR
     A0[Admin authenticated]
     A1[Catalog and commerce settings managed]
   end
-
+  subgraph Cabinet["Customer Cabinet\nflows/features/customer-cabinet.md"]
+    U0[Customer authenticated]
+    U1[Cabinet dashboard viewed]
+    U2[Order history browsed]
+  end
   Admin -- "catalog:published" --> Catalog
   Admin -- "commerce:settings-updated" --> Cart
   Catalog -- "cart:item-selected" --> Cart
   Cart -- "order:placed" --> Admin
-```
+  Cart -- "order:placed" --> Cabinet
 
 ## Cross-flow contracts
-
 | Source | Event/data | Target | Notes |
 |---|---|---|---|
 | Admin Operations | `catalog:published` | Catalog Browsing | Payload: `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }`. Medusa is the authority; storefront reads only published, sales-channel-visible data. |
 | Admin Operations | `commerce:settings-updated` | Cart and Checkout | Payload: `{ regionIds?, shippingOptionIds?, paymentProviderIds?, priceListIds? }`. Cart and checkout revalidate through Medusa before mutation/completion. |
 | Catalog Browsing | `cart:item-selected` | Cart and Checkout | Payload: `{ productId, variantId, quantity, regionId }`. |
+| Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |
 | Cart and Checkout | `order:placed` | Admin Operations | Payload: `{ orderId, cartId, customerId? }`; order appears in Medusa admin/order management. |
 
 ## Non-negotiables
