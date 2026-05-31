@@ -3,6 +3,26 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 
+const CharReveal = ({ text, className, stagger = 0.025, delay = 0, y = 24, duration = 0.5 }: { text: string; className?: string; stagger?: number; delay?: number; y?: number; duration?: number }) => (
+  <motion.span
+    initial="hidden"
+    animate="visible"
+    variants={{ hidden: {}, visible: { transition: { staggerChildren: stagger, delayChildren: delay } } }}
+    className={className}
+    aria-label={text}
+  >
+    {text.split("").map((char, i) => (
+      <motion.span
+        key={i}
+        variants={{ hidden: { opacity: 0, y }, visible: { opacity: 1, y: 0, transition: { duration, ease: [0.25, 0.1, 0.25, 1] } } }}
+        className="inline-block"
+      >
+        {char === " " ? "\u00A0" : char}
+      </motion.span>
+    ))}
+  </motion.span>
+);
+
 // Inline lightweight custom SVG icons for maximum compatibility, performance, and zero dependency issues
 const SearchIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -146,13 +166,13 @@ export default function Home() {
 
           {/* Centered Navigation */}
           <nav className="hidden md:flex items-center gap-12 text-xs font-medium tracking-widest text-[#2c211b]">
-            <a href="#collection" className="hover:text-[#2f6f78] hover:translate-y-[-1px] transition-all duration-200">
+            <a href="#collection" className="relative inline-block hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none">
               КОЛЛЕКЦИЯ
             </a>
-            <a href="#about" className="hover:text-[#2f6f78] hover:translate-y-[-1px] transition-all duration-200">
+            <a href="#about" className="relative inline-block hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none">
               О НАС
             </a>
-            <a href="#contacts" className="hover:text-[#2f6f78] hover:translate-y-[-1px] transition-all duration-200">
+            <a href="#contacts" className="relative inline-block hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none">
               КОНТАКТЫ
             </a>
           </nav>
@@ -190,21 +210,21 @@ export default function Home() {
             <a 
               href="#collection" 
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2 hover:text-[#2f6f78] transition-colors"
+              className="relative inline-block py-2 hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-1 after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none"
             >
               КОЛЛЕКЦИЯ
             </a>
             <a 
               href="#about" 
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2 hover:text-[#2f6f78] transition-colors"
+              className="relative inline-block py-2 hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-1 after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none"
             >
               О НАС
             </a>
             <a 
               href="#contacts" 
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2 hover:text-[#2f6f78] transition-colors"
+              className="relative inline-block py-2 hover:translate-y-[-1px] active:translate-y-[0px] transition-transform duration-200 after:absolute after:bottom-1 after:left-0 after:h-[2px] after:w-full after:bg-[#2f6f78] after:scale-x-0 after:origin-left after:transition-transform after:duration-200 hover:after:scale-x-100 focus-visible:translate-y-[-1px] focus-visible:after:scale-x-100 focus-visible:outline-none"
             >
               КОНТАКТЫ
             </a>
@@ -217,47 +237,44 @@ export default function Home() {
         {/* Hero Contents */}
         <div className="relative flex-1 flex items-center pt-12 md:pt-16 pb-0">
           {/* Background Image / Split Layout - constrained to hero top-half/side */}
-          <div className="absolute inset-y-0 right-0 w-full md:w-[54%] h-full overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
+            className="absolute inset-y-0 right-0 w-full md:w-[54%] h-full overflow-hidden"
+          >
             <div className="absolute inset-y-0 left-0 w-[15%] bg-gradient-to-r from-[#f4ebe6] to-transparent md:-left-2 z-10" />
             <div 
               role="img"
               aria-label="Warm beach editorial sunglasses and premium chain with sea beads" 
-              className="w-full h-full bg-cover bg-[position:20%_center] scale-100 transition-transform duration-10000 ease-out"
-              style={{ backgroundImage: "url('/images/hero-wide.png')" }}
+              className="w-full h-full bg-cover bg-[position:20%_center]"
+              style={{ backgroundImage: "url('/images/hero-wide.webp')" }}
             />
-          </div>
+          </motion.div>
           <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
             <motion.div 
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, type: "spring", stiffness: 50 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
               className="max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8"
             >
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.8 }}
-                className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b]"
-              >
-                МЕНЯЙ СЕБЯ.<br />
-                ВЫРАЖАЙ СЕБЯ.
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-                className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md"
-              >
-                Аксессуары для очков,<br className="hidden sm:inline" />
-                которые становятся частью вашего стиля.
-              </motion.p>
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b]">
+                <CharReveal text="МЕНЯЙ СЕБЯ." stagger={0.018} delay={0} y={24} duration={0.35} />
+                <br />
+                <CharReveal text="ВЫРАЖАЙ СЕБЯ." stagger={0.018} delay={0.14} y={24} duration={0.35} />
+              </h1>
+              <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md">
+                <CharReveal text="Аксессуары для очков," stagger={0.01} delay={0.35} y={14} duration={0.28} />
+                <br className="hidden sm:inline" />
+                <CharReveal text="которые становятся частью вашего стиля." stagger={0.01} delay={0.45} y={14} duration={0.28} />
+              </p>
               <motion.a 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
+                transition={{ delay: 0.75, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                href="#collection" 
+                href="#collection"
                 className="inline-flex items-center justify-center px-8 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg hover:translate-y-[-2px] group"
               >
                 СМОТРЕТЬ КОЛЛЕКЦИЮ
@@ -299,7 +316,7 @@ export default function Home() {
                   role="img"
                   aria-label="Эстетичный образ" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/model1.png')" }}
+                  style={{ backgroundImage: "url('/images/model1.webp')" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
@@ -315,7 +332,7 @@ export default function Home() {
                   role="img"
                   aria-label="Элегантный стиль" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/model2.png')" }}
+                  style={{ backgroundImage: "url('/images/model2.webp')" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
@@ -331,7 +348,7 @@ export default function Home() {
                   role="img"
                   aria-label="Лаконичная деталь" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/model3.png')" }}
+                  style={{ backgroundImage: "url('/images/model3.webp')" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
@@ -345,9 +362,9 @@ export default function Home() {
               className="lg:col-span-1 flex flex-col justify-between py-4"
             >
               <div className="flex flex-col gap-4">
-                <h3 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
+                <h2 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
                   НОСИ ПО-СВОЕМУ
-                </h3>
+                </h2>
                 <p className="text-sm sm:text-base leading-relaxed text-[#2c211b]/80 mt-2">
                   SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.
                 </p>
@@ -409,7 +426,7 @@ export default function Home() {
                   role="img"
                   aria-label="Бирюза" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/product-turquoise.png')" }}
+                  style={{ backgroundImage: "url('/images/product-turquoise.webp')" }}
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
@@ -434,7 +451,7 @@ export default function Home() {
                   role="img"
                   aria-label="Leather Loop" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/product-leather.png')" }}
+                  style={{ backgroundImage: "url('/images/product-leather.webp')" }}
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
@@ -459,7 +476,7 @@ export default function Home() {
                   role="img"
                   aria-label="Silver Chain" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/product-silver.png')" }}
+                  style={{ backgroundImage: "url('/images/product-silver.webp')" }}
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
@@ -484,7 +501,7 @@ export default function Home() {
                   role="img"
                   aria-label="Sand Chain" 
                   className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/product-sand.png')" }}
+                  style={{ backgroundImage: "url('/images/product-sand.webp')" }}
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
@@ -541,7 +558,7 @@ export default function Home() {
                   <span className="font-serif text-5xl sm:text-6xl font-light leading-none">S</span>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h4 className="font-serif text-lg font-bold text-[#2c211b]">S-элемент</h4>
+                  <h3 className="font-serif text-lg font-bold text-[#2c211b]">S-элемент</h3>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Фирменная деталь SUNLUK</p>
                 </div>
               </motion.div>
@@ -557,7 +574,7 @@ export default function Home() {
                   <GemIcon className="w-12 h-12" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h4 className="font-serif text-lg font-bold text-[#2c211b]">Премиальные материалы</h4>
+                  <h3 className="font-serif text-lg font-bold text-[#2c211b]">Премиальные материалы</h3>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Отборные материалы, которые служат долго.</p>
                 </div>
               </motion.div>
@@ -573,7 +590,7 @@ export default function Home() {
                   <LeafIcon className="w-12 h-12" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h4 className="font-serif text-lg font-bold text-[#2c211b]">Лёгкие</h4>
+                  <h3 className="font-serif text-lg font-bold text-[#2c211b]">Лёгкие</h3>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Комфортные на весь день.</p>
                 </div>
               </motion.div>
@@ -589,7 +606,7 @@ export default function Home() {
                   <ShieldIcon className="w-12 h-12" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h4 className="font-serif text-lg font-bold text-[#2c211b]">Надёжные</h4>
+                  <h3 className="font-serif text-lg font-bold text-[#2c211b]">Надёжные</h3>
                   <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">Прочное крепление для ваших очков.</p>
                 </div>
               </motion.div>
@@ -605,9 +622,9 @@ export default function Home() {
               <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
                 ФИЛОСОФИЯ ДЕТАЛЕЙ
               </span>
-              <h3 className="font-serif text-4xl sm:text-5xl font-light tracking-wide leading-[1.15] text-[#2c211b]">
+              <h2 className="font-serif text-4xl sm:text-5xl font-light tracking-wide leading-[1.15] text-[#2c211b]">
                 Всё держится на деталях
-              </h3>
+              </h2>
               <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80">
                 Форма, фактура, металл и цвет подобраны так, чтобы аксессуар выглядел естественно рядом с очками.
               </p>
@@ -617,7 +634,7 @@ export default function Home() {
         </div>
       </section>
       {/* 6. About / Order split section */}
-      <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-white overflow-hidden">
+      <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-[#f4ebe6] overflow-hidden">
         {/* Left packaging/beach image */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -630,7 +647,7 @@ export default function Home() {
             role="img"
             aria-label="SUNLUK эксклюзивные упаковочные коробки и аксессуары" 
             className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/about-packaging.png')" }}
+            style={{ backgroundImage: "url('/images/about-packaging.webp')" }}
           />
         </motion.div>
         {/* Right text and button */}
@@ -671,7 +688,7 @@ export default function Home() {
             role="img"
             aria-label="Warm turquoise sea waves background" 
             className="w-full h-full bg-cover bg-center opacity-40 scale-105"
-            style={{ backgroundImage: "url('/images/newsletter-bg.png')" }}
+            style={{ backgroundImage: "url('/images/newsletter-bg.webp')" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#2f6f78]/95 via-[#2f6f78]/80 to-[#5a3828]/90 mix-blend-multiply" />
         </div>
@@ -770,9 +787,9 @@ export default function Home() {
 
             {/* Column 2: Сервис */}
             <div className="flex flex-col gap-4 sm:gap-5">
-              <h4 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
+              <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
                 СЕРВИС КЛИЕНТОВ
-              </h4>
+              </h3>
               <ul className="flex flex-col gap-2.5 text-xs font-medium">
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Наша история</a></li>
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Доставка и возврат</a></li>
@@ -783,9 +800,9 @@ export default function Home() {
 
             {/* Column 3: Магазин */}
             <div className="flex flex-col gap-4 sm:gap-5">
-              <h4 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
+              <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
                 МАГАЗИН
-              </h4>
+              </h3>
               <ul className="flex flex-col gap-2.5 text-xs font-medium">
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Все товары</a></li>
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Подарочные карты</a></li>
@@ -794,9 +811,9 @@ export default function Home() {
 
             {/* Column 4: Вопросы */}
             <div className="flex flex-col gap-4 sm:gap-5">
-              <h4 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
+              <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
                 ВОПРОСЫ
-              </h4>
+              </h3>
               <ul className="flex flex-col gap-2.5 text-xs font-medium">
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Связаться с нами</a></li>
                 <li><a href="#" className="hover:text-[#2f6f78] transition-colors">Telegram</a></li>
