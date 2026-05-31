@@ -13,6 +13,7 @@
     "backend:seed": "npm run backend:seed --prefix backend",
     "db:setup:local": "node scripts/local-postgres.js setup",
     "db:start:local": "node scripts/local-postgres.js start",
+    "db:stop:local": "node scripts/local-postgres.js stop",
     "db:status:local": "node scripts/local-postgres.js status",
     "backend:prepare:local": "npm run db:setup:local && npm exec --prefix backend --workspace @dtc/backend -- medusa db:migrate",
     "dev:backend:local": "npm run backend:prepare:local && npm run dev:backend",

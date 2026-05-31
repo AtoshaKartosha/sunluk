@@ -98,6 +98,17 @@ async function startCluster() {
   console.log(`Started PostgreSQL on localhost:${port}`)
 }
 
+async function stopCluster() {
+  if (!(await isPortOpen("127.0.0.1", port))) {
+    console.log(`PostgreSQL already stopped on localhost:${port}`)
+    return
+  }
+
+  run(pgCtl, ["-D", dataDir, "stop", "-m", "fast"])
+  console.log(`Stopped PostgreSQL on localhost:${port}`)
+}
+
+
 function databaseExists() {
   const output = run(psql, [
     "-h",
@@ -137,6 +148,10 @@ async function main() {
 
   if (command === "start") {
     await startCluster()
+    return
+  }
+  if (command === "stop") {
+    await stopCluster()
     return
   }
 
