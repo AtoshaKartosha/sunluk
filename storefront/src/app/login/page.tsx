@@ -144,8 +144,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f4ebe6] px-4 py-16">
-      <div className="w-full max-w-[420px] rounded-xl bg-card p-8 shadow-md">
-        {/* Brand */}
+      <div className="w-full max-w-[420px] rounded-none bg-card p-8 shadow-md">
         <div className="mb-8 text-center">
           <Link
             href="/"
@@ -168,7 +167,7 @@ export default function LoginPage() {
           {serverError && (
             <div
               role="alert"
-              className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              className="rounded-none border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
             >
               {serverError}
             </div>
@@ -199,7 +198,7 @@ export default function LoginPage() {
                 errors.email ? "login-email-error" : undefined
               }
               disabled={loading}
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+              className="w-full rounded-none border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
             />
             {errors.email && (
               <p
@@ -237,7 +236,7 @@ export default function LoginPage() {
                   errors.password ? "login-password-error" : undefined
                 }
                 disabled={loading}
-                className="w-full rounded-lg border border-input bg-background px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
+                className="w-full rounded-none border border-input bg-background px-4 py-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
               />
               <button
                 type="button"
@@ -246,7 +245,7 @@ export default function LoginPage() {
                 aria-label={
                   showPassword ? "Скрыть пароль" : "Показать пароль"
                 }
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-none p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {showPassword ? (
                   <EyeOff className="size-4" />
@@ -270,7 +269,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-none bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? (
               <>

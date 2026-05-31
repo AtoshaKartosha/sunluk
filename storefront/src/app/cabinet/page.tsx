@@ -133,7 +133,7 @@ export default async function CabinetPage() {
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
             {T.profileSection}
           </h2>
-          <div className="bg-white rounded-xl border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
+          <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-[#2c211b]/40 mt-0.5 shrink-0" />
@@ -172,7 +172,7 @@ export default async function CabinetPage() {
             {T.ordersSection}
           </h2>
           {!ordersResult || ordersResult.orders.length === 0 ? (
-            <div className="bg-white rounded-xl border border-[#2c211b]/8 p-12 text-center shadow-sm">
+            <div className="bg-white rounded-none border border-[#2c211b]/8 p-12 text-center shadow-sm">
               <ShoppingBag className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
               <p className="text-sm text-[#2c211b]/60 mb-4">{T.noOrders}</p>
               <Link
@@ -184,7 +184,7 @@ export default async function CabinetPage() {
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-[#2c211b]/8 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-none border border-[#2c211b]/8 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>

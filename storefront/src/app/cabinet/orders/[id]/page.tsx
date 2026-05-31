@@ -173,7 +173,7 @@ export default async function OrderDetailPage({
       <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
         <SiteHeader />
         <main className="flex-1 flex items-center justify-center px-4 py-16">
-          <div className="bg-white rounded-xl border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
+          <div className="bg-white rounded-none border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
           <Package className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
           <h1 className="text-lg font-semibold text-[#2c211b] mb-2">
             {T.notFound}
@@ -225,7 +225,7 @@ export default async function OrderDetailPage({
         </Link>
 
         {/* Order Header */}
-        <div className="bg-white rounded-xl border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm mb-6">
+        <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-[#2c211b] tracking-tight">
@@ -239,7 +239,7 @@ export default async function OrderDetailPage({
 
           {/* Status badges */}
           <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#f4ebe6]/60 rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#f4ebe6]/60 rounded-none">
               {statusIcon(orderStatus)}
               <div>
                 <p className="text-[10px] font-semibold text-[#2c211b]/50 uppercase tracking-wider">
@@ -250,7 +250,7 @@ export default async function OrderDetailPage({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#f4ebe6]/60 rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#f4ebe6]/60 rounded-none">
               <CreditCard className="w-4 h-4 text-[#2c211b]/40" />
               <div>
                 <p className="text-[10px] font-semibold text-[#2c211b]/50 uppercase tracking-wider">
@@ -265,7 +265,7 @@ export default async function OrderDetailPage({
         </div>
 
         {/* Order Items */}
-        <section className="bg-white rounded-xl border border-[#2c211b]/8 shadow-sm mb-6 overflow-hidden">
+        <section className="bg-white rounded-none border border-[#2c211b]/8 shadow-sm mb-6 overflow-hidden">
           <h2 className="px-6 sm:px-8 pt-6 pb-4 text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50">
             {T.itemsSection}
           </h2>
@@ -301,10 +301,10 @@ export default async function OrderDetailPage({
                           <img
                             src={item.thumbnail}
                             alt={item.title}
-                            className="w-12 h-12 rounded-lg object-cover border border-[#2c211b]/6"
+                            className="w-12 h-12 rounded-none object-cover border border-[#2c211b]/6"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-[#f4ebe6] flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-none bg-[#f4ebe6] flex items-center justify-center">
                             <Package className="w-5 h-5 text-[#2c211b]/25" />
                           </div>
                         )}
@@ -338,7 +338,7 @@ export default async function OrderDetailPage({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Addresses */}
-          <div className="bg-white rounded-xl border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
+          <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4 flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               {T.shippingAddress}
@@ -365,7 +365,7 @@ export default async function OrderDetailPage({
           </div>
 
           {/* Totals */}
-          <div className="bg-white rounded-xl border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
+          <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
               {T.totalsSection}
             </h2>
