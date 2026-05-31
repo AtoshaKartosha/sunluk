@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { ProductOption, ProductVariant } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { useCart } from "@/components/cart/CartContext";
@@ -79,7 +79,36 @@ export function VariantSelector({
   const safeOptions = useMemo(() => options ?? [], [options]);
   const safeVariants = useMemo(() => variants ?? [], [variants]);
 
-  const [selected, setSelected] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const opt of options ?? []) {
+      const optionValues = (opt.values ?? []).map((v) =>
+        typeof v === "string" ? v : v.value,
+      );
+      if (optionValues.length === 0) continue;
+
+      const inStockValues = optionValues.filter((val) => {
+        return (variants ?? []).some((v) => {
+          const matchedOpt = v.options?.find((o) => o.option_id === opt.id);
+          if (!matchedOpt) return false;
+          const inStock =
+            v.manage_inventory === false || (v.inventory_quantity ?? 0) > 0;
+          return matchedOpt.value === val && inStock;
+        });
+      });
+
+      if (inStockValues.length === 1) {
+        // Rule 3: only one material/value in stock out of several -> select it
+        initial[opt.id] = inStockValues[0];
+      } else if (optionValues.length > 0) {
+        // Rule 1 & 2: single or multiple overall -> select first in-stock or first overall
+        const defaultValue =
+          inStockValues.length > 0 ? inStockValues[0] : optionValues[0];
+        initial[opt.id] = defaultValue;
+      }
+    }
+    return initial;
+  });
   const [quantity, setQuantity] = useState(1);
   const [addingInProgress, setAddingInProgress] = useState(false);
 
@@ -111,6 +140,10 @@ export function VariantSelector({
     },
     [safeOptions, safeVariants, onSelectionChange],
   );
+  // Notify parent of initial selection on mount.
+  useEffect(() => {
+    stableCallback(selected, quantity);
+  }, [stableCallback, selected, quantity]);
 
   const handleOptionChange = useCallback(
     (optionId: string, value: string) => {
