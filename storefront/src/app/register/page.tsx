@@ -112,7 +112,12 @@ export default function RegisterPage() {
           setAuthCookie(result.token);
           router.push("/cabinet");
         } else {
-          setServerError(T.errors.registrationFailed);
+          const err = result.error;
+          if (err.includes("already exists")) {
+            setServerError("Аккаунт с таким email уже существует.");
+          } else {
+            setServerError(err || T.errors.registrationFailed);
+          }
         }
       } catch {
         setServerError(T.errors.network);
