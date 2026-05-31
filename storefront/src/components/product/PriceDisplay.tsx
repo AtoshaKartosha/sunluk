@@ -10,17 +10,15 @@ interface PriceDisplayProps {
 }
 
 function formatPriceValue(amount: number, currencyCode: string): string {
-  // Amounts from Medusa are in the smallest currency unit (cents).
-  const major = amount / 100;
   try {
     return new Intl.NumberFormat("ru-RU", {
       style: "currency",
       currency: currencyCode.toUpperCase(),
-      minimumFractionDigits: major % 1 === 0 ? 0 : 2,
-    }).format(major);
+      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    }).format(amount);
   } catch {
     // Fallback for unknown currency codes
-    return `${major.toFixed(2)} ${currencyCode.toUpperCase()}`;
+    return `${amount.toFixed(2)} ${currencyCode.toUpperCase()}`;
   }
 }
 

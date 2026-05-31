@@ -11,7 +11,7 @@ export interface ProductImage {
 export interface ProductOption {
   id: string
   title: string
-  values?: string[]
+  values?: Array<string | { id?: string; value: string }>
 }
 
 export interface VariantOptionValue {

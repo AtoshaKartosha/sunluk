@@ -57,18 +57,48 @@ function UnsupportedRegion({ countryCode }: { countryCode: string }) {
   );
 }
 
+function ProductDetailError() {
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
+      <SiteHeader />
+      <main className="flex-1 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
+          <h2 className="font-serif text-2xl font-light tracking-wide mb-4">
+            ОШИБКА ЗАГРУЗКИ
+          </h2>
+          <p className="text-sm text-[#2c211b]/60">
+            Не удалось загрузить товар. Пожалуйста, попробуйте позже.
+          </p>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
 export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
   const { handle } = await params;
 
-  const region = await resolveRegion();
+  let region;
+  try {
+    region = await resolveRegion();
+  } catch {
+    return <ProductDetailError />;
+  }
 
   if ("type" in region) {
     return <UnsupportedRegion countryCode={region.countryCode} />;
   }
 
-  const product = await getProduct(handle, region);
+  let product;
+  try {
+    product = await getProduct(handle, region);
+  } catch {
+    return <ProductDetailError />;
+  }
 
   if (!product) {
     notFound();

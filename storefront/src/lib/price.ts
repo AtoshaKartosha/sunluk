@@ -14,8 +14,8 @@ export interface PriceParts {
 /**
  * Format a Medusa calculated price for display.
  *
- * Medusa stores prices in minor units (cents/øre). This helper does NOT
- * calculate totals or convert currencies — it only formats a single
+ * Medusa Store API calculated prices are already returned as display-unit
+ * amounts. This helper does NOT calculate totals or convert currencies — it
  * `calculated_amount` + `currency_code` pair.
  *
  * Returns `null` when `amount` or `currency` is missing — callers should
@@ -27,13 +27,8 @@ export function formatPriceForDisplay(
 ): PriceParts | null {
   if (amount == null || !currency) return null;
 
-  // Convert minor units → major (e.g. 10900 → 109.00)
-  const major = amount / 100;
-
-  // Simple formatting: group thousands, always 2 decimal places.
-  // We use a locale-agnostic split so the caller can style whole/decimal independently.
-  const formatted = major.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
+  const formatted = amount.toLocaleString("en-US", {
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   });
 

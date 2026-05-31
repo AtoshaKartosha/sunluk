@@ -50,7 +50,9 @@ function availableValues(
   currentOptionId: string,
 ): string[] {
   // Collect raw option values from the product option definition.
-  const raw = options.find((o) => o.id === currentOptionId)?.values ?? [];
+  const raw = (options.find((o) => o.id === currentOptionId)?.values ?? []).map((value) =>
+    typeof value === "string" ? value : value.value,
+  );
 
   // Filter to values that exist on at least one variant compatible with other selections.
   const filtered = raw.filter((val) =>

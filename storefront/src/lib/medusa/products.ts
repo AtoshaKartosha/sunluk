@@ -27,10 +27,15 @@ export interface ProductDetailVariant extends ProductListVariant {
   options: ProductVariantOption[] | null;
 }
 
+export interface ProductOptionValue {
+  id: string;
+  value: string;
+}
+
 export interface ProductOption {
   id: string;
   title: string;
-  values: string[];
+  values: ProductOptionValue[] | string[];
 }
 
 export interface ProductImage {
@@ -90,6 +95,20 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
     );
   }
 }
+function normalizeProductOptions<T extends ProductDetail>(product: T): T {
+  if (!product.options) return product;
+
+  return {
+    ...product,
+    options: product.options.map((option) => ({
+      ...option,
+      values: option.values.map((value) =>
+        typeof value === "string" ? value : value.value,
+      ),
+    })),
+  };
+}
+
 
 /**
  * List published products for a resolved region.
@@ -139,5 +158,6 @@ export async function getProduct(
     products: ProductDetail[];
   };
 
-  return data.products[0] ?? null;
+  const product = data.products[0];
+  return product ? normalizeProductOptions(product) : null;
 }

@@ -55,7 +55,12 @@ function CatalogError() {
 }
 
 export default async function ProductsPage() {
-  const region = await resolveRegion();
+  let region;
+  try {
+    region = await resolveRegion();
+  } catch {
+    return <CatalogError />;
+  }
 
   if ("type" in region) {
     return <UnsupportedRegion countryCode={region.countryCode} />;
