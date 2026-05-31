@@ -10,7 +10,7 @@ Medusa v2 uses a modular architecture where commerce domains (Product, Cart, Ord
 
 * **State Authority**: Medusa is the single source of truth for all commerce state. The storefront (Next.js) only displays projections.
 * **Deterministic Decisions**: All commerce logic (calculating totals, applying discounts, checking inventory) must run inside Medusa workflows.
-
+* **Server and Worker Process Separation**: In production environments, Medusa v2 supports splitting execution into a **Server Process** (serving API requests and Admin UI) and a **Worker Process** (handling background jobs, event subscribers, and heavy workflows) to ensure horizontal scalability without compromising API latency.
 ---
 
 ## 2. Regions, Currencies, and Taxes
@@ -88,8 +88,9 @@ A Variant is a concrete combinatoric instance of product options (e.g., `Silver 
 ### 4.3 Inventory & Stock Locations
 Medusa v2 decouples product variants from physical inventory via the **Inventory Module** and **Stock Location Module**.
 1. **Inventory Item**: Each variant has a matching `inventory_item_id`.
-2. **Stock Location**: Represents a physical warehouse or fulfillment center (e.g., `European Warehouse`).
-3. **Inventory Levels**: Links an `Inventory Item` to a `Stock Location` and defines:
+2. **Multi-part and Shared Inventory**: A single product variant can be linked to *multiple* inventory items (e.g., a "Premium Eyewear Set" variant that tracks stock for both a "Glasses" item and a "Leather Case" item separately). Conversely, multiple variants across different products can share a single underlying physical inventory item.
+3. **Stock Location**: Represents a physical warehouse or fulfillment center (e.g., `European Warehouse`).
+4. **Inventory Levels**: Links an `Inventory Item` to a `Stock Location` and defines:
    * `stocked_quantity`: Total physical items present.
    * `reserved_quantity`: Items locked by active, unfulfilled carts/orders.
    * `allow_backorder`: Whether customers can buy items when stock is `0`.
@@ -129,8 +130,7 @@ Promotions can belong to a **Campaign**. Campaigns hold:
 ### 6.3 Discount Application Forms
 1. **Percentage**: Deducts a percentage from the matching target (e.g., `15% off`).
 2. **Fixed Amount**: Deducts a fixed monetary value (e.g., `10 EUR off`).
-3. **Free Shipping**: Sets shipping total to `0`.
-
+3. **Free Shipping**: Sets shipping total to `0`. Under the hood in Medusa v2, free shipping is handled as separate adjustment lines targeting the shipping methods directly.
 ### 6.4 Rules & Targeting
 Promotions use precise rule-matching schemas:
 * **Target rules**: What items the discount applies to (e.g., only products in `Chains` category).
