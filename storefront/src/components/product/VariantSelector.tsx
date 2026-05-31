@@ -8,11 +8,14 @@ import { useCart } from "@/components/cart/CartContext";
 interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
+  hideOptionButtons?: boolean;
   /** Callback invoked with resolved { productId?, variantId, quantity } when valid. */
   onSelectionChange?: (selection: {
     variantId: string | null;
     quantity: number;
     valid: boolean;
+    selectedOptions?: Record<string, string>;
+    onOptionChange?: (optionId: string, value: string) => void;
   }) => void;
 }
 
@@ -74,6 +77,7 @@ function availableValues(
 export function VariantSelector({
   options,
   variants,
+  hideOptionButtons = false,
   onSelectionChange,
 }: VariantSelectorProps) {
   const safeOptions = useMemo(() => options ?? [], [options]);
@@ -136,6 +140,10 @@ export function VariantSelector({
           v != null &&
           Number.isInteger(q) &&
           q > 0,
+        selectedOptions: s,
+        onOptionChange: (optionId: string, value: string) => {
+          setSelected((prev) => ({ ...prev, [optionId]: value }));
+        },
       });
     },
     [safeOptions, safeVariants, onSelectionChange],
@@ -194,45 +202,61 @@ export function VariantSelector({
   return (
     <div className="flex flex-col gap-5">
       {/* Options */}
-      {safeOptions.map((opt) => {
-        const values = availableValues(
-          safeOptions,
-          safeVariants,
-          selected,
-          opt.id,
-        );
-        return (
-          <fieldset key={opt.id} className="flex flex-col gap-2">
-            <legend className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/70">
-              {opt.title}
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {values.map((val) => {
-                const isSelected = selected[opt.id] === val;
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => handleOptionChange(opt.id, val)}
-                    className={[
-                      "px-4 py-2 text-sm font-medium tracking-wide uppercase border transition-all duration-200 cursor-pointer",
-                      isSelected
-                        ? "border-[#2f6f78] bg-[#2f6f78] text-white"
-                        : "border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50",
-                    ].join(" ")}
-                  >
-                    {val}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-        );
-      })}
+      {!hideOptionButtons &&
+        safeOptions.map((opt) => {
+          const values = availableValues(
+            safeOptions,
+            safeVariants,
+            selected,
+            opt.id,
+          );
+          const showLegend =
+            opt.title.toLowerCase() !== "material" && safeOptions.length > 1;
+          return (
+            <fieldset key={opt.id} className="flex flex-col gap-2">
+              {showLegend && (
+                <legend className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/70">
+                  {opt.title}
+                </legend>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {values.map((val) => {
+                  const isSelected = selected[opt.id] === val;
+                  const translations: Record<string, string> = {
+                    turquoise: "Бирюза",
+                    leather: "Кожа",
+                    silver: "Сталь",
+                    "gold-plated": "Золото",
+                    Turquoise: "Бирюза",
+                    Leather: "Кожа",
+                    Silver: "Сталь",
+                    "Gold-plated": "Золото",
+                  };
+                  const displayVal = translations[val] || val;
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => handleOptionChange(opt.id, val)}
+                      className={[
+                        "px-4 py-2 text-sm font-medium tracking-wide uppercase border transition-all duration-200 cursor-pointer",
+                        isSelected
+                          ? "border-[#2f6f78] bg-[#2f6f78] text-white"
+                          : "border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50",
+                      ].join(" ")}
+                    >
+                      {displayVal}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          );
+        })}
 
       {/* Variant price */}
       {resolved?.calculated_price && (
-        <div className="flex flex-col gap-1.5 pt-4 border-t border-[#2c211b]/10">
+        <div className={`flex flex-col gap-1.5 pt-4 ${hideOptionButtons ? "" : "border-t border-[#2c211b]/10"}`}>
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {quantity > 1 ? "Стоимость" : "Цена"}

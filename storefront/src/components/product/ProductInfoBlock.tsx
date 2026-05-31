@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { StoreProduct, CalculatedPrice } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
@@ -71,6 +71,28 @@ function AccordionItem({
 /* ------------------------------------------------------------------ */
 
 export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
+  const handleSelectionChange = useCallback((selection: {
+    variantId: string | null;
+    quantity: number;
+    valid: boolean;
+    selectedOptions?: Record<string, string>;
+    onOptionChange?: (optionId: string, value: string) => void;
+  }) => {
+    if (selection.onOptionChange) {
+      onOptionChangeRef.current = selection.onOptionChange;
+    }
+    if (selection.selectedOptions) {
+      const next = selection.selectedOptions;
+      setSelectedOptions((prev) => {
+        const isSame =
+          Object.keys(next).length === Object.keys(prev).length &&
+          Object.keys(next).every((k) => prev[k] === next[k]);
+        return isSame ? prev : next;
+      });
+    }
+  }, []);
   return (
     <div className="flex flex-col gap-6 lg:pt-4">
       {/* Title block */}
@@ -78,11 +100,53 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
         <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
           АКСЕССУАРЫ SUNLUK
         </span>
-        <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
-          {product.title}
-        </h1>
+        <div className="flex justify-between items-baseline gap-4 flex-wrap pb-2 border-b border-[#2c211b]/10">
+          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
+            {product.title}
+          </h1>
+          {/* Material Switchers directly on the right */}
+          <div className="flex gap-4 items-center">
+            {product.options?.map((opt) => {
+              if (opt.title.toLowerCase() !== "material") return null;
+              const values =
+                opt.values?.map((v) => (typeof v === "string" ? v : v.value)) ?? [];
+              return (
+                <div key={opt.id} className="flex gap-3">
+                  {values.map((val) => {
+                    const isSelected = selectedOptions[opt.id] === val;
+                    const translations: Record<string, string> = {
+                      turquoise: "Бирюза",
+                      leather: "Кожа",
+                      silver: "Сталь",
+                      "gold-plated": "Золото",
+                      Turquoise: "Бирюза",
+                      Leather: "Кожа",
+                      Silver: "Сталь",
+                      "Gold-plated": "Золото",
+                    };
+                    const displayVal = translations[val] || val;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => onOptionChangeRef.current?.(opt.id, val)}
+                        className={[
+                          "text-xs sm:text-sm font-serif tracking-wider uppercase border-b transition-all duration-200 cursor-pointer pb-0.5",
+                          isSelected
+                            ? "border-[#2f6f78] text-[#2f6f78] font-medium"
+                            : "border-transparent text-[#2c211b]/40 hover:text-[#2c211b] hover:border-[#2c211b]/30",
+                        ].join(" ")}
+                      >
+                        {displayVal}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
-
       {/* Price */}
       <div className="flex items-baseline gap-3">
         <PriceDisplay price={price} className="text-2xl font-light font-serif text-[#2c211b]" />
@@ -90,14 +154,12 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
           НДС включен
         </span>
       </div>
-
       {/* Brief description */}
       {product.description && (
         <div className="text-sm text-[#2c211b]/70 leading-relaxed max-w-xl">
           <p>{product.description}</p>
         </div>
       )}
-
       {/* Trust Badges list */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 border-t border-b border-[#2c211b]/10 my-2">
         <div className="flex items-center gap-3">
@@ -119,15 +181,15 @@ export function ProductInfoBlock({ product, price }: ProductInfoBlockProps) {
           </span>
         </div>
       </div>
-
       {/* Variant Selector */}
       <div className="pt-2">
         <VariantSelector
           options={product.options}
           variants={product.variants}
+          hideOptionButtons={true}
+          onSelectionChange={handleSelectionChange}
         />
       </div>
-
       {/* Collapsible Sections (UX Details) */}
       <div className="mt-4 border-t border-[#2c211b]/10">
         <AccordionItem title="МАТЕРИАЛЫ И УХОД">
