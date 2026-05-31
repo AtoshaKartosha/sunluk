@@ -4,8 +4,7 @@ import { getProduct, type ProductDetail } from "@/lib/medusa/products";
 import type { CalculatedPrice } from "@/components/product";
 import {
   ProductGallery,
-  PriceDisplay,
-  VariantSelector,
+  ProductInfoBlock,
 } from "@/components/product";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
@@ -122,32 +121,8 @@ export default async function ProductDetailPage({
                 />
               </div>
 
-              {/* Product Info */}
-              <div className="flex flex-col gap-6 lg:pt-4">
-                <div>
-                  <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
-                    АКСЕССУАРЫ SUNLUK
-                  </span>
-                  <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
-                    {product.title}
-                  </h1>
-                </div>
-
-                <PriceDisplay price={price} className="text-xl" />
-
-                {product.description && (
-                  <div className="text-sm text-[#2c211b]/70 leading-relaxed">
-                    <p>{product.description}</p>
-                  </div>
-                )}
-
-                <div className="border-t border-[#2c211b]/10 pt-6">
-                  <VariantSelector
-                    options={product.options}
-                    variants={product.variants}
-                  />
-                </div>
-              </div>
+              {/* Product Info (UX Optimized) */}
+              <ProductInfoBlock product={product} price={price} />
             </div>
           </div>
         </section>
