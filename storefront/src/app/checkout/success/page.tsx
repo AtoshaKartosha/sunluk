@@ -40,8 +40,8 @@ function SuccessContent() {
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
 
-      <main className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-lg mx-auto text-center">
+      <main className="flex-1 flex items-center justify-center px-4 py-16 sm:py-24 lg:py-32">
+        <div className="w-full max-w-lg mx-auto text-center my-auto">
           {/* Check icon */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-[#2f6f78] text-[#2f6f78] mb-8">
             <CheckIcon className="w-10 h-10" />
