@@ -34,7 +34,7 @@ export default async function initial_data_seed({
     ModuleRegistrationName.FULFILLMENT
   );
 
-  const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
+  const countries = ["gb", "de", "dk", "se", "fr", "es", "it", "ru"];
 
   logger.info("Seeding store data...");
   const {
@@ -87,13 +87,16 @@ export default async function initial_data_seed({
               currency_code: "usd",
               is_default: false,
             },
+            {
+              currency_code: "rub",
+              is_default: false,
+            },
           ],
           default_sales_channel_id: defaultSalesChannel.id,
         },
       ],
     },
   });
-
   logger.info("Seeding region data...");
   const { result: regionResult } = await createRegionsWorkflow(container).run({
     input: {
@@ -101,7 +104,13 @@ export default async function initial_data_seed({
         {
           name: "Europe",
           currency_code: "eur",
-          countries,
+          countries: ["de", "dk", "se", "fr", "es", "it", "gb"],
+          payment_providers: ["pp_system_default"],
+        },
+        {
+          name: "Russia",
+          currency_code: "rub",
+          countries: ["ru"],
           payment_providers: ["pp_system_default"],
         },
       ],
@@ -349,6 +358,10 @@ export default async function initial_data_seed({
                   amount: 54,
                   currency_code: "usd",
                 },
+                {
+                  amount: 4900,
+                  currency_code: "rub",
+                },
               ],
               manage_inventory: true,
             },
@@ -393,6 +406,10 @@ export default async function initial_data_seed({
                 {
                   amount: 65,
                   currency_code: "usd",
+                },
+                {
+                  amount: 5900,
+                  currency_code: "rub",
                 },
               ],
               manage_inventory: true,
@@ -439,6 +456,10 @@ export default async function initial_data_seed({
                   amount: 49,
                   currency_code: "usd",
                 },
+                {
+                  amount: 4500,
+                  currency_code: "rub",
+                },
               ],
               manage_inventory: true,
             },
@@ -483,6 +504,10 @@ export default async function initial_data_seed({
                 {
                   amount: 60,
                   currency_code: "usd",
+                },
+                {
+                  amount: 5500,
+                  currency_code: "rub",
                 },
               ],
               manage_inventory: true,
