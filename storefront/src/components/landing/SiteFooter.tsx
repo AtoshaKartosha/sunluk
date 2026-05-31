@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { InstagramIcon, SendIcon, YoutubeIcon } from "./icons";
 import { BRAND, FOOTER_GROUPS } from "@/lib/landing-data";
 
@@ -10,7 +11,7 @@ export function SiteFooter() {
           
           {/* Column 1: Logo and social */}
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
-            <a href="#" className="flex flex-col group">
+            <Link href="/" className="flex flex-col group">
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-none border-2 border-[#2c211b] flex items-center justify-center font-serif text-xs font-medium leading-none">
                   {BRAND.name.charAt(0)}
@@ -22,7 +23,7 @@ export function SiteFooter() {
               <span className="text-[8px] sm:text-[9px] tracking-[0.05em] uppercase text-[#2c211b]/70 font-semibold mt-1">
                 {BRAND.subtitle}
               </span>
-            </a>
+            </Link>
             <div className="flex items-center gap-4 mt-2">
               <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Instagram">
                 <InstagramIcon className="w-5 h-5" />

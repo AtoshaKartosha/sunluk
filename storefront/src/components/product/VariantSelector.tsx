@@ -3,11 +3,12 @@
 import { useState, useMemo, useCallback } from "react";
 import type { ProductOption, ProductVariant } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
+import { useCart } from "@/components/cart/CartContext";
 
 interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
-  /** Callback invoked with resolved { productId?, variantId, quantity } when valid. Not wired to cart yet. */
+  /** Callback invoked with resolved { productId?, variantId, quantity } when valid. */
   onSelectionChange?: (selection: {
     variantId: string | null;
     quantity: number;
@@ -80,6 +81,9 @@ export function VariantSelector({
 
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
+  const [addingInProgress, setAddingInProgress] = useState(false);
+
+  const { addItem } = useCart();
 
   const resolved = useMemo(
     () => resolveVariant(safeVariants, selected),
@@ -137,10 +141,22 @@ export function VariantSelector({
     if (!resolved) return "Недоступно";
     if (isInStock === false) return "Нет в наличии";
     if (!quantityValid) return "Укажите количество";
-    return "Корзина скоро";
+    return "В корзину";
   })();
 
   const cartReady = valid && isInStock !== false;
+
+  const handleAddToCart = async () => {
+    if (!resolved?.id || !cartReady || addingInProgress) return;
+    setAddingInProgress(true);
+    try {
+      await addItem(resolved.id, quantity);
+    } catch {
+      // Error is handled by the context; button stays enabled for retry.
+    } finally {
+      setAddingInProgress(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -199,9 +215,7 @@ export function VariantSelector({
             isInStock ? "text-[#2f6f78]" : "text-red-600",
           ].join(" ")}
         >
-          {isInStock
-            ? "В наличии"
-            : "Нет в наличии"}
+          {isInStock ? "В наличии" : "Нет в наличии"}
         </p>
       )}
 
@@ -248,15 +262,27 @@ export function VariantSelector({
       {/* CTA */}
       <button
         type="button"
-        disabled
-        aria-disabled="true"
-        title={cartReady ? "Добавление в корзину будет подключено в следующем шаге" : undefined}
+        disabled={!cartReady || addingInProgress}
+        aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
+        onClick={handleAddToCart}
         className={[
           "inline-flex items-center justify-center px-10 py-4 text-xs font-medium tracking-widest uppercase transition-all duration-300",
-          "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
+          cartReady && !addingInProgress
+            ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
+            : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
         ].join(" ")}
       >
-        {buttonCopy}
+        {addingInProgress ? (
+          <span className="flex items-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Добавление...
+          </span>
+        ) : (
+          buttonCopy
+        )}
       </button>
     </div>
   );

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Geist_Mono } from "next/font/google";
+import { CartProvider } from "@/components/cart/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
 import "./globals.css";
 const montserrat = Montserrat({
   variable: "--font-sans",
@@ -30,7 +32,12 @@ export default function RootLayout({
       lang="ru"
       className={`${montserrat.variable} ${montserratSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><main className="flex-1">{children}</main></body>
+      <body className="min-h-full flex flex-col">
+        <CartProvider>
+          <main className="flex-1">{children}</main>
+          <CartDrawer />
+        </CartProvider>
+      </body>
     </html>
   );
 }

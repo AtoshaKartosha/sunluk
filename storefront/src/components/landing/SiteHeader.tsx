@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { BRAND, NAV_LINKS } from "@/lib/landing-data";
 import { NavLink } from "@/components/landing/NavLink";
+import { useCart } from "@/components/cart/CartContext";
 
 /* ------------------------------------------------------------------ */
 /*  inline SVGs – only the icons this component needs                 */
@@ -44,18 +46,17 @@ const XIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-/* ------------------------------------------------------------------ */
-/*  SiteHeader                                                        */
-/* ------------------------------------------------------------------ */
 export default function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { itemCount, openCart } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-[#f4ebe6]/90 backdrop-blur-md border-b border-[#2c211b]/10 transition-all duration-300">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
 
         {/* Logo & Subtitle */}
-        <a href="#" className="flex flex-col group">
+        <Link href="/" className="flex flex-col group">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-none border-2 border-[#2c211b] flex items-center justify-center font-serif text-xs font-medium leading-none group-hover:bg-[#2c211b] group-hover:text-[#f4ebe6] transition-colors duration-300">
               S
@@ -67,7 +68,7 @@ export default function SiteHeader() {
           <span className="text-[8px] sm:text-[9px] tracking-[0.05em] uppercase text-[#2c211b]/70 font-semibold mt-1">
             {BRAND.subtitle}
           </span>
-        </a>
+        </Link>
 
         {/* Centered Navigation – desktop */}
         <nav className="hidden md:flex items-center gap-12 text-xs font-medium tracking-widest text-[#2c211b]">
@@ -84,12 +85,18 @@ export default function SiteHeader() {
           <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
             <UserIcon className="w-5 h-5" />
           </button>
-          <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 flex items-center gap-1.5 transition-colors duration-200" aria-label="Корзина">
+          <button
+            onClick={openCart}
+            className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 flex items-center gap-1.5 transition-colors duration-200"
+            aria-label="Корзина"
+          >
             <div className="relative">
               <ShoppingBagIcon className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 bg-[#2f6f78] text-white text-[9px] font-bold w-4.5 h-4.5 rounded-none flex items-center justify-center">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#2f6f78] text-white text-[9px] font-bold w-4.5 h-4.5 rounded-none flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
             </div>
           </button>
 
