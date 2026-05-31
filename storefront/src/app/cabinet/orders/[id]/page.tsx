@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, XCircle, Truck } from "lucide-react";
 import { getCustomerOrder, getServerAuthToken } from "@/lib/medusa/customer-server";
+import SiteHeader from "@/components/landing/SiteHeader";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 
 /* ------------------------------------------------------------------ */
 /*  Translations (RU primary)                                         */
@@ -168,8 +170,10 @@ export default async function OrderDetailPage({
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#f4ebe6] flex items-center justify-center px-4">
-        <div className="bg-white rounded-xl border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
+      <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
+        <SiteHeader />
+        <main className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="bg-white rounded-xl border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
           <Package className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
           <h1 className="text-lg font-semibold text-[#2c211b] mb-2">
             {T.notFound}
@@ -182,7 +186,9 @@ export default async function OrderDetailPage({
             <ArrowLeft className="w-4 h-4" />
             {T.goToCabinet}
           </Link>
-        </div>
+          </div>
+        </main>
+        <SiteFooter />
       </div>
     );
   }
@@ -206,8 +212,9 @@ export default async function OrderDetailPage({
   const billingAddrStr = formatAddress(billingAddress);
 
   return (
-    <div className="min-h-screen bg-[#f4ebe6]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
+    <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
+      <SiteHeader />
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Back link */}
         <Link
           href="/cabinet"
@@ -394,7 +401,8 @@ export default async function OrderDetailPage({
             </dl>
           </div>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

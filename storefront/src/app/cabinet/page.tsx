@@ -3,6 +3,8 @@ import Link from "next/link";
 import { User, ChevronRight, Clock, CheckCircle, AlertCircle, XCircle, ShoppingBag } from "lucide-react";
 import { getCustomer, getCustomerOrders } from "@/lib/medusa/customer-server";
 import { LogoutButton } from "./LogoutButton";
+import SiteHeader from "@/components/landing/SiteHeader";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 
 /* ------------------------------------------------------------------ */
 /*  Translations (RU primary)                                         */
@@ -105,8 +107,9 @@ export default async function CabinetPage() {
   const ordersResult = await getCustomerOrders(20, 0);
 
   return (
-    <div className="min-h-screen bg-[#f4ebe6]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
+    <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
+      <SiteHeader />
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
@@ -258,7 +261,8 @@ export default async function CabinetPage() {
             </div>
           )}
         </section>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }
