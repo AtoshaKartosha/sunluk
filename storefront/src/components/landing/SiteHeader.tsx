@@ -82,9 +82,9 @@ export default function SiteHeader() {
           <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Поиск">
             <SearchIcon className="w-5 h-5" />
           </button>
-          <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
+          <Link href="/cabinet" className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
             <UserIcon className="w-5 h-5" />
-          </button>
+          </Link>
           <button
             onClick={openCart}
             className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 flex items-center gap-1.5 transition-colors duration-200"
