@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import type { StoreProduct, CalculatedPrice } from "./types";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 
@@ -24,6 +24,14 @@ export interface ProductInfoBlockLabels {
   shippingItem3: string;
   shippingItem4: string;
   materialNames: Record<string, string>;
+  /** Labels forwarded to VariantSelector for button text, stock, qty, etc. */
+  variantSelector: import("./types").VariantSelectorLabels;
+  /** Breadcrumb link label. */
+  breadcrumbCatalog: string;
+  /** Social proof section labels. */
+  socialProof: import("./types").SocialProofLabels;
+  /** Product facts heading. */
+  factsHeading: string;
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
@@ -54,6 +62,40 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     Silver: "Сталь",
     "Gold-plated": "Золото",
   },
+  variantSelector: {
+    selectAllOptions: "Выберите все параметры",
+    unavailable: "Недоступно",
+    outOfStock: "Нет в наличии",
+    invalidQuantity: "Укажите количество",
+    addToCart: "В корзину",
+    quantity: "Количество",
+    decreaseQuantity: "Уменьшить количество",
+    increaseQuantity: "Увеличить количество",
+    price: "Цена",
+    cost: "Стоимость",
+    inStock: "В наличии",
+    lowStock: "Осталось мало",
+    backorderAvailable: "Доступно под заказ",
+    notAvailable: "Нет в наличии",
+    deliveryPromise: "Бесплатная доставка",
+    adding: "Добавление...",
+    materialNames: {
+      turquoise: "Бирюза",
+      leather: "Кожа",
+      silver: "Сталь",
+      "gold-plated": "Золото",
+      Turquoise: "Бирюза",
+      Leather: "Кожа",
+      Silver: "Сталь",
+      "Gold-plated": "Золото",
+    },
+  },
+  breadcrumbCatalog: "КАТАЛОГ",
+  socialProof: {
+    heading: "ПОКУПАТЕЛИ ГОВОРЯТ",
+    placeholder: "Отзывы скоро появятся. Станьте первым!",
+  },
+  factsHeading: "ХАРАКТЕРИСТИКИ",
 };
 
 interface ProductInfoBlockProps {
@@ -122,52 +164,153 @@ function AccordionItem({
 /*  ProductInfoBlock main component                                    */
 /* ------------------------------------------------------------------ */
 
-export function ProductInfoBlock({ product, price, labels = DEFAULT_LABELS }: ProductInfoBlockProps) {
+export function ProductInfoBlock({
+  product,
+  price,
+  labels = DEFAULT_LABELS,
+}: ProductInfoBlockProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
+  const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
+  const [selectionValid, setSelectionValid] = useState(false);
+  const [selectionQuantity, setSelectionQuantity] = useState(1);
+  const [mobileBarVisible, setMobileBarVisible] = useState(false);
+
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
-  const handleSelectionChange = useCallback((selection: {
-    variantId: string | null;
-    quantity: number;
-    valid: boolean;
-    selectedOptions?: Record<string, string>;
-    onOptionChange?: (optionId: string, value: string) => void;
-  }) => {
-    if (selection.onOptionChange) {
-      onOptionChangeRef.current = selection.onOptionChange;
-    }
-    if (selection.selectedOptions) {
-      const next = selection.selectedOptions;
-      setSelectedOptions((prev) => {
-        const isSame =
-          Object.keys(next).length === Object.keys(prev).length &&
-          Object.keys(next).every((k) => prev[k] === next[k]);
-        return isSame ? prev : next;
-      });
-    }
+
+  const handleSelectionChange = useCallback(
+    (selection: {
+      variantId: string | null;
+      quantity: number;
+      valid: boolean;
+      selectedOptions?: Record<string, string>;
+      onOptionChange?: (optionId: string, value: string) => void;
+      resolvedVariant?: ProductVariant | null;
+      stockInfo?: StockInfo | null;
+    }) => {
+      if (selection.onOptionChange) {
+        onOptionChangeRef.current = selection.onOptionChange;
+      }
+      if (selection.selectedOptions) {
+        const next = selection.selectedOptions;
+        setSelectedOptions((prev) => {
+          const isSame =
+            Object.keys(next).length === Object.keys(prev).length &&
+            Object.keys(next).every((k) => prev[k] === next[k]);
+          return isSame ? prev : next;
+        });
+      }
+      if (selection.resolvedVariant !== undefined) {
+        setResolvedVariant(selection.resolvedVariant);
+      }
+      if (selection.stockInfo !== undefined) {
+        setStockInfo(selection.stockInfo);
+      }
+      setSelectionValid(selection.valid);
+      setSelectionQuantity(selection.quantity);
+    },
+    [],
+  );
+
+  // Show mobile sticky bar when scrolled past the regular CTA.
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show mobile bar after 400px of scroll (roughly past the hero image).
+      setMobileBarVisible(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Which price to show in the headline: variant price if resolved, else cheapest.
+  const headlinePrice: CalculatedPrice | null =
+    resolvedVariant?.calculated_price ?? price;
+
+  // Derive structured facts from product data.
+  const facts: ProductFact[] = [];
+  if (resolvedVariant?.sku) {
+    facts.push({ label: "SKU", value: resolvedVariant.sku });
+  }
+  if (resolvedVariant?.title) {
+    facts.push({ label: "Variant", value: resolvedVariant.title });
+  }
+  // Add material facts from selected options.
+  for (const [optId, val] of Object.entries(selectedOptions)) {
+    const opt = product.options?.find((o) => o.id === optId);
+    if (opt) {
+      const displayVal = labels.materialNames[val] || val;
+      facts.push({ label: opt.title, value: displayVal });
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-6 lg:pt-4">
-      {/* Title block */}
-      <div>
-        <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
-          {labels.brand}
-        </span>
-        <div className="flex justify-between items-baseline gap-4 flex-wrap pb-2 border-b border-[#2c211b]/10">
-          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
+    <>
+      <div className="flex flex-col gap-6 lg:pt-4">
+        {/* Title block — brand + H1, no inline variant controls */}
+        <div>
+          <span className="text-[10px] font-medium tracking-[0.25em] uppercase text-[#2f6f78] block mb-2">
+            {labels.brand}
+          </span>
+          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase pb-2 border-b border-[#2c211b]/10">
             {product.title}
           </h1>
-          {/* Material Switchers directly on the right */}
-          <div className="flex gap-4 items-center">
-            {product.options?.map((opt) => {
-              if (opt.title.toLowerCase() !== "material") return null;
+        </div>
+
+        {/* Headline Price — variant-driven */}
+        <div className="flex items-baseline gap-3">
+          <PriceDisplay
+            price={headlinePrice}
+            className="text-2xl sm:text-3xl font-light font-serif text-[#2c211b]"
+          />
+          <span className="text-[10px] tracking-wide text-[#2c211b]/50 uppercase font-medium">
+            {labels.vatIncluded}
+          </span>
+        </div>
+
+        {/* Brief description */}
+        {product.description && (
+          <div className="text-sm text-[#2c211b]/70 leading-relaxed max-w-xl">
+            <p>{product.description}</p>
+          </div>
+        )}
+
+        {/* Trust Badges */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 border-t border-b border-[#2c211b]/10">
+          <div className="flex items-center gap-3">
+            <SparklesIcon />
+            <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
+              {labels.handmade}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <TruckIcon />
+            <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
+              {labels.delivery}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <GiftIcon />
+            <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
+              {labels.giftWrap}
+            </span>
+          </div>
+        </div>
+
+        {/* Material quick-switch chips (visual, inline with variant selector) */}
+        {product.options?.some((o) => o.title.toLowerCase() === "material") && (
+          product.options
+            ?.filter((o) => o.title.toLowerCase() === "material")
+            .map((opt) => {
               const values =
                 opt.values?.map((v) => (typeof v === "string" ? v : v.value)) ?? [];
               return (
-                <div key={opt.id} className="flex gap-3">
+                <div key={opt.id} className="flex flex-wrap gap-3 items-center">
+                  <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
+                    {opt.title}
+                  </span>
                   {values.map((val) => {
                     const isSelected = selectedOptions[opt.id] === val;
                     const displayVal = labels.materialNames[val] || val;
-
                     return (
                       <button
                         key={val}
@@ -186,77 +329,138 @@ export function ProductInfoBlock({ product, price, labels = DEFAULT_LABELS }: Pr
                   })}
                 </div>
               );
-            })}
+            })
+        )}
+
+        {/* Variant Selector (non-material options + purchase controls) */}
+        <div className="pt-2">
+          <VariantSelector
+            options={product.options}
+            variants={product.variants}
+            hideOptionButtons={product.options?.length === 1 && product.options[0].title.toLowerCase() === "material"}
+            labels={labels.variantSelector}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
+
+        {/* Stock + Delivery near CTA (redundant safety — VariantSelector already shows it) */}
+        {stockInfo && !selectionValid && (
+          <div className="flex flex-col gap-1 -mt-3">
+            <p
+              className={[
+                "text-xs font-medium",
+                stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
+              ].join(" ")}
+            >
+              {stockInfo.message}
+            </p>
+          </div>
+        )}
+
+        {/* Structured Product Facts */}
+        {facts.length > 0 && (
+          <div className="border-t border-[#2c211b]/10 pt-5">
+            <h3 className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60 mb-3">
+              {labels.factsHeading}
+            </h3>
+            <dl className="space-y-2">
+              {facts.map((f, i) => (
+                <div key={i} className="flex justify-between text-xs">
+                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{f.label}</dt>
+                  <dd className="text-[#2c211b] font-medium">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        {/* Social Proof Placeholder */}
+        <div className="border-t border-[#2c211b]/10 pt-5">
+          <h3 className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60 mb-3">
+            {labels.socialProof.heading}
+          </h3>
+          <div className="rounded-sm border border-dashed border-[#2c211b]/15 p-6 text-center">
+            <p className="text-xs text-[#2c211b]/40 italic">
+              {labels.socialProof.placeholder}
+            </p>
           </div>
         </div>
-      </div>
-      {/* Price */}
-      <div className="flex items-baseline gap-3">
-        <PriceDisplay price={price} className="text-2xl font-light font-serif text-[#2c211b]" />
-        <span className="text-[10px] tracking-wide text-[#2c211b]/50 uppercase font-medium">
-          {labels.vatIncluded}
-        </span>
-      </div>
-      {/* Brief description */}
-      {product.description && (
-        <div className="text-sm text-[#2c211b]/70 leading-relaxed max-w-xl">
-          <p>{product.description}</p>
-        </div>
-      )}
-      {/* Trust Badges list */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4 border-t border-b border-[#2c211b]/10 my-2">
-        <div className="flex items-center gap-3">
-          <SparklesIcon />
-          <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            {labels.handmade}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <TruckIcon />
-          <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            {labels.delivery}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <GiftIcon />
-          <span className="text-[11px] font-medium tracking-wide text-[#2c211b]/80 uppercase">
-            {labels.giftWrap}
-          </span>
-        </div>
-      </div>
-      {/* Variant Selector */}
-      <div className="pt-2">
-        <VariantSelector
-          options={product.options}
-          variants={product.variants}
-          hideOptionButtons={true}
-          onSelectionChange={handleSelectionChange}
-        />
-      </div>
-      {/* Collapsible Sections (UX Details) */}
-      <div className="mt-4 border-t border-[#2c211b]/10">
-        <AccordionItem title={labels.materialsHeading}>
-          <p>{labels.materialsText}</p>
-          <ul className="list-disc pl-4 space-y-1 mt-2">
-            <li>{labels.materialsItem1}</li>
-            <li>{labels.materialsItem2}</li>
-            <li>{labels.materialsItem3}</li>
-          </ul>
-          <p className="mt-2 text-[#2c211b]/50 italic">
-            {labels.materialsCare}
-          </p>
-        </AccordionItem>
 
-        <AccordionItem title={labels.shippingHeading}>
-          <p>{labels.shippingText}</p>
-          <ul className="list-disc pl-4 space-y-1 mt-2">
-            <li>{labels.shippingItem1}</li>
-            <li>{labels.shippingItem2}</li>
-            <li>{labels.shippingItem3}</li>
-            <li>{labels.shippingItem4}</li>
-          </ul>
-        </AccordionItem>
+        {/* Collapsible Sections */}
+        <div className="border-t border-[#2c211b]/10">
+          <AccordionItem title={labels.materialsHeading}>
+            <p>{labels.materialsText}</p>
+            <ul className="list-disc pl-4 space-y-1 mt-2">
+              <li>{labels.materialsItem1}</li>
+              <li>{labels.materialsItem2}</li>
+              <li>{labels.materialsItem3}</li>
+            </ul>
+            <p className="mt-2 text-[#2c211b]/50 italic">
+              {labels.materialsCare}
+            </p>
+          </AccordionItem>
+
+          <AccordionItem title={labels.shippingHeading}>
+            <p>{labels.shippingText}</p>
+            <ul className="list-disc pl-4 space-y-1 mt-2">
+              <li>{labels.shippingItem1}</li>
+              <li>{labels.shippingItem2}</li>
+              <li>{labels.shippingItem3}</li>
+              <li>{labels.shippingItem4}</li>
+            </ul>
+          </AccordionItem>
+        </div>
       </div>
-    </div>
+
+      {/* ---------- Sticky Mobile CTA Bar ---------- */}
+      <div
+        className={[
+          "fixed bottom-0 left-0 right-0 z-40 bg-[#f4ebe6]/95 backdrop-blur-md border-t border-[#2c211b]/10 px-4 py-3 lg:hidden transition-transform duration-300",
+          mobileBarVisible ? "translate-y-0" : "translate-y-full",
+        ].join(" ")}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col min-w-0">
+            {headlinePrice && (
+              <PriceDisplay
+                price={{
+                  calculated_amount: headlinePrice.calculated_amount * (selectionQuantity || 1),
+                  currency_code: headlinePrice.currency_code,
+                }}
+                className="text-sm font-semibold font-serif text-[#2c211b]"
+              />
+            )}
+            {stockInfo && (
+              <span
+                className={[
+                  "text-[10px] font-medium truncate",
+                  stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
+                ].join(" ")}
+              >
+                {stockInfo.message}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={!selectionValid || stockInfo?.available === false}
+            className={[
+              "flex-shrink-0 px-6 py-3 text-xs font-medium tracking-widest uppercase transition-all duration-300",
+              selectionValid && stockInfo?.available !== false
+                ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
+                : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
+            ].join(" ")}
+            onClick={() => {
+              // Scroll to and click the primary CTA.
+              const cta = document.getElementById("pdp-primary-cta");
+              cta?.scrollIntoView({ behavior: "smooth" });
+              cta?.click();
+            }}
+          >
+            {labels.variantSelector.addToCart}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

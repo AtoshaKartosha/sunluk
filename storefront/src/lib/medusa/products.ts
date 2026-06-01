@@ -38,6 +38,12 @@ export interface ProductOption {
   values: ProductOptionValue[] | string[];
 }
 
+export interface ProductCategory {
+  id: string;
+  name: string;
+  handle: string;
+}
+
 export interface ProductImage {
   id: string;
   url: string;
@@ -56,8 +62,10 @@ export interface ProductListItem {
 /** Full product shape for the detail page. */
 export interface ProductDetail extends ProductListItem {
   description: string | null;
+  subtitle: string | null;
   options: ProductOption[] | null;
   variants: ProductDetailVariant[] | null;
+  categories: ProductCategory[] | null;
 }
 
 export interface ProductListResult {
@@ -76,7 +84,7 @@ const LIST_FIELDS = [
 ].join(",");
 
 const DETAIL_FIELDS = [
-  "id", "title", "handle", "thumbnail", "description",
+  "id", "title", "handle", "thumbnail", "description", "subtitle",
   "*images",
   "*options",
   "*options.values",
@@ -84,6 +92,7 @@ const DETAIL_FIELDS = [
   "*variants.calculated_price",
   "*variants.options",
   "+variants.inventory_quantity",
+  "*categories",
 ].join(",");
 
 // ---- Helpers ----
@@ -166,4 +175,36 @@ export async function getProduct(
 
   const product = data.products[0];
   return product ? normalizeProductOptions(product) : null;
+}
+
+/**
+ * List related products for a PDP, excluding the given handle.
+ *
+ * Falls back to recent products when no category filter is available.
+ * Returns at most `limit` products (default 4).
+ */
+export async function listRelatedProducts(
+  region: ResolvedRegion,
+  excludeHandle: string,
+  medusaLocale?: string,
+  limit = 4,
+): Promise<ProductListItem[]> {
+  ensureRegion(region);
+
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
+
+  const data = (await sdk.store.product.list({
+    region_id: region.regionId,
+    fields: LIST_FIELDS,
+    limit: limit + 1, // fetch one extra in case the excluded product appears
+  })) as unknown as {
+    products: ProductListItem[];
+    count: number;
+  };
+
+  return data.products
+    .filter((p) => p.handle !== excludeHandle)
+    .slice(0, limit);
 }

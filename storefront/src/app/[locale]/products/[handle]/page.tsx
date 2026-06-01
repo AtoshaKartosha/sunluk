@@ -1,12 +1,21 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveRegion } from "@/lib/medusa/regions";
-import { getProduct } from "@/lib/medusa/products";
+import { getProduct, listRelatedProducts } from "@/lib/medusa/products";
 import type { ProductDetail } from "@/lib/medusa/products";
-import type { CalculatedPrice, ProductInfoBlockLabels } from "@/components/product";
+import {
+  projectVariant,
+  cheapestVariantPrice,
+  type VariantProjection,
+} from "@/lib/price";
+import type { ProductInfoBlockLabels } from "@/components/product";
 import {
   ProductGallery,
   ProductInfoBlock,
+  ProductBreadcrumb,
+  ProductRelatedProducts,
+  ProductJsonLd,
   LocaleSwitcher,
 } from "@/components/product";
 import SiteHeader from "@/components/landing/SiteHeader";
@@ -21,24 +30,66 @@ interface Props {
   params: Promise<{ locale: string; handle: string }>;
 }
 
-function cheapestPrice(product: ProductDetail): CalculatedPrice | null {
-  const variants = product.variants;
-  if (!variants || variants.length === 0) return null;
+// ---- generateMetadata ----
 
-  let best: number | null = null;
-  let bestPrice: CalculatedPrice | null = null;
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { locale, handle } = await params;
+  const resolvedLocale = locale as Locale;
+  const medusaLocale = toMedusaLocale(resolvedLocale);
 
-  for (const v of variants) {
-    const amt = v.calculated_price?.calculated_amount;
-    if (amt == null) continue;
-    if (best === null || amt < best) {
-      best = amt;
-      bestPrice = v.calculated_price!;
-    }
+  let region;
+  try {
+    region = await resolveRegion(undefined, medusaLocale);
+  } catch {
+    return { title: "Product" };
   }
 
-  return bestPrice;
+  if ("type" in region) {
+    return { title: "Product" };
+  }
+
+  let product: ProductDetail | null = null;
+  try {
+    product = await getProduct(handle, region, medusaLocale);
+  } catch {
+    // metadata is best-effort; fall through
+  }
+
+  if (!product) {
+    return { title: "Product Not Found" };
+  }
+
+  const projection = projectVariant(
+    product.variants,
+    product.options,
+  );
+
+  const priceText = projection.price
+    ? `${projection.price.calculated_amount} ${projection.price.currency_code.toUpperCase()}`
+    : "";
+
+  const title = priceText
+    ? `${product.title} — ${priceText}`
+    : product.title;
+
+  return {
+    title,
+    description: product.description ?? product.title,
+    openGraph: {
+      title: product.title,
+      description: product.description ?? undefined,
+      images: product.thumbnail
+        ? [{ url: product.thumbnail }]
+        : product.images?.[0]?.url
+          ? [{ url: product.images[0].url }]
+          : undefined,
+    },
+  };
 }
+
+// ---- Page chrome helpers ----
 
 function getPageChrome(locale: Locale) {
   return {
@@ -47,6 +98,8 @@ function getPageChrome(locale: Locale) {
     copyright: getCopyright(locale),
   };
 }
+
+// ---- Sub-renderers ----
 
 function UnsupportedRegion({
   locale,
@@ -124,11 +177,14 @@ function ProductDetailState({
   );
 }
 
+// ---- Main page component ----
+
 export default async function ProductDetailPage({ params }: Props) {
   const { locale, handle } = await params;
   const resolvedLocale = locale as Locale;
   const medusaLocale = toMedusaLocale(resolvedLocale);
   const t = await getTranslations({ locale, namespace: "catalog" });
+
   let region;
   try {
     region = await resolveRegion(undefined, medusaLocale);
@@ -179,7 +235,30 @@ export default async function ProductDetailPage({ params }: Props) {
     );
   }
 
-  const price = cheapestPrice(product);
+  // ---- Data projections ----
+
+  const projection: VariantProjection = projectVariant(
+    product.variants,
+    product.options,
+  );
+
+  // Fallback headline price from cheapest variant when no projection resolves.
+  const headlinePrice = projection.price ?? cheapestVariantPrice(product.variants);
+
+  // Related products (best-effort; failure is silent).
+  let relatedProducts: ProductDetail[] = [];
+  try {
+    relatedProducts = (await listRelatedProducts(
+      region,
+      handle,
+      medusaLocale,
+      4,
+    )) as ProductDetail[];
+  } catch {
+    // safe to leave empty
+  }
+
+  // ---- Labels ----
 
   const pt = await getTranslations({ locale, namespace: "product" });
   const productLabels: ProductInfoBlockLabels = {
@@ -210,16 +289,68 @@ export default async function ProductDetailPage({ params }: Props) {
       Silver: pt("silver"),
       "Gold-plated": pt("gold-plated"),
     },
+    variantSelector: {
+      selectAllOptions: pt("selectAllOptions"),
+      unavailable: pt("unavailable"),
+      outOfStock: pt("outOfStock"),
+      invalidQuantity: pt("invalidQuantity"),
+      addToCart: pt("addToCart"),
+      quantity: pt("quantity"),
+      decreaseQuantity: pt("decreaseQuantity"),
+      increaseQuantity: pt("increaseQuantity"),
+      price: pt("price"),
+      cost: pt("cost"),
+      inStock: pt("inStock"),
+      lowStock: pt("lowStock"),
+      backorderAvailable: pt("backorderAvailable"),
+      notAvailable: pt("notAvailable"),
+      deliveryPromise: pt("deliveryPromise"),
+      adding: pt("adding"),
+      materialNames: {
+        turquoise: pt("turquoise"),
+        leather: pt("leather"),
+        silver: pt("silver"),
+        "gold-plated": pt("gold-plated"),
+        Turquoise: pt("turquoise"),
+        Leather: pt("leather"),
+        Silver: pt("silver"),
+        "Gold-plated": pt("gold-plated"),
+      },
+    },
+    breadcrumbCatalog: pt("breadcrumbCatalog"),
+    socialProof: {
+      heading: pt("socialHeading"),
+      placeholder: pt("socialPlaceholder"),
+    },
+    factsHeading: pt("factsHeading"),
   };
+
+  // ---- Render ----
+
+  const canonicalUrl = `https://sunluk.com/${resolvedLocale}/products/${handle}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
+      {/* JSON-LD in head-adjacent position */}
+      <ProductJsonLd
+        title={product.title}
+        description={product.description}
+        imageUrl={product.thumbnail ?? product.images?.[0]?.url ?? null}
+        projection={projection}
+        url={canonicalUrl}
+      />
+
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
       <main className="flex-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4 flex justify-end">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4 flex justify-between items-center">
+          <ProductBreadcrumb
+            title={product.title}
+            locale={resolvedLocale}
+            catalogLabel={pt("breadcrumbCatalog")}
+          />
           <LocaleSwitcher />
         </div>
-        <section className="pt-8 sm:pt-16 pb-16">
+        <section className="pt-4 sm:pt-8 pb-16">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
             <div className="grid grid-cols-1 lg:grid-cols-[42%_1fr] gap-12 lg:gap-20 items-start">
               <div className="w-full max-w-[460px] sm:max-w-[500px] mx-auto lg:mx-0">
@@ -230,8 +361,19 @@ export default async function ProductDetailPage({ params }: Props) {
                 />
               </div>
 
-              <ProductInfoBlock product={product} price={price} labels={productLabels} />
+              <ProductInfoBlock
+                product={product}
+                price={headlinePrice}
+                labels={productLabels}
+              />
             </div>
+
+            {/* Related products */}
+            <ProductRelatedProducts
+              products={relatedProducts}
+              locale={resolvedLocale}
+              heading={pt("relatedHeading")}
+            />
           </div>
         </section>
       </main>

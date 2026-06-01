@@ -52,3 +52,53 @@ export interface StoreProduct {
   updated_at?: string
   metadata?: Record<string, unknown> | null
 }
+
+/** Stock/delivery information derived from a resolved variant. */
+export interface StockInfo {
+  /** Whether the variant is currently purchasable (in stock or backorderable). */
+  available: boolean
+  /** Label key: "inStock" | "lowStock" | "outOfStock" | "backorderAvailable" */
+  status: "inStock" | "lowStock" | "outOfStock" | "backorderAvailable"
+  /** Human-readable stock message e.g. "Only 2 left", "Backorder: ships in 7–10 days". */
+  message: string
+  /** Delivery promise message e.g. "Free delivery by Friday" */
+  deliveryPromise: string | null
+}
+
+/** A structured product fact row. */
+export interface ProductFact {
+  label: string
+  value: string
+}
+
+/** Labels for the VariantSelector component. */
+export interface VariantSelectorLabels {
+  selectAllOptions: string
+  unavailable: string
+  outOfStock: string
+  invalidQuantity: string
+  addToCart: string
+  quantity: string
+  decreaseQuantity: string
+  increaseQuantity: string
+  price: string
+  cost: string
+  inStock: string
+  lowStock: string
+  backorderAvailable: string
+  notAvailable: string
+  deliveryPromise: string
+  adding: string
+  materialNames: Record<string, string>
+}
+
+/** Labels for social-proof section. */
+export interface SocialProofLabels {
+  heading: string
+  placeholder: string
+}
+
+/** Labels for product facts section. */
+export interface ProductFactsLabels {
+  heading: string
+}

@@ -3,37 +3,16 @@ import Link from "next/link";
 import type { StoreProduct } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import type { Locale } from "@/i18n/routing";
+import { cheapestVariantPrice } from "@/lib/price";
 
 interface ProductCardProps {
   product: StoreProduct;
   locale?: Locale;
 }
 
-/**
- * Resolves the cheapest variant's calculated_price, or null.
- */
-function cheapestPrice(product: StoreProduct) {
-  const variants = product.variants;
-  if (!variants || variants.length === 0) return null;
-
-  let best: number | null = null;
-  let bestPrice = null;
-
-  for (const v of variants) {
-    const amt = v.calculated_price?.calculated_amount;
-    if (amt == null) continue;
-    if (best === null || amt < best) {
-      best = amt;
-      bestPrice = v.calculated_price!;
-    }
-  }
-
-  return bestPrice;
-}
-
 export function ProductCard({ product, locale }: ProductCardProps) {
   const src = product.thumbnail ?? product.images?.[0]?.url;
-  const price = cheapestPrice(product);
+  const price = cheapestVariantPrice(product.variants);
 
   const href = locale
     ? `/${locale}/products/${product.handle}`

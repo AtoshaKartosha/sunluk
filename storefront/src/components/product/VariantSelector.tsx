@@ -1,14 +1,22 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import type { ProductOption, ProductVariant } from "./types";
+import type {
+  ProductOption,
+  ProductVariant,
+  StockInfo,
+} from "./types";
+import type { VariantSelectorLabels } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { useCart } from "@/components/cart/CartContext";
 
-interface VariantSelectorProps {
+export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
+  /** When true, hides the option-picking UI (options are managed externally). */
   hideOptionButtons?: boolean;
+  /** Localized labels for all UI copy. */
+  labels: VariantSelectorLabels;
   /** Callback invoked with resolved { productId?, variantId, quantity } when valid. */
   onSelectionChange?: (selection: {
     variantId: string | null;
@@ -16,6 +24,10 @@ interface VariantSelectorProps {
     valid: boolean;
     selectedOptions?: Record<string, string>;
     onOptionChange?: (optionId: string, value: string) => void;
+    /** The resolved variant, if any. */
+    resolvedVariant?: ProductVariant | null;
+    /** Derived stock/delivery info. */
+    stockInfo?: StockInfo | null;
   }) => void;
 }
 
@@ -35,10 +47,8 @@ function resolveVariant(
 
   return (
     variants.find((v) => {
-      const vOpts = v.options;
-      if (!vOpts || vOpts.length === 0) return false;
-      if (vOpts.length !== Object.keys(selected).length) return false;
-      return vOpts.every((vo) => selected[vo.option_id] === vo.value);
+      if (!v.options || v.options.length === 0) return false;
+      return v.options.every((o) => selected[o.option_id] === o.value);
     }) ?? null
   );
 }
@@ -53,31 +63,92 @@ function availableValues(
   selected: Record<string, string>,
   currentOptionId: string,
 ): string[] {
-  // Collect raw option values from the product option definition.
-  const raw = (options.find((o) => o.id === currentOptionId)?.values ?? []).map((value) =>
-    typeof value === "string" ? value : value.value,
-  );
+  const rawValues = options
+    .find((o) => o.id === currentOptionId)
+    ?.values?.map((v) => (typeof v === "string" ? v : v.value)) ?? [];
 
-  // Filter to values that exist on at least one variant compatible with other selections.
-  const filtered = raw.filter((val) =>
-    variants.some((v) => {
-      const vOpts = v.options;
-      if (!vOpts) return false;
-      return vOpts.every((vo) => {
-        if (vo.option_id === currentOptionId) return vo.value === val;
-        const sel = selected[vo.option_id];
-        return sel == null || sel === vo.value;
-      });
-    }),
-  );
+  if (rawValues.length === 0) return [];
 
-  return filtered.length > 0 ? filtered : raw;
+  return rawValues.filter((val) => {
+    return variants.some((v) => {
+      const vOpts = v.options ?? [];
+      const match = vOpts.find((o) => o.option_id === currentOptionId);
+      if (!match || match.value !== val) return false;
+
+      // Check that this variant is compatible with other current selections.
+      for (const [optId, optVal] of Object.entries(selected)) {
+        if (optId === currentOptionId) continue;
+        const otherMatch = vOpts.find((o) => o.option_id === optId);
+        if (!otherMatch || otherMatch.value !== optVal) return false;
+      }
+      return true;
+    });
+  });
+}
+
+/**
+ * Derive stock/delivery messaging from a variant for display near CTA.
+ */
+function deriveStockInfo(
+  variant: ProductVariant | null,
+  labels: VariantSelectorLabels,
+): StockInfo | null {
+  if (!variant) return null;
+
+  const qty = variant.inventory_quantity ?? 0;
+  const managed = variant.manage_inventory !== false;
+  const backorderable = variant.allow_backorder === true;
+
+  if (!managed) {
+    // No inventory tracking — assume available.
+    return {
+      available: true,
+      status: "inStock",
+      message: labels.inStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (qty > 5) {
+    return {
+      available: true,
+      status: "inStock",
+      message: labels.inStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (qty > 0) {
+    return {
+      available: true,
+      status: "lowStock",
+      message: labels.lowStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (backorderable) {
+    return {
+      available: true,
+      status: "backorderAvailable",
+      message: labels.backorderAvailable,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  return {
+    available: false,
+    status: "outOfStock",
+    message: labels.notAvailable,
+    deliveryPromise: null,
+  };
 }
 
 export function VariantSelector({
   options,
   variants,
   hideOptionButtons = false,
+  labels,
   onSelectionChange,
 }: VariantSelectorProps) {
   const safeOptions = useMemo(() => options ?? [], [options]);
@@ -102,10 +173,8 @@ export function VariantSelector({
       });
 
       if (inStockValues.length === 1) {
-        // Rule 3: only one material/value in stock out of several -> select it
         initial[opt.id] = inStockValues[0];
       } else if (optionValues.length > 0) {
-        // Rule 1 & 2: single or multiple overall -> select first in-stock or first overall
         const defaultValue =
           inStockValues.length > 0 ? inStockValues[0] : optionValues[0];
         initial[opt.id] = defaultValue;
@@ -123,6 +192,11 @@ export function VariantSelector({
     [safeVariants, selected],
   );
 
+  const stockInfo = useMemo(
+    () => deriveStockInfo(resolved, labels),
+    [resolved, labels],
+  );
+
   const allOptionsSelected = safeOptions.every((o) => selected[o.id] != null);
   const quantityValid = Number.isInteger(quantity) && quantity > 0;
 
@@ -132,6 +206,7 @@ export function VariantSelector({
   const stableCallback = useCallback(
     (s: typeof selected, q: number) => {
       const v = resolveVariant(safeVariants, s);
+      const si = deriveStockInfo(v, labels);
       onSelectionChange?.({
         variantId: v?.id ?? null,
         quantity: q,
@@ -144,14 +219,18 @@ export function VariantSelector({
         onOptionChange: (optionId: string, value: string) => {
           setSelected((prev) => ({ ...prev, [optionId]: value }));
         },
+        resolvedVariant: v ?? null,
+        stockInfo: si,
       });
     },
-    [safeOptions, safeVariants, onSelectionChange],
+    [safeOptions, safeVariants, onSelectionChange, labels],
   );
+
   // Notify parent of initial selection on mount.
   useEffect(() => {
     stableCallback(selected, quantity);
-  }, [stableCallback, selected, quantity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableCallback]);
 
   const handleOptionChange = useCallback(
     (optionId: string, value: string) => {
@@ -176,16 +255,16 @@ export function VariantSelector({
   const isInStock = resolved
     ? resolved.manage_inventory === false || (resolved.inventory_quantity ?? 0) > 0
     : null;
+  const isBackorderable = resolved?.allow_backorder === true;
+  const cartReady = valid && (isInStock !== false || isBackorderable);
 
   const buttonCopy = (() => {
-    if (!allOptionsSelected) return "Выберите все параметры";
-    if (!resolved) return "Недоступно";
-    if (isInStock === false) return "Нет в наличии";
-    if (!quantityValid) return "Укажите количество";
-    return "В корзину";
+    if (!allOptionsSelected) return labels.selectAllOptions;
+    if (!resolved) return labels.unavailable;
+    if (isInStock === false && !isBackorderable) return labels.outOfStock;
+    if (!quantityValid) return labels.invalidQuantity;
+    return labels.addToCart;
   })();
-
-  const cartReady = valid && isInStock !== false;
 
   const handleAddToCart = async () => {
     if (!resolved?.id || !cartReady || addingInProgress) return;
@@ -222,17 +301,7 @@ export function VariantSelector({
               <div className="flex flex-wrap gap-2">
                 {values.map((val) => {
                   const isSelected = selected[opt.id] === val;
-                  const translations: Record<string, string> = {
-                    turquoise: "Бирюза",
-                    leather: "Кожа",
-                    silver: "Сталь",
-                    "gold-plated": "Золото",
-                    Turquoise: "Бирюза",
-                    Leather: "Кожа",
-                    Silver: "Сталь",
-                    "Gold-plated": "Золото",
-                  };
-                  const displayVal = translations[val] || val;
+                  const displayVal = labels.materialNames[val] || val;
                   return (
                     <button
                       key={val}
@@ -259,7 +328,7 @@ export function VariantSelector({
         <div className={`flex flex-col gap-1.5 pt-4 ${hideOptionButtons ? "" : "border-t border-[#2c211b]/10"}`}>
           <div className="flex items-baseline justify-between">
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
-              {quantity > 1 ? "Стоимость" : "Цена"}
+              {quantity > 1 ? labels.cost : labels.price}
             </span>
             <div className="flex items-baseline gap-2">
               {quantity > 1 && (
@@ -279,16 +348,23 @@ export function VariantSelector({
         </div>
       )}
 
-      {/* Stock note */}
-      {resolved && (
-        <p
-          className={[
-            "text-xs font-medium",
-            isInStock ? "text-[#2f6f78]" : "text-red-600",
-          ].join(" ")}
-        >
-          {isInStock ? "В наличии" : "Нет в наличии"}
-        </p>
+      {/* Stock + delivery messaging */}
+      {stockInfo && (
+        <div className="flex flex-col gap-1">
+          <p
+            className={[
+              "text-xs font-medium",
+              stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
+            ].join(" ")}
+          >
+            {stockInfo.message}
+          </p>
+          {stockInfo.deliveryPromise && stockInfo.available && (
+            <p className="text-xs text-[#2c211b]/50">
+              {stockInfo.deliveryPromise}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Quantity */}
@@ -297,7 +373,7 @@ export function VariantSelector({
           htmlFor="variant-qty"
           className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/70"
         >
-          Количество
+          {labels.quantity}
         </label>
         <div className="flex items-center gap-2">
           <button
@@ -305,7 +381,7 @@ export function VariantSelector({
             onClick={() => handleQuantityChange(quantity - 1)}
             disabled={quantity <= 1}
             className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Уменьшить количество"
+            aria-label={labels.decreaseQuantity}
           >
             −
           </button>
@@ -324,7 +400,7 @@ export function VariantSelector({
             type="button"
             onClick={() => handleQuantityChange(quantity + 1)}
             className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 transition-colors"
-            aria-label="Увеличить количество"
+            aria-label={labels.increaseQuantity}
           >
             +
           </button>
@@ -333,6 +409,7 @@ export function VariantSelector({
 
       {/* CTA */}
       <button
+        id="pdp-primary-cta"
         type="button"
         disabled={!cartReady || addingInProgress}
         aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
@@ -350,7 +427,7 @@ export function VariantSelector({
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Добавление...
+            {labels.adding}
           </span>
         ) : (
           buttonCopy
