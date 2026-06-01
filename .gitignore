@@ -30,3 +30,9 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Agent files and lock files
+.agents/
+.omp/
+skills-lock.json
+
