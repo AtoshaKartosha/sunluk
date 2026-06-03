@@ -108,7 +108,7 @@ export default async function initial_data_seed({
       code: ["ru-RU", "en-US"],
     });
     const existingCodes = new Set(existing.map((l) => l.code));
-    const toCreate = [];
+    const toCreate: { code: string; name: string }[] = [];
     if (!existingCodes.has("ru-RU")) {
       toCreate.push({ code: "ru-RU", name: "Russian (Russia)" });
     }
