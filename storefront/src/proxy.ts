@@ -1,39 +1,48 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
+import { type NextRequest, NextResponse } from "next/server";
 
-const handleI18n = createMiddleware(routing);
-
-export async function proxy(request: NextRequest): Promise<NextResponse | undefined> {
+/**
+ * Redirect non-locale-prefixed paths to the default locale.
+ *
+ * With localePrefix: "always", all routes live under `/[locale]/`.
+ * This middleware ensures `/login`, `/`, `/cabinet` etc.
+ * redirect to `/ru/login`, `/ru`, `/ru/cabinet`.
+ */
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isCatalogPath = pathname.startsWith("/products");
-  const localizedCatalogMatch = pathname.match(/^\/([^/]+)\/products(\/.*)?$/);
 
-  if (localizedCatalogMatch) {
-    const [, locale, suffix = ""] = localizedCatalogMatch;
-
-    if (locale !== "ru" && locale !== "en") {
-      const url = new URL(`/ru/products${suffix}`, request.url);
-      return NextResponse.redirect(url, 308);
-    }
-
-    return handleI18n(request);
+  // Already locale-prefixed or a special path
+  if (
+    pathname.startsWith("/ru/") ||
+    pathname.startsWith("/en/") ||
+    pathname === "/ru" ||
+    pathname === "/en"
+  ) {
+    return NextResponse.next();
   }
 
-  if (isCatalogPath) {
-    const url = new URL(`/ru${pathname}`, request.url);
-    return NextResponse.redirect(url, 308);
+  // Static assets and Next.js internals
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/media") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
   }
 
-  return undefined;
+  // Redirect to default locale
+  const url = new URL(`/ru${pathname}`, request.url);
+  return NextResponse.redirect(url, 308);
 }
 
 export const config = {
   matcher: [
-    "/products",
-    "/products/:path*",
-    "/:locale/products",
-    "/:locale/products/:path*",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

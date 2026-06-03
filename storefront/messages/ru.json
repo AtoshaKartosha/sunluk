@@ -1,4 +1,9 @@
 {
+  "home": {
+    "collectionLabel": "ИЗЫСКАННЫЙ ВЫБОР",
+    "collectionHeading": "КОЛЛЕКЦИЯ SUNLUK",
+    "collectionCta": "ВЫБРАТЬ АКСЕССУАР"
+  },
   "catalog": {
     "breadcrumb": "КАТАЛОГ",
     "heading": "ВСЕ ТОВАРЫ",
@@ -78,5 +83,198 @@
   "localeSwitcher": {
     "ru": "RU",
     "en": "EN"
+  },
+  "auth": {
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
+    "login": {
+      "title": "Вход в аккаунт",
+      "subtitle": "Добро пожаловать",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "loginButton": "Войти",
+      "loggingIn": "Вход...",
+      "noAccount": "Нет аккаунта?",
+      "registerLink": "Зарегистрироваться",
+      "showPassword": "Показать пароль",
+      "hidePassword": "Скрыть пароль",
+      "validation": {
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Некорректный email",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMinLength": "Пароль должен содержать минимум 6 символов"
+      },
+      "errors": {
+        "invalidCredentials": "Неверный email или пароль. Попробуйте снова.",
+        "network": "Ошибка соединения. Проверьте интернет."
+      }
+    },
+    "register": {
+      "title": "Регистрация",
+      "subtitle": "Создайте аккаунт",
+      "firstNameLabel": "Имя",
+      "firstNamePlaceholder": "Иван",
+      "lastNameLabel": "Фамилия",
+      "lastNamePlaceholder": "Петров",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "registerButton": "Зарегистрироваться",
+      "registering": "Регистрация...",
+      "hasAccount": "Уже есть аккаунт?",
+      "loginLink": "Войти",
+      "showPassword": "Показать пароль",
+      "hidePassword": "Скрыть пароль",
+      "validation": {
+        "firstNameRequired": "Имя обязательно",
+        "lastNameRequired": "Фамилия обязательна",
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Некорректный email",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMinLength": "Пароль должен содержать минимум 6 символов"
+      },
+      "errors": {
+        "network": "Ошибка соединения. Проверьте интернет.",
+        "registrationFailed": "Не удалось создать аккаунт. Возможно, email уже занят.",
+        "emailAlreadyExists": "Аккаунт с таким email уже существует."
+      }
+    }
+  },
+  "cabinet": {
+    "title": "Личный кабинет",
+    "greeting": "Здравствуйте",
+    "profileSection": "Профиль",
+    "emailLabel": "Email",
+    "nameLabel": "Имя",
+    "noName": "Не указано",
+    "ordersSection": "Мои заказы",
+    "noOrders": "У вас пока нет заказов.",
+    "browseCatalog": "Перейти в каталог",
+    "orderId": "Заказ №",
+    "date": "Дата",
+    "status": "Статус",
+    "payment": "Оплата",
+    "total": "Сумма",
+    "viewDetails": "Подробнее",
+    "logout": "Выйти",
+    "orderStatus": {
+      "pending": "Ожидает",
+      "received": "Получен",
+      "confirmed": "Подтверждён",
+      "processing": "В обработке",
+      "shipped": "Отправлен",
+      "delivered": "Доставлен",
+      "canceled": "Отменён",
+      "declined": "Отклонён",
+      "requires_action": "Требует действия"
+    },
+    "paymentStatus": {
+      "captured": "Оплачен",
+      "authorized": "Авторизован",
+      "pending": "Ожидает",
+      "not_paid": "Не оплачен",
+      "refunded": "Возвращён",
+      "partially_refunded": "Частично возвращён",
+      "canceled": "Отменён",
+      "requires_action": "Требует действия"
+    },
+    "order": {
+      "backToCabinet": "В кабинет",
+      "orderTitle": "Заказ",
+      "notFound": "Заказ не найден",
+      "notFoundDesc": "Возможно, он не существует или не принадлежит вашему аккаунту.",
+      "goToCabinet": "Вернуться в кабинет",
+      "status": "Статус",
+      "payment": "Оплата",
+      "date": "Дата оформления",
+      "itemsSection": "Товары в заказе",
+      "quantity": "Кол-во",
+      "price": "Цена",
+      "subtotal": "Сумма",
+      "totalsSection": "Итого",
+      "itemSubtotal": "Товары",
+      "shipping": "Доставка",
+      "tax": "Налог",
+      "discount": "Скидка",
+      "total": "Всего",
+      "shippingAddress": "Адрес доставки",
+      "billingAddress": "Платёжный адрес",
+      "noAddress": "Не указан",
+      "untitledItem": "Товар",
+      "variant": "Вариант"
+    }
+  },
+  "checkout": {
+    "loading": "ЗАГРУЗКА КОРЗИНЫ…",
+    "emptyTitle": "КОРЗИНА ПУСТА",
+    "emptyDesc": "Добавьте товары в корзину, чтобы продолжить оформление заказа.",
+    "emptyCta": "В КАТАЛОГ",
+    "noItems": "Нет товаров в корзине.",
+    "pageLabel": "ОФОРМЛЕНИЕ ЗАКАЗА",
+    "pageTitle": "ЧЕКАУТ",
+    "steps": {
+      "contact": "КОНТАКТЫ И АДРЕС",
+      "shipping": "ДОСТАВКА",
+      "payment": "ОПЛАТА"
+    },
+    "contact": {
+      "heading": "КОНТАКТЫ И АДРЕС ДОСТАВКИ",
+      "desc": "Укажите контактные данные для получения заказа.",
+      "email": "Email",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "address": "Адрес",
+      "city": "Город",
+      "postalCode": "Индекс",
+      "countryCode": "Код страны",
+      "phone": "Телефон",
+      "emailPlaceholder": "your@email.com",
+      "firstNamePlaceholder": "Иван",
+      "lastNamePlaceholder": "Иванов",
+      "addressPlaceholder": "ул. Примерная, д. 1, кв. 42",
+      "cityPlaceholder": "Москва",
+      "postalCodePlaceholder": "123456",
+      "countryCodePlaceholder": "dk",
+      "phonePlaceholder": "+7 (999) 123-45-67"
+    },
+    "shipping": {
+      "heading": "СПОСОБ ДОСТАВКИ",
+      "desc": "Выберите способ доставки вашего заказа.",
+      "loading": "Загрузка вариантов доставки…",
+      "noneAvailable": "Нет доступных вариантов доставки для вашего региона."
+    },
+    "payment": {
+      "heading": "СПОСОБ ОПЛАТЫ",
+      "desc": "Подтвердите способ оплаты для завершения заказа.",
+      "methodLabel": "Банковская карта / Стандартная оплата",
+      "methodDesc": "Защищённый платёж через платёжную систему"
+    },
+    "actions": {
+      "saving": "СОХРАНЕНИЕ…",
+      "continue": "ПРОДОЛЖИТЬ",
+      "back": "← НАЗАД",
+      "continueToPayment": "ПРОДОЛЖИТЬ К ОПЛАТЕ",
+      "processing": "ОФОРМЛЕНИЕ…",
+      "placeOrder": "ОФОРМИТЬ ЗАКАЗ"
+    },
+    "summary": {
+      "yourOrder": "ВАШ ЗАКАЗ",
+      "subtotal": "Подытог",
+      "shipping": "Доставка",
+      "tax": "Налог",
+      "total": "Итого"
+    },
+    "success": {
+      "title": "СПАСИБО ЗА ЗАКАЗ!",
+      "orderNumber": "НОМЕР ЗАКАЗА",
+      "confirmation": "Подтверждение заказа и детали доставки отправлены на вашу электронную почту.",
+      "backToCatalog": "ВЕРНУТЬСЯ В КАТАЛОГ"
+    }
+  },
+  "cart": {
+    "checkout": "Перейти к оформлению",
+    "total": "Итого"
   }
 }

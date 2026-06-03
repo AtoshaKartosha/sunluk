@@ -1,31 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { User, ChevronRight, Clock, CheckCircle, AlertCircle, XCircle, ShoppingBag } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { getCustomer, getCustomerOrders } from "@/lib/medusa/customer-server";
 import { LogoutButton } from "./LogoutButton";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-
-/* ------------------------------------------------------------------ */
-/*  Translations (RU primary)                                         */
-/* ------------------------------------------------------------------ */
-const T = {
-  title: "Личный кабинет",
-  greeting: "Здравствуйте",
-  profileSection: "Профиль",
-  emailLabel: "Email",
-  nameLabel: "Имя",
-  noName: "Не указано",
-  ordersSection: "Мои заказы",
-  noOrders: "У вас пока нет заказов.",
-  browseCatalog: "Перейти в каталог",
-  orderId: "Заказ №",
-  date: "Дата",
-  status: "Статус",
-  payment: "Оплата",
-  total: "Сумма",
-  viewDetails: "Подробнее",
-} as const;
 
 /* ------------------------------------------------------------------ */
 /*  Status helpers                                                    */
@@ -37,39 +17,16 @@ const ORDER_STATUS_ICONS: Record<string, React.ReactNode> = {
   archived: <CheckCircle className="w-4 h-4 text-emerald-500" />,
   canceled: <XCircle className="w-4 h-4 text-red-500" />,
   requires_action: <AlertCircle className="w-4 h-4 text-orange-500" />,
+  processing: <Clock className="w-4 h-4 text-blue-500" />,
+  shipped: <CheckCircle className="w-4 h-4 text-blue-500" />,
+  delivered: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  received: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  confirmed: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  declined: <XCircle className="w-4 h-4 text-red-500" />,
 };
-
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: "Ожидает",
-  completed: "Завершён",
-  archived: "Архивирован",
-  canceled: "Отменён",
-  requires_action: "Требует действия",
-  processing: "В обработке",
-  shipped: "Отправлен",
-  delivered: "Доставлен",
-};
-
-function statusLabel(status: string): string {
-  return ORDER_STATUS_LABELS[status] ?? status;
-}
 
 function statusIcon(status: string): React.ReactNode {
   return ORDER_STATUS_ICONS[status] ?? <Clock className="w-4 h-4 text-muted-foreground" />;
-}
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  captured: "Оплачен",
-  authorized: "Авторизован",
-  pending: "Ожидает",
-  refunded: "Возвращён",
-  partially_refunded: "Частичный возврат",
-  canceled: "Отменён",
-  requires_action: "Требует действия",
-};
-
-function paymentLabel(status: string): string {
-  return PAYMENT_STATUS_LABELS[status] ?? status;
 }
 
 /* ------------------------------------------------------------------ */
@@ -98,10 +55,28 @@ function formatPrice(amount: number | null | undefined, currency: string | null 
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
 
-export default async function CabinetPage() {
+export default async function CabinetPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id?: string }>;
+}) {
+  const { locale } = await params;
+
+  const t = await getTranslations({ locale, namespace: "cabinet" });
+  const ts = await getTranslations({ locale, namespace: "cabinet.orderStatus" });
+  const tp = await getTranslations({ locale, namespace: "cabinet.paymentStatus" });
+
+  function statusLabel(status: string): string {
+    return ts(status as Parameters<typeof ts>[0]) ?? status;
+  }
+
+  function paymentLabel(status: string): string {
+    return tp(status as Parameters<typeof tp>[0]) ?? status;
+  }
+
   const customer = await getCustomer();
   if (!customer) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   const ordersResult = await getCustomerOrders(20, 0);
@@ -114,14 +89,14 @@ export default async function CabinetPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-[#2c211b] tracking-tight">
-              {T.title}
+              {t("title")}
             </h1>
             <p className="text-sm text-[#2c211b]/60 mt-1">
-              {T.greeting},{" "}
+              {t("greeting")},{" "}
               <span className="font-medium text-[#2c211b]/80">
                 {customer.first_name || customer.last_name
                   ? [customer.first_name, customer.last_name].filter(Boolean).join(" ")
-                  : T.noName}
+                  : t("noName")}
               </span>
             </p>
           </div>
@@ -131,7 +106,7 @@ export default async function CabinetPage() {
         {/* Profile Card */}
         <section className="mb-10">
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
-            {T.profileSection}
+            {t("profileSection")}
           </h2>
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -139,12 +114,12 @@ export default async function CabinetPage() {
                 <User className="w-5 h-5 text-[#2c211b]/40 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs font-medium text-[#2c211b]/50 uppercase tracking-wide mb-0.5">
-                    {T.nameLabel}
+                    {t("nameLabel")}
                   </p>
                   <p className="text-sm font-medium text-[#2c211b]">
                     {customer.first_name || customer.last_name
                       ? [customer.first_name, customer.last_name].filter(Boolean).join(" ")
-                      : T.noName}
+                      : t("noName")}
                   </p>
                 </div>
               </div>
@@ -155,7 +130,7 @@ export default async function CabinetPage() {
                 </svg>
                 <div>
                   <p className="text-xs font-medium text-[#2c211b]/50 uppercase tracking-wide mb-0.5">
-                    {T.emailLabel}
+                    {t("emailLabel")}
                   </p>
                   <p className="text-sm font-medium text-[#2c211b]">
                     {customer.email}
@@ -169,17 +144,17 @@ export default async function CabinetPage() {
         {/* Orders Section */}
         <section>
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
-            {T.ordersSection}
+            {t("ordersSection")}
           </h2>
           {!ordersResult || ordersResult.orders.length === 0 ? (
             <div className="bg-white rounded-none border border-[#2c211b]/8 p-12 text-center shadow-sm">
               <ShoppingBag className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
-              <p className="text-sm text-[#2c211b]/60 mb-4">{T.noOrders}</p>
+              <p className="text-sm text-[#2c211b]/60 mb-4">{t("noOrders")}</p>
               <Link
-                href="/products"
+                href={`/${locale}/products`}
                 className="inline-flex items-center gap-2 text-sm font-medium text-[#2f6f78] hover:text-[#2f6f78]/80 transition-colors"
               >
-                {T.browseCatalog}
+                {t("browseCatalog")}
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -190,19 +165,19 @@ export default async function CabinetPage() {
                   <thead>
                     <tr className="border-b border-[#2c211b]/6">
                       <th className="text-left px-6 py-4 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                        {T.orderId}
+                        {t("orderId")}
                       </th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                        {T.date}
+                        {t("date")}
                       </th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                        {T.status}
+                        {t("status")}
                       </th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                        {T.payment}
+                        {t("payment")}
                       </th>
                       <th className="text-right px-6 py-4 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                        {T.total}
+                        {t("total")}
                       </th>
                       <th className="px-6 py-4" />
                     </tr>
@@ -241,10 +216,10 @@ export default async function CabinetPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <Link
-                            href={`/cabinet/orders/${order.id}`}
+                            href={`/${locale}/cabinet/orders/${order.id}`}
                             className="inline-flex items-center gap-1 text-xs font-medium text-[#2f6f78] hover:text-[#2f6f78]/80 transition-colors"
                           >
-                            {T.viewDetails}
+                            {t("viewDetails")}
                             <ChevronRight className="w-3 h-3" />
                           </Link>
                         </td>
@@ -262,7 +237,7 @@ export default async function CabinetPage() {
           )}
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }

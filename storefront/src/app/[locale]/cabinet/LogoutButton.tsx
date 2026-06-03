@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { LogOut, Loader2 } from "lucide-react";
 import { logoutCustomer, removeAuthCookie } from "@/lib/medusa/customer";
 
 export function LogoutButton() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("cabinet");
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
@@ -17,7 +20,7 @@ export function LogoutButton() {
       // proceed with local cleanup even if remote logout fails
     }
     removeAuthCookie();
-    router.push("/login");
+    router.push(`/${locale}/login`);
     router.refresh();
   }
 
@@ -32,7 +35,7 @@ export function LogoutButton() {
       ) : (
         <LogOut className="w-4 h-4" />
       )}
-      Выйти
+      {t("logout")}
     </button>
   );
 }

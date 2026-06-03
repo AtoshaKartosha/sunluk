@@ -1,9 +1,14 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { routing } from "@/i18n/routing";
+import { CartProvider } from "@/components/cart/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
 import type { ReactNode } from "react";
+
+/* ------------------------------------------------------------------ */
+/*  Locale layout                                                      */
+/* ------------------------------------------------------------------ */
 
 interface LocaleLayoutProps {
   children: ReactNode;
@@ -20,11 +25,17 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  // Enable static rendering for the locale
+  setRequestLocale(locale);
+
   const messages = await getMessages();
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
+      <CartProvider>
+        <main className="flex-1">{children}</main>
+        <CartDrawer />
+      </CartProvider>
     </NextIntlClientProvider>
   );
 }

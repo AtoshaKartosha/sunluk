@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import { Montserrat, Geist_Mono } from "next/font/google";
-import { CartProvider } from "@/components/cart/CartContext";
-import CartDrawer from "@/components/cart/CartDrawer";
 import "./globals.css";
+
 const montserrat = Montserrat({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
 });
+
 const montserratSerif = Montserrat({
   variable: "--font-serif",
   subsets: ["latin", "cyrillic"],
 });
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin", "cyrillic"],
 });
+
+const fontClasses = `${montserrat.variable} ${montserratSerif.variable} ${geistMono.variable}`;
 
 export const metadata: Metadata = {
   title: "SUNLUK — Аксессуары для очков",
@@ -28,15 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ru"
-      className={`${montserrat.variable} ${montserratSerif.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="ru" className={`${fontClasses} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <main className="flex-1">{children}</main>
-          <CartDrawer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );

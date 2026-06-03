@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { BRAND, NAV_LINKS } from "@/lib/landing-data";
 import type { NavLinkData } from "@/lib/landing-data";
 import { NavLink } from "@/components/landing/NavLink";
@@ -50,6 +51,7 @@ const XIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
   const links = navLinks ?? NAV_LINKS;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const locale = useLocale();
 
   const { itemCount, openCart } = useCart();
 
@@ -58,7 +60,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
 
         {/* Logo & Subtitle */}
-        <Link href="/" className="flex flex-col group">
+        <Link href={`/${locale}`} className="flex flex-col group">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-none border-2 border-[#2c211b] flex items-center justify-center font-serif text-xs font-medium leading-none group-hover:bg-[#2c211b] group-hover:text-[#f4ebe6] transition-colors duration-300">
               S
@@ -84,7 +86,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
           <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Поиск">
             <SearchIcon className="w-5 h-5" />
           </button>
-          <Link href="/cabinet" className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
+          <Link href={`/${locale}/cabinet`} className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
             <UserIcon className="w-5 h-5" />
           </Link>
           <button

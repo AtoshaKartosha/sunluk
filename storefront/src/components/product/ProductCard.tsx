@@ -14,9 +14,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
   const src = product.thumbnail ?? product.images?.[0]?.url;
   const price = cheapestVariantPrice(product.variants);
 
-  const href = locale
-    ? `/${locale}/products/${product.handle}`
-    : `/products/${product.handle}`;
+  const href = `/${locale ?? "ru"}/products/${product.handle}`;
 
   return (
     <Link

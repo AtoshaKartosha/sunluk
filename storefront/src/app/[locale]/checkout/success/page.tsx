@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 
@@ -35,6 +36,8 @@ function CheckIcon({ className = "w-10 h-10" }: { className?: string }) {
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
+  const locale = useLocale();
+  const t = useTranslations("checkout.success");
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
@@ -49,7 +52,7 @@ function SuccessContent() {
 
           {/* Heading */}
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#2c211b] uppercase mb-4">
-            СПАСИБО ЗА ЗАКАЗ!
+            {t("title")}
           </h1>
 
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-8" />
@@ -57,7 +60,7 @@ function SuccessContent() {
           {/* Order ID */}
           {orderId ? (
             <p className="text-sm tracking-widest uppercase text-[#2c211b]/60 mb-3">
-              НОМЕР ЗАКАЗА
+              {t("orderNumber")}
             </p>
           ) : null}
           {orderId ? (
@@ -72,21 +75,20 @@ function SuccessContent() {
 
           {/* Confirmation note */}
           <p className="text-sm leading-relaxed text-[#2c211b]/60 max-w-sm mx-auto mb-12">
-            Подтверждение заказа и детали доставки отправлены на вашу
-            электронную почту.
+            {t("confirmation")}
           </p>
 
           {/* CTA */}
           <Link
-            href="/products"
+            href={`/${locale}/products`}
             className="inline-flex items-center px-10 py-3.5 border-2 border-[#2c211b] text-[#2c211b] hover:bg-[#2c211b] hover:text-white text-xs font-medium tracking-widest uppercase transition-all duration-300"
           >
-            ВЕРНУТЬСЯ В КАТАЛОГ
+            {t("backToCatalog")}
           </Link>
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }
@@ -96,6 +98,8 @@ function SuccessContent() {
 /* ------------------------------------------------------------------ */
 
 export default function CheckoutSuccessPage() {
+  const locale = useLocale();
+
   return (
     <Suspense
       fallback={
@@ -104,7 +108,7 @@ export default function CheckoutSuccessPage() {
           <main className="flex-1 flex items-center justify-center">
             <div className="w-20 h-20 rounded-full border-2 border-[#2f6f78] animate-pulse" />
           </main>
-          <SiteFooter />
+          <SiteFooter locale={locale} />
         </div>
       }
     >

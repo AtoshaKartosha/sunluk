@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/components/cart/CartContext";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
@@ -29,7 +30,6 @@ interface ShippingOption {
   calculated_amount?: number;
   currency_code?: string;
 }
-
 
 
 interface ContactShippingFormState {
@@ -75,7 +75,13 @@ function formatPrice(amount: number | null | undefined, currency: string | null 
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function LoadingState() {
+function LoadingState({
+  t,
+  locale,
+}: {
+  t: ReturnType<typeof useTranslations<"checkout">>;
+  locale: string;
+}) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
@@ -83,16 +89,22 @@ function LoadingState() {
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-[#2c211b]/60 tracking-wide">
-            ЗАГРУЗКА КОРЗИНЫ…
+            {t("loading")}
           </p>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }
 
-function EmptyCartState() {
+function EmptyCartState({
+  t,
+  locale,
+}: {
+  t: ReturnType<typeof useTranslations<"checkout">>;
+  locale: string;
+}) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
@@ -100,29 +112,35 @@ function EmptyCartState() {
         <div className="text-center max-w-md px-4 py-16">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
           <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
-            КОРЗИНА ПУСТА
+            {t("emptyTitle")}
           </h1>
           <p className="text-sm text-[#2c211b]/60 mb-8">
-            Добавьте товары в корзину, чтобы продолжить оформление заказа.
+            {t("emptyDesc")}
           </p>
           <Link
-            href="/products"
+            href={`/${locale}/products`}
             className="inline-flex items-center px-8 py-3 border-2 border-[#2c211b] text-[#2c211b] hover:bg-[#2c211b] hover:text-white text-xs font-medium tracking-widest uppercase transition-all duration-300"
           >
-            В КАТАЛОГ
+            {t("emptyCta")}
           </Link>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }
 
-function StepIndicator({ currentStep }: { currentStep: CheckoutStep }) {
+function StepIndicator({
+  currentStep,
+  tsteps,
+}: {
+  currentStep: CheckoutStep;
+  tsteps: ReturnType<typeof useTranslations<"checkout.steps">>;
+}) {
   const steps: { key: CheckoutStep; label: string }[] = [
-    { key: "contact", label: "КОНТАКТЫ И АДРЕС" },
-    { key: "shipping", label: "ДОСТАВКА" },
-    { key: "payment", label: "ОПЛАТА" },
+    { key: "contact", label: tsteps("contact") },
+    { key: "shipping", label: tsteps("shipping") },
+    { key: "payment", label: tsteps("payment") },
   ];
 
   const currentIdx = steps.findIndex((s) => s.key === currentStep);
@@ -171,6 +189,14 @@ function StepIndicator({ currentStep }: { currentStep: CheckoutStep }) {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, loading } = useCart();
+  const locale = useLocale();
+  const t = useTranslations("checkout");
+  const tc = useTranslations("checkout.contact");
+  const ts = useTranslations("checkout.shipping");
+  const tp = useTranslations("checkout.payment");
+  const ta = useTranslations("checkout.actions");
+  const tsm = useTranslations("checkout.summary");
+  const tsteps = useTranslations("checkout.steps");
 
   // ---- Step state ----
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("contact");
@@ -280,7 +306,7 @@ export default function CheckoutPage() {
 
         if (result.type === "order" && result.order) {
           clearCartId();
-          router.push(`/checkout/success?order_id=${result.order.id}`);
+          router.push(`/${locale}/checkout/success?order_id=${result.order.id}`);
         } else {
           const errMsg =
             (result as { error?: { message?: string } }).error?.message ??
@@ -295,7 +321,7 @@ export default function CheckoutPage() {
         setCompleting(false);
       }
     },
-    [cart, router],
+    [cart, router, locale],
   );
 
   const updateContactField = useCallback(
@@ -307,8 +333,8 @@ export default function CheckoutPage() {
 
   // ---- Render states ----
 
-  if (loading) return <LoadingState />;
-  if (!cart || !cart.items || cart.items.length === 0) return <EmptyCartState />;
+  if (loading) return <LoadingState t={t} locale={locale} />;
+  if (!cart || !cart.items || cart.items.length === 0) return <EmptyCartState t={t} locale={locale} />;
 
   const hasItems = cart.items && cart.items.length > 0;
 
@@ -319,10 +345,10 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="mb-12">
           <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
-            ОФОРМЛЕНИЕ ЗАКАЗА
+            {t("pageLabel")}
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide mt-2">
-            ЧЕКАУТ
+            {t("pageTitle")}
           </h1>
           <div className="w-16 h-0.5 bg-[#2f6f78] mt-4" />
         </div>
@@ -332,17 +358,17 @@ export default function CheckoutPage() {
           {/* Left Column — Checkout Steps */}
           {/* ================================================================ */}
           <div>
-            <StepIndicator currentStep={currentStep} />
+            <StepIndicator currentStep={currentStep} tsteps={tsteps} />
 
             {/* ---- Step 1: Contact & Address ---- */}
             {currentStep === "contact" && (
               <form onSubmit={handleContactSubmit} className="space-y-8">
                 <div className="space-y-1">
                   <h2 className="font-serif text-xl tracking-wide">
-                    КОНТАКТЫ И АДРЕС ДОСТАВКИ
+                    {tc("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
-                    Укажите контактные данные для получения заказа.
+                    {tc("desc")}
                   </p>
                 </div>
 
@@ -352,7 +378,7 @@ export default function CheckoutPage() {
                     htmlFor="checkout-email"
                     className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                   >
-                    Email *
+                    {tc("email")} *
                   </label>
                   <input
                     id="checkout-email"
@@ -361,7 +387,7 @@ export default function CheckoutPage() {
                     value={contactForm.email}
                     onChange={(e) => updateContactField("email", e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                    placeholder="your@email.com"
+                    placeholder={tc("emailPlaceholder")}
                   />
                 </fieldset>
 
@@ -372,7 +398,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-first-name"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Имя *
+                      {tc("firstName")} *
                     </label>
                     <input
                       id="checkout-first-name"
@@ -383,7 +409,7 @@ export default function CheckoutPage() {
                         updateContactField("first_name", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="Иван"
+                      placeholder={tc("firstNamePlaceholder")}
                     />
                   </fieldset>
                   <fieldset className="space-y-1.5">
@@ -391,7 +417,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-last-name"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Фамилия *
+                      {tc("lastName")} *
                     </label>
                     <input
                       id="checkout-last-name"
@@ -402,7 +428,7 @@ export default function CheckoutPage() {
                         updateContactField("last_name", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="Иванов"
+                      placeholder={tc("lastNamePlaceholder")}
                     />
                   </fieldset>
                 </div>
@@ -413,7 +439,7 @@ export default function CheckoutPage() {
                     htmlFor="checkout-address"
                     className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                   >
-                    Адрес *
+                    {tc("address")} *
                   </label>
                   <input
                     id="checkout-address"
@@ -424,7 +450,7 @@ export default function CheckoutPage() {
                       updateContactField("address_1", e.target.value)
                     }
                     className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                    placeholder="ул. Примерная, д. 1, кв. 42"
+                    placeholder={tc("addressPlaceholder")}
                   />
                 </fieldset>
 
@@ -435,7 +461,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-city"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Город *
+                      {tc("city")} *
                     </label>
                     <input
                       id="checkout-city"
@@ -444,7 +470,7 @@ export default function CheckoutPage() {
                       value={contactForm.city}
                       onChange={(e) => updateContactField("city", e.target.value)}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="Москва"
+                      placeholder={tc("cityPlaceholder")}
                     />
                   </fieldset>
                   <fieldset className="space-y-1.5">
@@ -452,7 +478,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-postal"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Индекс *
+                      {tc("postalCode")} *
                     </label>
                     <input
                       id="checkout-postal"
@@ -463,7 +489,7 @@ export default function CheckoutPage() {
                         updateContactField("postal_code", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="123456"
+                      placeholder={tc("postalCodePlaceholder")}
                     />
                   </fieldset>
                 </div>
@@ -474,7 +500,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-country"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Код страны *
+                      {tc("countryCode")} *
                     </label>
                     <input
                       id="checkout-country"
@@ -485,7 +511,7 @@ export default function CheckoutPage() {
                         updateContactField("country_code", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="dk"
+                      placeholder={tc("countryCodePlaceholder")}
                     />
                   </fieldset>
                   <fieldset className="space-y-1.5">
@@ -493,7 +519,7 @@ export default function CheckoutPage() {
                       htmlFor="checkout-phone"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      Телефон
+                      {tc("phone")}
                     </label>
                     <input
                       id="checkout-phone"
@@ -503,7 +529,7 @@ export default function CheckoutPage() {
                         updateContactField("phone", e.target.value)
                       }
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder="+7 (999) 123-45-67"
+                      placeholder={tc("phonePlaceholder")}
                     />
                   </fieldset>
                 </div>
@@ -519,7 +545,7 @@ export default function CheckoutPage() {
                   disabled={stepSubmitting}
                   className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {stepSubmitting ? "СОХРАНЕНИЕ…" : "ПРОДОЛЖИТЬ"}
+                  {stepSubmitting ? ta("saving") : ta("continue")}
                 </button>
               </form>
             )}
@@ -529,10 +555,10 @@ export default function CheckoutPage() {
               <form onSubmit={handleShippingSubmit} className="space-y-8">
                 <div className="space-y-1">
                   <h2 className="font-serif text-xl tracking-wide">
-                    СПОСОБ ДОСТАВКИ
+                    {ts("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
-                    Выберите способ доставки вашего заказа.
+                    {ts("desc")}
                   </p>
                 </div>
 
@@ -540,12 +566,12 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-3 py-8">
                     <div className="w-5 h-5 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin" />
                     <span className="text-sm text-[#2c211b]/50">
-                      Загрузка вариантов доставки…
+                      {ts("loading")}
                     </span>
                   </div>
                 ) : shippingOptions.length === 0 ? (
                   <p className="text-sm text-[#2c211b]/50 py-4">
-                    Нет доступных вариантов доставки для вашего региона.
+                    {ts("noneAvailable")}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -594,7 +620,7 @@ export default function CheckoutPage() {
                     onClick={() => setCurrentStep("contact")}
                     className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/50 hover:text-[#2c211b] transition-colors"
                   >
-                    ← НАЗАД
+                    {ta("back")}
                   </button>
                   <button
                     type="submit"
@@ -602,8 +628,8 @@ export default function CheckoutPage() {
                     className="inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {stepSubmitting
-                      ? "СОХРАНЕНИЕ…"
-                      : "ПРОДОЛЖИТЬ К ОПЛАТЕ"}
+                      ? ta("saving")
+                      : ta("continueToPayment")}
                   </button>
                 </div>
               </form>
@@ -614,10 +640,10 @@ export default function CheckoutPage() {
               <form onSubmit={handlePaymentSubmit} className="space-y-8">
                 <div className="space-y-1">
                   <h2 className="font-serif text-xl tracking-wide">
-                    СПОСОБ ОПЛАТЫ
+                    {tp("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
-                    Подтвердите способ оплаты для завершения заказа.
+                    {tp("desc")}
                   </p>
                 </div>
 
@@ -631,10 +657,10 @@ export default function CheckoutPage() {
                     />
                     <div className="flex-1">
                       <span className="text-sm font-medium">
-                        Банковская карта / Стандартная оплата
+                        {tp("methodLabel")}
                       </span>
                       <p className="text-xs text-[#2c211b]/40 mt-0.5">
-                        Защищённый платёж через платёжную систему
+                        {tp("methodDesc")}
                       </p>
                     </div>
                     <div className="w-8 h-8 flex items-center justify-center rounded border border-[#2c211b]/15">
@@ -668,7 +694,7 @@ export default function CheckoutPage() {
                     disabled={completing}
                     className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/50 hover:text-[#2c211b] transition-colors disabled:opacity-30"
                   >
-                    ← НАЗАД
+                    {ta("back")}
                   </button>
                   <button
                     type="submit"
@@ -678,10 +704,10 @@ export default function CheckoutPage() {
                     {completing ? (
                       <>
                         <span className="w-4 h-4 border-2 border-[#f4ebe6] border-t-transparent rounded-full animate-spin mr-2" />
-                        ОФОРМЛЕНИЕ…
+                        {ta("processing")}
                       </>
                     ) : (
-                      "ОФОРМИТЬ ЗАКАЗ"
+                      ta("placeOrder")
                     )}
                   </button>
                 </div>
@@ -695,7 +721,7 @@ export default function CheckoutPage() {
           <div className="lg:sticky lg:top-10 self-start">
             <div className="bg-white border border-[#2c211b]/8 p-6 sm:p-8">
               <h3 className="font-serif text-lg tracking-wide mb-6">
-                ВАШ ЗАКАЗ
+                {tsm("yourOrder")}
               </h3>
 
               {/* Line items */}
@@ -739,14 +765,14 @@ export default function CheckoutPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-[#2c211b]/50 mb-6">
-                  Нет товаров в корзине.
+                  {t("noItems")}
                 </p>
               )}
 
               {/* Totals */}
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-[#2c211b]/60">Подытог</dt>
+                  <dt className="text-[#2c211b]/60">{tsm("subtotal")}</dt>
                   <dd className="font-medium">
                     {formatPrice(
                       cart.subtotal,
@@ -755,7 +781,7 @@ export default function CheckoutPage() {
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-[#2c211b]/60">Доставка</dt>
+                  <dt className="text-[#2c211b]/60">{tsm("shipping")}</dt>
                   <dd className="font-medium">
                     {cart.shipping_total > 0
                       ? formatPrice(
@@ -766,7 +792,7 @@ export default function CheckoutPage() {
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-[#2c211b]/60">Налог</dt>
+                  <dt className="text-[#2c211b]/60">{tsm("tax")}</dt>
                   <dd className="font-medium">
                     {cart.tax_total > 0
                       ? formatPrice(
@@ -777,7 +803,7 @@ export default function CheckoutPage() {
                   </dd>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-[#2c211b]/15 text-base">
-                  <dt className="font-semibold">Итого</dt>
+                  <dt className="font-semibold">{tsm("total")}</dt>
                   <dd className="font-bold">
                     {formatPrice(
                       cart.total,
@@ -790,7 +816,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }

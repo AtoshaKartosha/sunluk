@@ -51,6 +51,7 @@ function UnsupportedRegion({
         </div>
       </main>
       <SiteFooter
+        locale={locale}
         footerGroups={chrome.footerGroups}
         copyright={chrome.copyright}
       />
@@ -90,6 +91,7 @@ function CatalogError({
         </div>
       </main>
       <SiteFooter
+        locale={locale}
         footerGroups={chrome.footerGroups}
         copyright={chrome.copyright}
       />
@@ -168,6 +170,7 @@ export default async function ProductsPage({ params }: Props) {
         </section>
       </main>
       <SiteFooter
+        locale={resolvedLocale}
         footerGroups={getFooterGroups(resolvedLocale)}
         copyright={getCopyright(resolvedLocale)}
       />

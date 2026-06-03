@@ -2,53 +2,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, XCircle, Truck } from "lucide-react";
 import { getCustomerOrder, getServerAuthToken } from "@/lib/medusa/customer-server";
+import { getTranslations } from "next-intl/server";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 
 /* ------------------------------------------------------------------ */
-/*  Translations (RU primary)                                         */
-/* ------------------------------------------------------------------ */
-
-const T = {
-  backToCabinet: "В кабинет",
-  orderTitle: "Заказ",
-  notFound: "Заказ не найден",
-  notFoundDesc: "Возможно, он не существует или не принадлежит вашему аккаунту.",
-  goToCabinet: "Вернуться в кабинет",
-  status: "Статус",
-  payment: "Оплата",
-  date: "Дата оформления",
-  itemsSection: "Товары в заказе",
-  quantity: "Кол-во",
-  price: "Цена",
-  subtotal: "Сумма",
-  totalsSection: "Итого",
-  itemSubtotal: "Товары",
-  shipping: "Доставка",
-  tax: "Налог",
-  discount: "Скидка",
-  total: "Всего",
-  shippingAddress: "Адрес доставки",
-  billingAddress: "Платёжный адрес",
-  noAddress: "Не указан",
-  untitledItem: "Товар",
-  variant: "Вариант",
-} as const;
-
-/* ------------------------------------------------------------------ */
 /*  Status helpers (same as cabinet)                                   */
 /* ------------------------------------------------------------------ */
-
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: "Ожидает",
-  completed: "Завершён",
-  archived: "Архивирован",
-  canceled: "Отменён",
-  requires_action: "Требует действия",
-  processing: "В обработке",
-  shipped: "Отправлен",
-  delivered: "Доставлен",
-};
 
 const ORDER_STATUS_ICONS: Record<string, React.ReactNode> = {
   pending: <Clock className="w-4 h-4 text-amber-500" />,
@@ -59,28 +19,13 @@ const ORDER_STATUS_ICONS: Record<string, React.ReactNode> = {
   processing: <Clock className="w-4 h-4 text-blue-500" />,
   shipped: <Truck className="w-4 h-4 text-blue-500" />,
   delivered: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  received: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  confirmed: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  declined: <XCircle className="w-4 h-4 text-red-500" />,
 };
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  captured: "Оплачен",
-  authorized: "Авторизован",
-  pending: "Ожидает",
-  refunded: "Возвращён",
-  partially_refunded: "Частичный возврат",
-  canceled: "Отменён",
-  requires_action: "Требует действия",
-};
-
-function statusLabel(status: string): string {
-  return ORDER_STATUS_LABELS[status] ?? status;
-}
 
 function statusIcon(status: string): React.ReactNode {
   return ORDER_STATUS_ICONS[status] ?? <Clock className="w-4 h-4 text-muted-foreground" />;
-}
-
-function paymentLabel(status: string): string {
-  return PAYMENT_STATUS_LABELS[status] ?? status;
 }
 
 /* ------------------------------------------------------------------ */
@@ -158,12 +103,25 @@ interface OrderItem {
 export default async function OrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { locale, id } = await params;
+
+  const t = await getTranslations({ locale, namespace: "cabinet.order" });
+  const t_status = await getTranslations({ locale, namespace: "cabinet.orderStatus" });
+  const t_payment = await getTranslations({ locale, namespace: "cabinet.paymentStatus" });
+
+  function statusLabel(status: string): string {
+    return t_status(status as Parameters<typeof t_status>[0]) ?? status;
+  }
+
+  function paymentLabel(status: string): string {
+    return t_payment(status as Parameters<typeof t_payment>[0]) ?? status;
+  }
+
   const token = await getServerAuthToken();
   if (!token) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   const order = await getCustomerOrder(id);
@@ -176,19 +134,19 @@ export default async function OrderDetailPage({
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
           <Package className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
           <h1 className="text-lg font-semibold text-[#2c211b] mb-2">
-            {T.notFound}
+            {t("notFound")}
           </h1>
-          <p className="text-sm text-[#2c211b]/60 mb-6">{T.notFoundDesc}</p>
+          <p className="text-sm text-[#2c211b]/60 mb-6">{t("notFoundDesc")}</p>
           <Link
-            href="/cabinet"
+            href={`/${locale}/cabinet`}
             className="inline-flex items-center gap-2 text-sm font-medium text-[#2f6f78] hover:text-[#2f6f78]/80 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            {T.goToCabinet}
+            {t("goToCabinet")}
           </Link>
           </div>
         </main>
-        <SiteFooter />
+        <SiteFooter locale={locale} />
       </div>
     );
   }
@@ -217,11 +175,11 @@ export default async function OrderDetailPage({
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Back link */}
         <Link
-          href="/cabinet"
+          href={`/${locale}/cabinet`}
           className="inline-flex items-center gap-2 text-sm text-[#2c211b]/60 hover:text-[#2f6f78] transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          {T.backToCabinet}
+          {t("backToCabinet")}
         </Link>
 
         {/* Order Header */}
@@ -229,7 +187,7 @@ export default async function OrderDetailPage({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-[#2c211b] tracking-tight">
-                {T.orderTitle} #{displayId || id.slice(-8)}
+                {t("orderTitle")} #{displayId || id.slice(-8)}
               </h1>
               <p className="text-sm text-[#2c211b]/50 mt-1">
                 {formatDate(createdAt)}
@@ -243,7 +201,7 @@ export default async function OrderDetailPage({
               {statusIcon(orderStatus)}
               <div>
                 <p className="text-[10px] font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                  {T.status}
+                  {t("status")}
                 </p>
                 <p className="text-sm font-medium text-[#2c211b]">
                   {statusLabel(orderStatus)}
@@ -254,7 +212,7 @@ export default async function OrderDetailPage({
               <CreditCard className="w-4 h-4 text-[#2c211b]/40" />
               <div>
                 <p className="text-[10px] font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                  {T.payment}
+                  {t("payment")}
                 </p>
                 <p className="text-sm font-medium text-[#2c211b]">
                   {paymentLabel(paymentStatus)}
@@ -267,23 +225,23 @@ export default async function OrderDetailPage({
         {/* Order Items */}
         <section className="bg-white rounded-none border border-[#2c211b]/8 shadow-sm mb-6 overflow-hidden">
           <h2 className="px-6 sm:px-8 pt-6 pb-4 text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50">
-            {T.itemsSection}
+            {t("itemsSection")}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-[#2c211b]/6">
                   <th className="text-left px-6 sm:px-8 py-3 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider w-full">
-                    {T.untitledItem}
+                    {t("untitledItem")}
                   </th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                    {T.quantity}
+                    {t("quantity")}
                   </th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                    {T.price}
+                    {t("price")}
                   </th>
                   <th className="text-right px-6 sm:px-8 py-3 text-xs font-semibold text-[#2c211b]/50 uppercase tracking-wider">
-                    {T.subtotal}
+                    {t("subtotal")}
                   </th>
                 </tr>
               </thead>
@@ -310,7 +268,7 @@ export default async function OrderDetailPage({
                         )}
                         <div>
                           <p className="font-medium text-[#2c211b]">
-                            {item.title || T.untitledItem}
+                            {item.title || t("untitledItem")}
                           </p>
                           {item.variant?.title && (
                             <p className="text-xs text-[#2c211b]/50 mt-0.5">
@@ -341,21 +299,21 @@ export default async function OrderDetailPage({
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4 flex items-center gap-2">
               <MapPin className="w-4 h-4" />
-              {T.shippingAddress}
+              {t("shippingAddress")}
             </h2>
             {shippingAddrStr ? (
               <p className="text-sm text-[#2c211b]/70 whitespace-pre-line leading-relaxed">
                 {shippingAddrStr}
               </p>
             ) : (
-              <p className="text-sm text-[#2c211b]/40 italic">{T.noAddress}</p>
+              <p className="text-sm text-[#2c211b]/40 italic">{t("noAddress")}</p>
             )}
 
             {billingAddrStr && billingAddrStr !== shippingAddrStr && (
               <>
                 <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mt-6 mb-4 flex items-center gap-2">
                   <CreditCard className="w-4 h-4" />
-                  {T.billingAddress}
+                  {t("billingAddress")}
                 </h2>
                 <p className="text-sm text-[#2c211b]/70 whitespace-pre-line leading-relaxed">
                   {billingAddrStr}
@@ -367,33 +325,33 @@ export default async function OrderDetailPage({
           {/* Totals */}
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
-              {T.totalsSection}
+              {t("totalsSection")}
             </h2>
             <dl className="space-y-3">
               <div className="flex justify-between text-sm">
-                <dt className="text-[#2c211b]/60">{T.itemSubtotal}</dt>
+                <dt className="text-[#2c211b]/60">{t("itemSubtotal")}</dt>
                 <dd className="text-[#2c211b]">{formatPrice(itemTotal || subtotal, currencyCode)}</dd>
               </div>
               {shippingTotal > 0 && (
                 <div className="flex justify-between text-sm">
-                  <dt className="text-[#2c211b]/60">{T.shipping}</dt>
+                  <dt className="text-[#2c211b]/60">{t("shipping")}</dt>
                   <dd className="text-[#2c211b]">{formatPrice(shippingTotal, currencyCode)}</dd>
                 </div>
               )}
               {taxTotal > 0 && (
                 <div className="flex justify-between text-sm">
-                  <dt className="text-[#2c211b]/60">{T.tax}</dt>
+                  <dt className="text-[#2c211b]/60">{t("tax")}</dt>
                   <dd className="text-[#2c211b]">{formatPrice(taxTotal, currencyCode)}</dd>
                 </div>
               )}
               {discountTotal > 0 && (
                 <div className="flex justify-between text-sm">
-                  <dt className="text-red-600">{T.discount}</dt>
+                  <dt className="text-red-600">{t("discount")}</dt>
                   <dd className="text-red-600">−{formatPrice(discountTotal, currencyCode)}</dd>
                 </div>
               )}
               <div className="flex justify-between text-sm pt-3 border-t border-[#2c211b]/8">
-                <dt className="font-semibold text-[#2c211b]">{T.total}</dt>
+                <dt className="font-semibold text-[#2c211b]">{t("total")}</dt>
                 <dd className="font-semibold text-[#2c211b] text-base">
                   {formatPrice(total, currencyCode)}
                 </dd>
@@ -402,7 +360,7 @@ export default async function OrderDetailPage({
           </div>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </div>
   );
 }

@@ -3,42 +3,19 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { Eye, EyeOff, UserPlus, Loader2 } from "lucide-react";
 import { registerCustomer, getAuthCookie, setAuthCookie, removeAuthCookie, getClientMedusaClient } from "@/lib/medusa/customer";
-
-/* ------------------------------------------------------------------ */
-/*  Translations (RU primary)                                         */
-/* ------------------------------------------------------------------ */
-const T = {
-  title: "Регистрация",
-  subtitle: "Создайте аккаунт",
-  firstNameLabel: "Имя",
-  firstNamePlaceholder: "Иван",
-  lastNameLabel: "Фамилия",
-  lastNamePlaceholder: "Петров",
-  emailLabel: "Email",
-  emailPlaceholder: "you@example.com",
-  passwordLabel: "Пароль",
-  passwordPlaceholder: "••••••••",
-  registerButton: "Зарегистрироваться",
-  registering: "Регистрация...",
-  hasAccount: "Уже есть аккаунт?",
-  loginLink: "Войти",
-  validation: {
-    allRequired: "Пожалуйста, заполните все поля.",
-    passwordMinLength: "Пароль должен быть не менее 8 символов.",
-  },
-  errors: {
-    registrationFailed: "Не удалось создать аккаунт. Возможно, email уже занят.",
-    network: "Ошибка соединения.",
-  },
-} as const;
 
 /* ------------------------------------------------------------------ */
 /*  Register Page                                                     */
 /* ------------------------------------------------------------------ */
 export default function RegisterPage() {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("auth.register");
+  const tv = useTranslations("auth.register.validation");
+  const te = useTranslations("auth.register.errors");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,7 +40,7 @@ export default function RegisterPage() {
           const sdk = getClientMedusaClient();
           const { customer } = await sdk.store.customer.retrieve();
           if (customer) {
-            router.replace("/cabinet");
+            router.replace(`/${locale}/cabinet`);
             return;
           }
         } catch {
@@ -74,7 +51,7 @@ export default function RegisterPage() {
       setCheckingAuth(false);
     };
     checkSession();
-  }, [router]);
+  }, [router, locale]);
 
   const validate = useCallback((): boolean => {
     const next: {
@@ -85,23 +62,23 @@ export default function RegisterPage() {
     } = {};
 
     if (!firstName.trim()) {
-      next.firstName = T.validation.allRequired;
+      next.firstName = tv("firstNameRequired");
     }
     if (!lastName.trim()) {
-      next.lastName = T.validation.allRequired;
+      next.lastName = tv("lastNameRequired");
     }
     if (!email.trim()) {
-      next.email = T.validation.allRequired;
+      next.email = tv("emailRequired");
     }
     if (!password) {
-      next.password = T.validation.allRequired;
+      next.password = tv("passwordRequired");
     } else if (password.length < 8) {
-      next.password = T.validation.passwordMinLength;
+      next.password = tv("passwordMinLength");
     }
 
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [firstName, lastName, email, password]);
+  }, [firstName, lastName, email, password, tv]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -120,22 +97,22 @@ export default function RegisterPage() {
 
         if (result.success) {
           setAuthCookie(result.token);
-          router.push("/cabinet");
+          router.push(`/${locale}/cabinet`);
         } else {
           const err = result.error;
           if (err.includes("already exists")) {
-            setServerError("Аккаунт с таким email уже существует.");
+            setServerError(te("emailAlreadyExists"));
           } else {
-            setServerError(err || T.errors.registrationFailed);
+            setServerError(err || te("registrationFailed"));
           }
         }
       } catch {
-        setServerError(T.errors.network);
+        setServerError(te("network"));
       } finally {
         setLoading(false);
       }
     },
-    [firstName, lastName, email, password, validate, router],
+    [firstName, lastName, email, password, validate, router, locale, te],
   );
 
   const clearFieldError = useCallback(
@@ -161,15 +138,15 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="mb-10 text-center">
           <Link
-            href="/"
+            href={`/${locale}`}
             className="inline-block text-2xl font-bold tracking-[0.3em] text-[#2c211b]"
           >
             SUNLUK
           </Link>
           <h1 className="mt-8 text-2xl font-semibold text-[#2c211b]">
-            {T.title}
+            {t("title")}
           </h1>
-          <p className="mt-2 text-sm text-[#2c211b]/60">{T.subtitle}</p>
+          <p className="mt-2 text-sm text-[#2c211b]/60">{t("subtitle")}</p>
         </div>
 
         {/* Form */}
@@ -192,7 +169,7 @@ export default function RegisterPage() {
                 htmlFor="register-firstname"
                 className="block text-sm font-medium text-[#2c211b]"
               >
-                {T.firstNameLabel}
+                {t("firstNameLabel")}
               </label>
               <input
                 id="register-firstname"
@@ -204,7 +181,7 @@ export default function RegisterPage() {
                   setFirstName(e.target.value);
                   clearFieldError("firstName");
                 }}
-                placeholder={T.firstNamePlaceholder}
+                placeholder={t("firstNamePlaceholder")}
                 aria-invalid={!!errors.firstName}
                 aria-describedby={
                   errors.firstName ? "register-firstname-error" : undefined
@@ -229,7 +206,7 @@ export default function RegisterPage() {
                 htmlFor="register-lastname"
                 className="block text-sm font-medium text-[#2c211b]"
               >
-                {T.lastNameLabel}
+                {t("lastNameLabel")}
               </label>
               <input
                 id="register-lastname"
@@ -240,7 +217,7 @@ export default function RegisterPage() {
                   setLastName(e.target.value);
                   clearFieldError("lastName");
                 }}
-                placeholder={T.lastNamePlaceholder}
+                placeholder={t("lastNamePlaceholder")}
                 aria-invalid={!!errors.lastName}
                 aria-describedby={
                   errors.lastName ? "register-lastname-error" : undefined
@@ -266,7 +243,7 @@ export default function RegisterPage() {
               htmlFor="register-email"
               className="block text-sm font-medium text-[#2c211b]"
             >
-              {T.emailLabel}
+              {t("emailLabel")}
             </label>
             <input
               id="register-email"
@@ -277,7 +254,7 @@ export default function RegisterPage() {
                 setEmail(e.target.value);
                 clearFieldError("email");
               }}
-              placeholder={T.emailPlaceholder}
+              placeholder={t("emailPlaceholder")}
               aria-invalid={!!errors.email}
               aria-describedby={
                 errors.email ? "register-email-error" : undefined
@@ -302,7 +279,7 @@ export default function RegisterPage() {
               htmlFor="register-password"
               className="block text-sm font-medium text-[#2c211b]"
             >
-              {T.passwordLabel}
+              {t("passwordLabel")}
             </label>
             <div className="relative">
               <input
@@ -314,7 +291,7 @@ export default function RegisterPage() {
                   setPassword(e.target.value);
                   clearFieldError("password");
                 }}
-                placeholder={T.passwordPlaceholder}
+                placeholder={t("passwordPlaceholder")}
                 aria-invalid={!!errors.password}
                 aria-describedby={
                   errors.password ? "register-password-error" : undefined
@@ -327,7 +304,7 @@ export default function RegisterPage() {
                 onClick={() => setShowPassword((s) => !s)}
                 disabled={loading}
                 aria-label={
-                  showPassword ? "Скрыть пароль" : "Показать пароль"
+                  showPassword ? t("hidePassword") : t("showPassword")
                 }
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-none p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -358,12 +335,12 @@ export default function RegisterPage() {
             {loading ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                {T.registering}
+                {t("registering")}
               </>
             ) : (
               <>
                 <UserPlus className="size-4" />
-                {T.registerButton}
+                {t("registerButton")}
               </>
             )}
           </button>
@@ -371,12 +348,12 @@ export default function RegisterPage() {
 
         {/* Footer link */}
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          {T.hasAccount}{" "}
+          {t("hasAccount")}{" "}
           <Link
-            href="/login"
+            href={`/${locale}/login`}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            {T.loginLink}
+            {t("loginLink")}
           </Link>
         </p>
       </div>

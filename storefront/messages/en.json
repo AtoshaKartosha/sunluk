@@ -1,4 +1,9 @@
 {
+  "home": {
+    "collectionLabel": "CURATED SELECTION",
+    "collectionHeading": "SUNLUK COLLECTION",
+    "collectionCta": "CHOOSE ACCESSORIES"
+  },
   "catalog": {
     "breadcrumb": "CATALOG",
     "heading": "ALL PRODUCTS",
@@ -42,12 +47,12 @@
     "quantity": "Quantity",
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
-    "price": "Price",
-    "cost": "Total",
     "inStock": "In stock",
     "lowStock": "Only a few left",
     "backorderAvailable": "Available for backorder",
     "notAvailable": "Out of stock",
+    "price": "Price",
+    "cost": "Total",
     "deliveryPromise": "Free delivery",
     "adding": "Adding…",
     "breadcrumbCatalog": "CATALOG",
@@ -78,5 +83,198 @@
   "localeSwitcher": {
     "ru": "RU",
     "en": "EN"
+  },
+  "auth": {
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Welcome",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "loginButton": "Sign In",
+      "loggingIn": "Signing in…",
+      "noAccount": "No account?",
+      "registerLink": "Register",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "validation": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 6 characters"
+      },
+      "errors": {
+        "invalidCredentials": "Invalid email or password. Please try again.",
+        "network": "Network error. Check your connection."
+      }
+    },
+    "register": {
+      "title": "Registration",
+      "subtitle": "Create an account",
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "Ivan",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Petrov",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "registerButton": "Register",
+      "registering": "Registering…",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign In",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "validation": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 6 characters"
+      },
+      "errors": {
+        "network": "Network error. Check your connection.",
+        "registrationFailed": "Could not create an account. The email may already be in use.",
+        "emailAlreadyExists": "An account with this email already exists."
+      }
+    }
+  },
+  "cabinet": {
+    "title": "My Account",
+    "greeting": "Hello",
+    "profileSection": "Profile",
+    "emailLabel": "Email",
+    "nameLabel": "Name",
+    "noName": "Not specified",
+    "ordersSection": "My Orders",
+    "noOrders": "You have no orders yet.",
+    "browseCatalog": "Browse Catalog",
+    "orderId": "Order #",
+    "date": "Date",
+    "status": "Status",
+    "payment": "Payment",
+    "total": "Total",
+    "viewDetails": "Details",
+    "logout": "Log Out",
+    "orderStatus": {
+      "pending": "Pending",
+      "received": "Received",
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "canceled": "Canceled",
+      "declined": "Declined",
+      "requires_action": "Requires Action"
+    },
+    "paymentStatus": {
+      "captured": "Paid",
+      "authorized": "Authorized",
+      "pending": "Pending",
+      "not_paid": "Not Paid",
+      "refunded": "Refunded",
+      "partially_refunded": "Partially Refunded",
+      "canceled": "Canceled",
+      "requires_action": "Requires Action"
+    },
+    "order": {
+      "backToCabinet": "Back to Cabinet",
+      "orderTitle": "Order",
+      "notFound": "Order Not Found",
+      "notFoundDesc": "It may not exist or does not belong to your account.",
+      "goToCabinet": "Back to Cabinet",
+      "status": "Status",
+      "payment": "Payment",
+      "date": "Order Date",
+      "itemsSection": "Items in Order",
+      "quantity": "Qty",
+      "price": "Price",
+      "subtotal": "Subtotal",
+      "totalsSection": "Totals",
+      "itemSubtotal": "Items",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "discount": "Discount",
+      "total": "Total",
+      "shippingAddress": "Shipping Address",
+      "billingAddress": "Billing Address",
+      "noAddress": "Not specified",
+      "untitledItem": "Item",
+      "variant": "Variant"
+    }
+  },
+  "checkout": {
+    "loading": "LOADING CART…",
+    "emptyTitle": "CART IS EMPTY",
+    "emptyDesc": "Add items to your cart to continue checkout.",
+    "emptyCta": "GO TO CATALOG",
+    "noItems": "No items in cart.",
+    "pageLabel": "CHECKOUT",
+    "pageTitle": "CHECKOUT",
+    "steps": {
+      "contact": "CONTACT & ADDRESS",
+      "shipping": "SHIPPING",
+      "payment": "PAYMENT"
+    },
+    "contact": {
+      "heading": "CONTACT & SHIPPING ADDRESS",
+      "desc": "Provide your contact details for order delivery.",
+      "email": "Email",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "address": "Address",
+      "city": "City",
+      "postalCode": "Postal Code",
+      "countryCode": "Country Code",
+      "phone": "Phone",
+      "emailPlaceholder": "your@email.com",
+      "firstNamePlaceholder": "Ivan",
+      "lastNamePlaceholder": "Ivanov",
+      "addressPlaceholder": "123 Example St., Apt. 42",
+      "cityPlaceholder": "Moscow",
+      "postalCodePlaceholder": "123456",
+      "countryCodePlaceholder": "dk",
+      "phonePlaceholder": "+7 (999) 123-45-67"
+    },
+    "shipping": {
+      "heading": "SHIPPING METHOD",
+      "desc": "Select a shipping method for your order.",
+      "loading": "Loading shipping options…",
+      "noneAvailable": "No shipping options available for your region."
+    },
+    "payment": {
+      "heading": "PAYMENT METHOD",
+      "desc": "Confirm your payment method to complete the order.",
+      "methodLabel": "Credit Card / Standard Payment",
+      "methodDesc": "Secure payment via the payment system"
+    },
+    "actions": {
+      "saving": "SAVING…",
+      "continue": "CONTINUE",
+      "back": "← BACK",
+      "continueToPayment": "CONTINUE TO PAYMENT",
+      "processing": "PROCESSING…",
+      "placeOrder": "PLACE ORDER"
+    },
+    "summary": {
+      "yourOrder": "YOUR ORDER",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "total": "Total"
+    },
+    "success": {
+      "title": "THANK YOU FOR YOUR ORDER!",
+      "orderNumber": "ORDER NUMBER",
+      "confirmation": "Order confirmation and delivery details have been sent to your email.",
+      "backToCatalog": "BACK TO CATALOG"
+    }
+  },
+  "cart": {
+    "checkout": "Checkout",
+    "total": "Total"
   }
 }

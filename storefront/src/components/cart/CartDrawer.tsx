@@ -4,6 +4,7 @@ import { useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
@@ -70,6 +71,7 @@ export default function CartDrawer() {
     mutating,
     itemCount,
   } = useCart();
+  const locale = useLocale();
 
   // Esc to close
   useEffect(() => {
@@ -184,6 +186,7 @@ export default function CartDrawer() {
                 cart={cart as StoreCart | null}
                 currency={currency}
                 disabled={mutating}
+                locale={locale}
               />
             )}
           </motion.aside>
@@ -326,9 +329,11 @@ interface CartFooterProps {
   cart: StoreCart | null;
   currency: string;
   disabled: boolean;
+  locale: string;
 }
+function CartFooter({ cart, currency, disabled, locale }: CartFooterProps) {
+  const t = useTranslations("cart");
 
-function CartFooter({ cart, currency, disabled }: CartFooterProps) {
   if (!cart) return null;
 
   const subtotal = cart.subtotal;
@@ -376,7 +381,7 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
           </div>
         ))}
         <div className="flex justify-between border-t border-[#2c211b]/10 pt-2 text-base font-semibold">
-          <span className="text-[#2c211b]">Итого</span>
+          <span className="text-[#2c211b]">{t("total")}</span>
           <span className="tabular-nums text-[#2c211b]">
             {total != null ? formatPrice(total, currency) : "—"}
           </span>
@@ -385,7 +390,7 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
 
       {/* CTA */}
       <Link
-        href="/checkout"
+        href={`/${locale}/checkout`}
         onClick={(e) => {
           if (disabled) e.preventDefault();
         }}
@@ -395,7 +400,7 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
           disabled && "pointer-events-none opacity-50",
         )}
       >
-        Перейти к оформлению
+        {t("checkout")}
       </Link>
     </div>
   );
