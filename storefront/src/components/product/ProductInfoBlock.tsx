@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
+import Image from "next/image";
 
 export interface ProductInfoBlockLabels {
   brand: string;
@@ -183,10 +184,13 @@ export function ProductInfoBlock({
   const [selectionValid, setSelectionValid] = useState(false);
   const [selectionQuantity, setSelectionQuantity] = useState(1);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
-  const [selectedPackaging, setSelectedPackaging] = useState<string>("none");
+  const [selectedPackaging, setSelectedPackaging] = useState<string>(() => {
+    return packagingProducts?.[0]?.handle || "velvet-pouch";
+  });
+
+
 
   const selectedPackagingVariantId = useMemo(() => {
-    if (selectedPackaging === "none") return null;
     const pkgProduct = packagingProducts?.find((p) => p.handle === selectedPackaging);
     return pkgProduct?.variants?.[0]?.id ?? null;
   }, [selectedPackaging, packagingProducts]);
@@ -353,33 +357,7 @@ export function ProductInfoBlock({
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {labels.packagingHeading}
             </span>
-            <div className="flex flex-col gap-2">
-              <label
-                className={[
-                  "flex items-center justify-between p-3 border transition-all duration-200 cursor-pointer",
-                  selectedPackaging === "none"
-                    ? "border-[#2f6f78] bg-[#2f6f78]/5"
-                    : "border-[#2c211b]/15 hover:border-[#2c211b]/40",
-                ].join(" ")}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="packaging"
-                    value="none"
-                    checked={selectedPackaging === "none"}
-                    onChange={() => setSelectedPackaging("none")}
-                    className="text-[#2f6f78] focus:ring-[#2f6f78] bg-transparent border-[#2c211b]/30"
-                  />
-                  <span className="text-xs uppercase tracking-wider font-medium text-[#2c211b]">
-                    {labels.packagingNone}
-                  </span>
-                </div>
-                <span className="text-xs text-[#2c211b]/60 font-serif">
-                  0
-                </span>
-              </label>
-
+            <div className="grid grid-cols-2 gap-4">
               {packagingProducts.map((p) => {
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
@@ -388,36 +366,50 @@ export function ProductInfoBlock({
                 const currency = variant.calculated_price?.currency_code;
                 const isFree = !amount;
                 const priceText = (isFree || !amount || !currency)
-                  ? `(${labels.packagingFree})`
+                  ? labels.packagingFree
                   : `+ ${formatPriceValue(amount, currency)}`;
 
+                // Fallback to our local generated images if no thumbnail is set on Medusa product
+                const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;
+
                 return (
-                  <label
+                  <button
                     key={p.id}
+                    type="button"
+                    onClick={() => setSelectedPackaging(p.handle)}
                     className={[
-                      "flex items-center justify-between p-3 border transition-all duration-200 cursor-pointer",
+                      "relative flex flex-col items-center justify-between p-3 border transition-all duration-300 text-center select-none cursor-pointer text-[#2c211b]",
                       isSelected
-                        ? "border-[#2f6f78] bg-[#2f6f78]/5"
-                        : "border-[#2c211b]/15 hover:border-[#2c211b]/40",
+                        ? "border-[#2f6f78] bg-[#2f6f78]/5 ring-1 ring-[#2f6f78]"
+                        : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",
                     ].join(" ")}
                   >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="packaging"
-                        value={p.handle}
-                        checked={isSelected}
-                        onChange={() => setSelectedPackaging(p.handle)}
-                        className="text-[#2f6f78] focus:ring-[#2f6f78] bg-transparent border-[#2c211b]/30"
+                    <div className="relative w-full aspect-square mb-2 bg-[#f4ebe6] overflow-hidden">
+                      <Image
+                        src={imageUrl}
+                        alt={p.title}
+                        fill
+                        className="object-cover transition-transform duration-300 hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 20vw"
                       />
-                      <span className="text-xs uppercase tracking-wider font-medium text-[#2c211b]">
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold">
                         {p.title}
                       </span>
+                      <span className="text-[11px] text-[#2c211b]/60 font-serif">
+                        {priceText}
+                      </span>
                     </div>
-                    <span className="text-xs text-[#2c211b]/60 font-serif">
-                      {priceText}
-                    </span>
-                  </label>
+                    {/* Selected indicator */}
+                    {isSelected && (
+                      <span className="absolute top-2 right-2 bg-[#2f6f78] text-white rounded-full p-0.5 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-3 h-3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
                 );
               })}
             </div>
