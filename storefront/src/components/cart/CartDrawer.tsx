@@ -151,7 +151,7 @@ export default function CartDrawer() {
               </h2>
               <button
                 onClick={closeCart}
-                className="rounded-full p-2 text-[#2c211b]/60 transition-colors hover:bg-[#2c211b]/5 hover:text-[#2c211b]"
+                className="p-2 text-[#2c211b]/60 transition-colors hover:bg-[#2c211b]/5 hover:text-[#2c211b]"
                 aria-label="Закрыть корзину"
               >
                 <X className="h-5 w-5" />
@@ -250,10 +250,10 @@ function CartLineItem({
         <img
           src={thumbnail}
           alt={item.title}
-          className="h-20 w-20 flex-shrink-0 rounded-md border border-[#2c211b]/10 object-cover"
+          className="h-20 w-20 flex-shrink-0 border border-[#2c211b]/10 object-cover"
         />
       ) : (
-        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-md border border-[#2c211b]/10 bg-[#2c211b]/3">
+        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center border border-[#2c211b]/10 bg-[#2c211b]/3">
           <ShoppingBag className="h-6 w-6 text-[#2c211b]/15" />
         </div>
       )}
@@ -274,7 +274,7 @@ function CartLineItem({
 
         <div className="mt-2 flex items-center justify-between">
           {/* Quantity controls */}
-          <div className="flex items-center gap-0.5 rounded-md border border-[#2c211b]/15 bg-white">
+          <div className="flex items-center gap-0.5 border border-[#2c211b]/15 bg-white">
             <button
               onClick={decrement}
               disabled={disabled || item.quantity <= 1}
@@ -306,7 +306,7 @@ function CartLineItem({
             <button
               onClick={() => onRemove(item.id)}
               disabled={disabled}
-              className="rounded p-1 text-[#2c211b]/30 transition-colors hover:bg-[#2c211b]/5 hover:text-destructive disabled:opacity-30"
+              className="p-1 text-[#2c211b]/30 transition-colors hover:bg-[#2c211b]/5 hover:text-destructive disabled:opacity-30"
               aria-label={`Удалить ${item.title}`}
             >
               <Trash2 className="h-4 w-4" />
@@ -390,7 +390,7 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
           if (disabled) e.preventDefault();
         }}
         className={cn(
-          "mt-4 flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-medium tracking-widest uppercase transition-all duration-300",
+          "mt-4 flex w-full items-center justify-center px-6 py-3 text-sm font-medium tracking-widest uppercase transition-all duration-300",
           "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 active:scale-[0.98]",
           disabled && "pointer-events-none opacity-50",
         )}

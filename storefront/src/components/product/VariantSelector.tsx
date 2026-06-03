@@ -278,10 +278,12 @@ export function VariantSelector({
     }
   };
 
+  const showOptions = !hideOptionButtons && safeVariants.length > 1;
+
   return (
     <div className="flex flex-col gap-5">
       {/* Options */}
-      {!hideOptionButtons &&
+      {showOptions &&
         safeOptions.map((opt) => {
           const values = availableValues(
             safeOptions,
@@ -323,51 +325,36 @@ export function VariantSelector({
           );
         })}
 
-      {/* Variant price */}
-      {resolved?.calculated_price && (
-        <div className={`flex flex-col gap-1.5 pt-4 ${hideOptionButtons ? "" : "border-t border-[#2c211b]/10"}`}>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
-              {quantity > 1 ? labels.cost : labels.price}
-            </span>
+      {/* Stock + delivery messaging & Price */}
+      {stockInfo && (
+        <div className={["flex items-center justify-between", showOptions ? "border-t border-[#2c211b]/10 pt-4" : ""].join(" ")}>
+          <div className="flex flex-col gap-1">
+            <p
+              className={[
+                "text-xs font-medium uppercase tracking-wider",
+                stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
+              ].join(" ")}
+            >
+              {stockInfo.message}
+            </p>
+            {stockInfo.deliveryPromise && stockInfo.available && (
+              <p className="text-xs text-[#2c211b]/50">
+                {stockInfo.deliveryPromise}
+              </p>
+            )}
+          </div>
+          {resolved?.calculated_price && (
             <div className="flex items-baseline gap-2">
-              {quantity > 1 && (
-                <span className="text-xs text-[#2c211b]/40 font-mono mr-1">
-                  {quantity} × <PriceDisplay price={resolved.calculated_price} className="text-xs text-[#2c211b]/60" /> =
-                </span>
-              )}
               <PriceDisplay
-                price={{
-                  calculated_amount: resolved.calculated_price.calculated_amount * quantity,
-                  currency_code: resolved.calculated_price.currency_code,
-                }}
-                className={quantity > 1 ? "text-lg font-bold text-[#2f6f78]" : "text-base"}
+                price={resolved.calculated_price}
+                className="text-xl sm:text-2xl font-light font-serif text-[#2c211b]"
               />
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stock + delivery messaging */}
-      {stockInfo && (
-        <div className="flex flex-col gap-1">
-          <p
-            className={[
-              "text-xs font-medium",
-              stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
-            ].join(" ")}
-          >
-            {stockInfo.message}
-          </p>
-          {stockInfo.deliveryPromise && stockInfo.available && (
-            <p className="text-xs text-[#2c211b]/50">
-              {stockInfo.deliveryPromise}
-            </p>
           )}
         </div>
       )}
 
-      {/* Quantity */}
+      {/* Quantity & CTA */}
       <div className="flex flex-col gap-2">
         <label
           htmlFor="variant-qty"
@@ -375,64 +362,65 @@ export function VariantSelector({
         >
           {labels.quantity}
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(quantity - 1)}
+              disabled={quantity <= 1}
+              className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label={labels.decreaseQuantity}
+            >
+              −
+            </button>
+            <input
+              id="variant-qty"
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) handleQuantityChange(v);
+              }}
+              className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(quantity + 1)}
+              className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 transition-colors"
+              aria-label={labels.increaseQuantity}
+            >
+              +
+            </button>
+          </div>
+
           <button
+            id="pdp-primary-cta"
             type="button"
-            onClick={() => handleQuantityChange(quantity - 1)}
-            disabled={quantity <= 1}
-            className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label={labels.decreaseQuantity}
+            disabled={!cartReady || addingInProgress}
+            aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
+            onClick={handleAddToCart}
+            className={[
+              "flex-1 h-9 inline-flex items-center justify-center px-6 text-xs font-medium tracking-widest uppercase transition-all duration-300",
+              cartReady && !addingInProgress
+                ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
+                : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
+            ].join(" ")}
           >
-            −
-          </button>
-          <input
-            id="variant-qty"
-            type="number"
-            min={1}
-            value={quantity}
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10);
-              if (!isNaN(v)) handleQuantityChange(v);
-            }}
-            className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <button
-            type="button"
-            onClick={() => handleQuantityChange(quantity + 1)}
-            className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 transition-colors"
-            aria-label={labels.increaseQuantity}
-          >
-            +
+            {addingInProgress ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {labels.adding}
+              </span>
+            ) : (
+              buttonCopy
+            )}
           </button>
         </div>
       </div>
-
-      {/* CTA */}
-      <button
-        id="pdp-primary-cta"
-        type="button"
-        disabled={!cartReady || addingInProgress}
-        aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
-        onClick={handleAddToCart}
-        className={[
-          "inline-flex items-center justify-center px-10 py-4 text-xs font-medium tracking-widest uppercase transition-all duration-300",
-          cartReady && !addingInProgress
-            ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
-            : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
-        ].join(" ")}
-      >
-        {addingInProgress ? (
-          <span className="flex items-center gap-2">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            {labels.adding}
-          </span>
-        ) : (
-          buttonCopy
-        )}
-      </button>
     </div>
   );
 }

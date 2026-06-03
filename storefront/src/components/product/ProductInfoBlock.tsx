@@ -297,7 +297,7 @@ export function ProductInfoBlock({
         </div>
 
         {/* Material quick-switch chips (visual, inline with variant selector) */}
-        {product.options?.some((o) => o.title.toLowerCase() === "material") && (
+        {product.variants && product.variants.length > 1 && product.options?.some((o) => o.title.toLowerCase() === "material") && (
           product.options
             ?.filter((o) => o.title.toLowerCase() === "material")
             .map((opt) => {
