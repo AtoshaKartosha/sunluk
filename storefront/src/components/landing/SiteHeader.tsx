@@ -7,6 +7,7 @@ import { BRAND, NAV_LINKS } from "@/lib/landing-data";
 import type { NavLinkData } from "@/lib/landing-data";
 import { NavLink } from "@/components/landing/NavLink";
 import { useCart } from "@/components/cart/CartContext";
+import { LocaleSwitcher } from "@/components/product";
 
 /* ------------------------------------------------------------------ */
 /*  inline SVGs – only the icons this component needs                 */
@@ -103,6 +104,8 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
               )}
             </div>
           </button>
+
+          <LocaleSwitcher />
 
           {/* Mobile Menu Button */}
           <button

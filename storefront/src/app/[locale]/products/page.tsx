@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { resolveRegion } from "@/lib/medusa/regions";
 import { listProducts } from "@/lib/medusa/products";
-import { ProductGrid, LocaleSwitcher } from "@/components/product";
+import { ProductGrid } from "@/components/product";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import type { Locale } from "@/i18n/routing";
@@ -147,9 +147,6 @@ export default async function ProductsPage({ params }: Props) {
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
       <main className="flex-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4 flex justify-end">
-          <LocaleSwitcher />
-        </div>
         <section className="pt-8 sm:pt-16 pb-10 sm:pb-16">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
             <div className="max-w-xl mx-auto mb-16 sm:mb-20 text-center">

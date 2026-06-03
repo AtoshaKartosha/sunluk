@@ -16,7 +16,6 @@ import {
   ProductBreadcrumb,
   ProductRelatedProducts,
   ProductJsonLd,
-  LocaleSwitcher,
 } from "@/components/product";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
@@ -360,13 +359,12 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
       <main className="flex-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4 flex justify-between items-center">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4">
           <ProductBreadcrumb
             title={product.title}
             locale={resolvedLocale}
             catalogLabel={pt("breadcrumbCatalog")}
           />
-          <LocaleSwitcher />
         </div>
         <section className="pt-4 sm:pt-8 pb-16">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
