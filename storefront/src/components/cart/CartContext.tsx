@@ -26,7 +26,7 @@ interface CartContextType {
   addItem: (
     variantId: string,
     quantity: number,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ) => Promise<StoreCart | undefined>;
   updateItem: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
@@ -98,7 +98,7 @@ async function addCartLineItem(
   cartId: string,
   variantId: string,
   quantity: number,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 ): Promise<StoreCart> {
   const sdk = getMedusaClient();
   const result = (await sdk.store.cart.createLineItem(
@@ -220,7 +220,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     async (
       variantId: string,
       quantity: number,
-      metadata?: Record<string, any>,
+      metadata?: Record<string, unknown>,
     ) => {
       setMutating(true);
       try {
