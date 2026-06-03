@@ -103,10 +103,24 @@ export default async function initial_data_seed({
   logger.info("Seeding locales...");
   const translationModuleService = container.resolve(Modules.TRANSLATION);
 
-  await translationModuleService.createLocales([
-    { code: "ru-RU", name: "Russian (Russia)" },
-    { code: "en-US", name: "English (United States)" },
-  ]);
+  try {
+    const existing = await translationModuleService.listLocales({
+      code: ["ru-RU", "en-US"],
+    });
+    const existingCodes = new Set(existing.map((l) => l.code));
+    const toCreate = [];
+    if (!existingCodes.has("ru-RU")) {
+      toCreate.push({ code: "ru-RU", name: "Russian (Russia)" });
+    }
+    if (!existingCodes.has("en-US")) {
+      toCreate.push({ code: "en-US", name: "English (United States)" });
+    }
+    if (toCreate.length > 0) {
+      await translationModuleService.createLocales(toCreate);
+    }
+  } catch (err) {
+    logger.warn("Failed to create locales during seed: " + (err instanceof Error ? err.message : String(err)));
+  }
 
   await updateStoresWorkflow(container).run({
     input: {
