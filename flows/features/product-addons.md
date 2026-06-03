@@ -5,7 +5,7 @@
 Allow customers to select product packaging add-ons (such as a free velvet pouch or a paid premium gift box) directly on the product detail page (PDP). When the customer adds the jewelry item to the cart, the selected packaging add-on is added alongside it as a linked cart line item. In the cart drawer, the packaging add-on is visually grouped under the parent jewelry item, and its lifecycle (removal and quantity changes) is synchronized with the parent item.
 
 Success criteria:
-- Customers can toggle between "No packaging", "Free velvet pouch", and "Premium gift box" on the PDP.
+- Customers can toggle between "Free velvet pouch" and "Premium gift box" on the PDP (no packaging option is omitted).
 - The paid gift box displays the correct currency price (RUB/EUR/USD) based on the active region.
 - Clicking "Add to cart" adds both the main variant and the packaging variant to the cart.
 - The packaging line item is linked to the parent jewelry line item via metadata.
@@ -41,15 +41,15 @@ Out of scope:
 ```mermaid
 flowchart TD
   Start[Customer visits PDP] --> LoadPack[Fetch packaging products from Category 'packaging']
-  LoadPack --> ShowOptions[Render packaging selector options]
+  LoadPack --> ShowOptions[Render packaging selector options grid]
   
-  ShowOptions --> Toggle[Customer selects packaging option]
+  ShowOptions --> Toggle[Customer selects packaging option card]
   Toggle --> ClickAdd[Click Add to Cart]
   
   ClickAdd --> AddMain[1. Add jewelry variant to cart]
   AddMain --> AddSuccess{Success?}
   AddSuccess -->|no| ShowError[Show Add to Cart error]
-  AddSuccess -->|yes| CheckAddon{Is packaging selected?}
+  AddSuccess -->|yes| CheckAddon{Is packaging variant resolved?}
   
   CheckAddon -->|no| OpenCart[Open Cart Drawer]
   CheckAddon -->|yes| AddAddon[2. Add packaging variant to cart with metadata: parent_line_item_id]
@@ -60,10 +60,9 @@ flowchart TD
 
 ```mermaid
 stateDiagram-v2
-  [*] --> NoAddonSelected: Visit PDP
-  NoAddonSelected --> FreeAddonSelected: Select "Velvet Pouch (0 EUR)"
-  NoAddonSelected --> PaidAddonSelected: Select "Gift Box (5 EUR)"
-  FreeAddonSelected --> PaidAddonSelected: Toggle
+  [*] --> FreeAddonSelected: Visit PDP (Default "Velvet Pouch")
+  FreeAddonSelected --> PaidAddonSelected: Toggle "Gift Box"
+  PaidAddonSelected --> FreeAddonSelected: Toggle "Velvet Pouch"
   
   FreeAddonSelected --> AddingToCart: Click Add to Cart
   PaidAddonSelected --> AddingToCart: Click Add to Cart
