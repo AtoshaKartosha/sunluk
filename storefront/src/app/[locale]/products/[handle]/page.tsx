@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveRegion } from "@/lib/medusa/regions";
-import { getProduct, listRelatedProducts } from "@/lib/medusa/products";
+import { getProduct, listRelatedProducts, listPackagingProducts } from "@/lib/medusa/products";
 import type { ProductDetail } from "@/lib/medusa/products";
 import {
   projectVariant,
@@ -260,6 +260,14 @@ export default async function ProductDetailPage({ params }: Props) {
     // safe to leave empty
   }
 
+  // Packaging products (best-effort; failure is silent).
+  let packagingProducts: ProductDetail[] = [];
+  try {
+    packagingProducts = await listPackagingProducts(region, medusaLocale);
+  } catch {
+    // safe to leave empty
+  }
+
   // ---- Labels ----
 
   const pt = await getTranslations({ locale, namespace: "product" });
@@ -325,6 +333,9 @@ export default async function ProductDetailPage({ params }: Props) {
       placeholder: pt("socialPlaceholder"),
     },
     factsHeading: pt("factsHeading"),
+    packagingHeading: pt("packaging.heading"),
+    packagingNone: pt("packaging.none"),
+    packagingFree: pt("packaging.free"),
   };
 
   // ---- Render ----
@@ -367,6 +378,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 product={product}
                 price={headlinePrice}
                 labels={productLabels}
+                packagingProducts={packagingProducts}
               />
             </div>
 

@@ -23,7 +23,11 @@ interface CartContextType {
   mutating: boolean;
   isOpen: boolean;
   itemCount: number;
-  addItem: (variantId: string, quantity: number) => Promise<void>;
+  addItem: (
+    variantId: string,
+    quantity: number,
+    metadata?: Record<string, any>,
+  ) => Promise<StoreCart | undefined>;
   updateItem: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
   openCart: () => void;
@@ -94,11 +98,12 @@ async function addCartLineItem(
   cartId: string,
   variantId: string,
   quantity: number,
+  metadata?: Record<string, any>,
 ): Promise<StoreCart> {
   const sdk = getMedusaClient();
   const result = (await sdk.store.cart.createLineItem(
     cartId,
-    { variant_id: variantId, quantity },
+    { variant_id: variantId, quantity, metadata },
     { fields: CART_FIELDS },
   )) as unknown as { cart: StoreCart };
   return result.cart;
@@ -203,14 +208,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = useMemo(
     () =>
-      cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
+      cart?.items
+        ?.filter((item) => !item.metadata?.parent_line_item_id)
+        .reduce((sum, item) => sum + item.quantity, 0) ?? 0,
     [cart],
   );
 
   // ---- Mutations ----
 
   const addItem = useCallback(
-    async (variantId: string, quantity: number) => {
+    async (
+      variantId: string,
+      quantity: number,
+      metadata?: Record<string, any>,
+    ) => {
       setMutating(true);
       try {
         const region = await ensureRegion();
@@ -225,12 +236,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Add the line item.
-        const updated = await addCartLineItem(currentId, variantId, quantity);
+        const updated = await addCartLineItem(
+          currentId,
+          variantId,
+          quantity,
+          metadata,
+        );
         setCart(updated);
         setIsOpen(true);
-      } catch {
+        return updated;
+      } catch (err) {
         // Mutations that fail leave the previous cart projection in place
         // so the user can retry. A production app would surface the error.
+        throw err;
       } finally {
         setMutating(false);
       }
@@ -245,15 +263,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
+        const linkedItem = cart?.items?.find(
+          (item) => item.metadata?.parent_line_item_id === lineItemId,
+        );
+
         if (quantity <= 0) {
-          const updated = await deleteCartLineItem(currentId, lineItemId);
+          let updated = await deleteCartLineItem(currentId, lineItemId);
+          if (linkedItem) {
+            updated = await deleteCartLineItem(currentId, linkedItem.id);
+          }
           setCart(updated);
         } else {
-          const updated = await updateCartLineItem(
+          let updated = await updateCartLineItem(
             currentId,
             lineItemId,
             quantity,
           );
+          if (linkedItem) {
+            updated = await updateCartLineItem(
+              currentId,
+              linkedItem.id,
+              quantity,
+            );
+          }
           setCart(updated);
         }
       } catch {
@@ -272,7 +304,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const updated = await deleteCartLineItem(currentId, lineItemId);
+        const linkedItem = cart?.items?.find(
+          (item) => item.metadata?.parent_line_item_id === lineItemId,
+        );
+
+        let updated = await deleteCartLineItem(currentId, lineItemId);
+        if (linkedItem) {
+          updated = await deleteCartLineItem(currentId, linkedItem.id);
+        }
         setCart(updated);
       } catch {
         // Leave previous projection in place.

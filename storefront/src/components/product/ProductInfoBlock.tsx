@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
-import { PriceDisplay } from "./PriceDisplay";
+import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 
 export interface ProductInfoBlockLabels {
@@ -32,6 +32,9 @@ export interface ProductInfoBlockLabels {
   socialProof: import("./types").SocialProofLabels;
   /** Product facts heading. */
   factsHeading: string;
+  packagingHeading?: string;
+  packagingNone?: string;
+  packagingFree?: string;
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
@@ -96,12 +99,16 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     placeholder: "Отзывы скоро появятся. Станьте первым!",
   },
   factsHeading: "ХАРАКТЕРИСТИКИ",
+  packagingHeading: "УПАКОВКА",
+  packagingNone: "Без упаковки",
+  packagingFree: "Бесплатно",
 };
 
 interface ProductInfoBlockProps {
   product: StoreProduct;
   price: CalculatedPrice | null;
   labels?: ProductInfoBlockLabels;
+  packagingProducts?: StoreProduct[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -168,6 +175,7 @@ export function ProductInfoBlock({
   product,
   price,
   labels = DEFAULT_LABELS,
+  packagingProducts = [],
 }: ProductInfoBlockProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
@@ -175,6 +183,13 @@ export function ProductInfoBlock({
   const [selectionValid, setSelectionValid] = useState(false);
   const [selectionQuantity, setSelectionQuantity] = useState(1);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
+  const [selectedPackaging, setSelectedPackaging] = useState<string>("none");
+
+  const selectedPackagingVariantId = useMemo(() => {
+    if (selectedPackaging === "none") return null;
+    const pkgProduct = packagingProducts?.find((p) => p.handle === selectedPackaging);
+    return pkgProduct?.variants?.[0]?.id ?? null;
+  }, [selectedPackaging, packagingProducts]);
 
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
 
@@ -332,6 +347,83 @@ export function ProductInfoBlock({
             })
         )}
 
+        {/* Packaging Options */}
+        {packagingProducts && packagingProducts.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-[#2c211b]/10 pt-5">
+            <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
+              {labels.packagingHeading}
+            </span>
+            <div className="flex flex-col gap-2">
+              <label
+                className={[
+                  "flex items-center justify-between p-3 border transition-all duration-200 cursor-pointer",
+                  selectedPackaging === "none"
+                    ? "border-[#2f6f78] bg-[#2f6f78]/5"
+                    : "border-[#2c211b]/15 hover:border-[#2c211b]/40",
+                ].join(" ")}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="packaging"
+                    value="none"
+                    checked={selectedPackaging === "none"}
+                    onChange={() => setSelectedPackaging("none")}
+                    className="text-[#2f6f78] focus:ring-[#2f6f78] bg-transparent border-[#2c211b]/30"
+                  />
+                  <span className="text-xs uppercase tracking-wider font-medium text-[#2c211b]">
+                    {labels.packagingNone}
+                  </span>
+                </div>
+                <span className="text-xs text-[#2c211b]/60 font-serif">
+                  0
+                </span>
+              </label>
+
+              {packagingProducts.map((p) => {
+                const variant = p.variants?.[0];
+                const isSelected = selectedPackaging === p.handle;
+                if (!variant) return null;
+                const amount = variant.calculated_price?.calculated_amount;
+                const currency = variant.calculated_price?.currency_code;
+                const isFree = !amount;
+                const priceText = (isFree || !amount || !currency)
+                  ? `(${labels.packagingFree})`
+                  : `+ ${formatPriceValue(amount, currency)}`;
+
+                return (
+                  <label
+                    key={p.id}
+                    className={[
+                      "flex items-center justify-between p-3 border transition-all duration-200 cursor-pointer",
+                      isSelected
+                        ? "border-[#2f6f78] bg-[#2f6f78]/5"
+                        : "border-[#2c211b]/15 hover:border-[#2c211b]/40",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="packaging"
+                        value={p.handle}
+                        checked={isSelected}
+                        onChange={() => setSelectedPackaging(p.handle)}
+                        className="text-[#2f6f78] focus:ring-[#2f6f78] bg-transparent border-[#2c211b]/30"
+                      />
+                      <span className="text-xs uppercase tracking-wider font-medium text-[#2c211b]">
+                        {p.title}
+                      </span>
+                    </div>
+                    <span className="text-xs text-[#2c211b]/60 font-serif">
+                      {priceText}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Variant Selector (non-material options + purchase controls) */}
         <div className="pt-2">
           <VariantSelector
@@ -339,6 +431,7 @@ export function ProductInfoBlock({
             variants={product.variants}
             hideOptionButtons={product.options?.length === 1 && product.options[0].title.toLowerCase() === "material"}
             labels={labels.variantSelector}
+            selectedPackagingVariantId={selectedPackagingVariantId}
             onSelectionChange={handleSelectionChange}
           />
         </div>

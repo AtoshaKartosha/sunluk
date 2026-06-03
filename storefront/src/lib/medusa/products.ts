@@ -144,7 +144,11 @@ export async function listProducts(
     count: number;
   };
 
-  return { products: data.products, count: data.count };
+  const filteredProducts = data.products.filter(
+    (p) => p.handle !== "velvet-pouch" && p.handle !== "gift-box"
+  );
+
+  return { products: filteredProducts, count: filteredProducts.length };
 }
 
 /**
@@ -198,13 +202,44 @@ export async function listRelatedProducts(
   const data = (await sdk.store.product.list({
     region_id: region.regionId,
     fields: LIST_FIELDS,
-    limit: limit + 1, // fetch one extra in case the excluded product appears
+    limit: limit + 3, // fetch extra in case excluded products appear
   })) as unknown as {
     products: ProductListItem[];
     count: number;
   };
 
   return data.products
-    .filter((p) => p.handle !== excludeHandle)
+    .filter(
+      (p) =>
+        p.handle !== excludeHandle &&
+        p.handle !== "velvet-pouch" &&
+        p.handle !== "gift-box"
+    )
     .slice(0, limit);
+}
+
+/**
+ * Fetch the specific product details for packaging options (velvet pouch and gift box).
+ */
+export async function listPackagingProducts(
+  region: ResolvedRegion,
+  medusaLocale?: string,
+): Promise<ProductDetail[]> {
+  ensureRegion(region);
+
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
+
+  // In Medusa v2, you can pass string | string[] to handle
+  const data = (await sdk.store.product.list({
+    handle: ["velvet-pouch", "gift-box"],
+    region_id: region.regionId,
+    fields: DETAIL_FIELDS,
+    limit: 2,
+  })) as unknown as {
+    products: ProductDetail[];
+  };
+
+  return data.products.map(normalizeProductOptions);
 }

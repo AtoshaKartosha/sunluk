@@ -17,6 +17,8 @@ export interface VariantSelectorProps {
   hideOptionButtons?: boolean;
   /** Localized labels for all UI copy. */
   labels: VariantSelectorLabels;
+  /** The selected packaging variant ID if any. */
+  selectedPackagingVariantId?: string | null;
   /** Callback invoked with resolved { productId?, variantId, quantity } when valid. */
   onSelectionChange?: (selection: {
     variantId: string | null;
@@ -149,6 +151,7 @@ export function VariantSelector({
   variants,
   hideOptionButtons = false,
   labels,
+  selectedPackagingVariantId = null,
   onSelectionChange,
 }: VariantSelectorProps) {
   const safeOptions = useMemo(() => options ?? [], [options]);
@@ -270,7 +273,20 @@ export function VariantSelector({
     if (!resolved?.id || !cartReady || addingInProgress) return;
     setAddingInProgress(true);
     try {
-      await addItem(resolved.id, quantity);
+      const updatedCart = await addItem(resolved.id, quantity);
+      if (selectedPackagingVariantId && updatedCart) {
+        // Find the main line item we just added/updated.
+        const mainLineItem = updatedCart.items?.find(
+          (item) =>
+            item.variant_id === resolved.id &&
+            !item.metadata?.parent_line_item_id,
+        );
+        if (mainLineItem) {
+          await addItem(selectedPackagingVariantId, quantity, {
+            parent_line_item_id: mainLineItem.id,
+          });
+        }
+      }
     } catch {
       // Error is handled by the context; button stays enabled for retry.
     } finally {

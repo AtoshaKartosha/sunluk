@@ -32,6 +32,7 @@ export interface StoreCartLineItem {
   original_total?: number;
   tax_total?: number;
   discount_total?: number;
+  metadata?: Record<string, any> | null;
 }
 
 export interface StoreCart {

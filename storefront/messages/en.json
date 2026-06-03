@@ -59,7 +59,12 @@
     "relatedHeading": "YOU MAY ALSO LIKE",
     "factsHeading": "SPECIFICATIONS",
     "socialHeading": "WHAT OUR CUSTOMERS SAY",
-    "socialPlaceholder": "Reviews coming soon. Be the first!"
+    "socialPlaceholder": "Reviews coming soon. Be the first!",
+    "packaging": {
+      "heading": "PACKAGING",
+      "none": "No packaging",
+      "free": "Free"
+    }
   },
   "header": {
     "catalog": "CATALOG",

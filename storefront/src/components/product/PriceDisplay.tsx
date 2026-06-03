@@ -9,7 +9,7 @@ interface PriceDisplayProps {
   unavailableCopy?: string;
 }
 
-function formatPriceValue(amount: number, currencyCode: string): string {
+export function formatPriceValue(amount: number, currencyCode: string): string {
   try {
     return new Intl.NumberFormat("ru-RU", {
       style: "currency",

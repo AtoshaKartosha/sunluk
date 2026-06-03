@@ -112,6 +112,7 @@ export default function CartDrawer() {
   );
 
   const items = cart?.items ?? [];
+  const mainItems = items.filter((item) => !item.metadata?.parent_line_item_id);
 
   return (
     <AnimatePresence>
@@ -162,26 +163,32 @@ export default function CartDrawer() {
 
             {/* ---- Body ---- */}
             <div className="flex-1 overflow-y-auto">
-              {items.length === 0 ? (
+              {mainItems.length === 0 ? (
                 <EmptyState />
               ) : (
                 <ul className="divide-y divide-[#2c211b]/5">
-                  {items.map((item) => (
-                    <CartLineItem
-                      key={item.id}
-                      item={item}
-                      currency={currency}
-                      disabled={mutating}
-                      onUpdate={handleUpdate}
-                      onRemove={handleRemove}
-                    />
-                  ))}
+                  {mainItems.map((item) => {
+                    const linkedItem = items.find(
+                      (i) => i.metadata?.parent_line_item_id === item.id
+                    );
+                    return (
+                      <CartLineItem
+                        key={item.id}
+                        item={item}
+                        linkedItem={linkedItem}
+                        currency={currency}
+                        disabled={mutating}
+                        onUpdate={handleUpdate}
+                        onRemove={handleRemove}
+                      />
+                    );
+                  })}
                 </ul>
               )}
             </div>
 
             {/* ---- Footer ---- */}
-            {items.length > 0 && (
+            {mainItems.length > 0 && (
               <CartFooter
                 cart={cart as StoreCart | null}
                 currency={currency}
@@ -220,6 +227,7 @@ function EmptyState() {
 
 interface CartLineItemProps {
   item: StoreCartLineItem;
+  linkedItem?: StoreCartLineItem | null;
   currency: string;
   disabled: boolean;
   onUpdate: (lineItemId: string, quantity: number) => void;
@@ -228,11 +236,13 @@ interface CartLineItemProps {
 
 function CartLineItem({
   item,
+  linkedItem = null,
   currency,
   disabled,
   onUpdate,
   onRemove,
 }: CartLineItemProps) {
+  const pt = useTranslations("product");
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
   const optionLabel = lineItemOptionLabel(item);
@@ -245,6 +255,10 @@ function CartLineItem({
   const increment = () => {
     onUpdate(item.id, item.quantity + 1);
   };
+
+  const totalUnitPrice = unitPrice != null
+    ? unitPrice + (linkedItem ? (linkedItem.unit_price ?? 0) : 0)
+    : null;
 
   return (
     <li className="flex gap-4 px-5 py-4">
@@ -272,6 +286,18 @@ function CartLineItem({
           )}
           {optionLabel && (
             <p className="mt-0.5 text-xs text-[#2c211b]/40">{optionLabel}</p>
+          )}
+          {linkedItem && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
+              <span className="font-medium text-[#2f6f78]">
+                + {linkedItem.title}
+              </span>
+              <span className="text-[#2c211b]/40">
+                ({linkedItem.unit_price === 0 || !linkedItem.unit_price
+                  ? pt("packaging.free").toLowerCase()
+                  : `+ ${formatPrice(linkedItem.unit_price, currency)}`})
+              </span>
+            </div>
           )}
         </div>
 
@@ -302,7 +328,7 @@ function CartLineItem({
           <div className="flex items-center gap-3">
             {/* Unit price */}
             <span className="text-sm font-medium tabular-nums text-[#2c211b]">
-              {unitPrice != null ? formatPrice(unitPrice, currency) : "—"}
+              {totalUnitPrice != null ? formatPrice(totalUnitPrice, currency) : "—"}
             </span>
 
             {/* Remove */}

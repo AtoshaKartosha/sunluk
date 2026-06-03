@@ -352,11 +352,17 @@ export default async function initial_data_seed({
           name: "Accessories",
           is_active: true,
         },
+        {
+          name: "Packaging",
+          handle: "packaging",
+          is_active: true,
+        },
       ],
     },
   });
 
   const accessoriesCategory = categoryResult[0];
+  const packagingCategory = categoryResult[1];
 
   const { result: productResults } = await createProductsWorkflow(container).run({
     input: {
@@ -557,6 +563,96 @@ export default async function initial_data_seed({
             },
           ],
         },
+        {
+          title: "Фирменный мешочек",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек SUNLUK",
+          handle: "velvet-pouch",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "VELVET-POUCH",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 0,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 0,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 0,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Подарочная коробка",
+          category_ids: [packagingCategory.id],
+          description: "Премиальная подарочная коробка SUNLUK с тиснением",
+          handle: "gift-box",
+          weight: 100,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "GIFT-BOX",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 5,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 5,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 500,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
       ],
     },
   });
@@ -636,6 +732,42 @@ export default async function initial_data_seed({
           translations: {
             title: "Sand Chain",
             description: "Warm metal and sea-sand shade",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек",
+            description: "Фирменный хлопковый мешочек SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Velvet Pouch",
+            description: "SUNLUK signature cotton pouch",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Подарочная коробка",
+            description: "Премиальная подарочная коробка SUNLUK с тиснением",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Premium Gift Box",
+            description: "Premium embossed SUNLUK gift box",
           },
         },
       ],

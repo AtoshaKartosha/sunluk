@@ -59,7 +59,12 @@
     "relatedHeading": "ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ",
     "factsHeading": "ХАРАКТЕРИСТИКИ",
     "socialHeading": "ПОКУПАТЕЛИ ГОВОРЯТ",
-    "socialPlaceholder": "Отзывы скоро появятся. Станьте первым!"
+    "socialPlaceholder": "Отзывы скоро появятся. Станьте первым!",
+    "packaging": {
+      "heading": "УПАКОВКА",
+      "none": "Без упаковки",
+      "free": "Бесплатно"
+    }
   },
   "header": {
     "catalog": "КАТАЛОГ",
