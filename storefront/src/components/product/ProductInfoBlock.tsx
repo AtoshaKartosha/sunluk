@@ -357,7 +357,7 @@ export function ProductInfoBlock({
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {labels.packagingHeading}
             </span>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {packagingProducts.map((p) => {
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
@@ -378,33 +378,30 @@ export function ProductInfoBlock({
                     type="button"
                     onClick={() => setSelectedPackaging(p.handle)}
                     className={[
-                      "relative flex flex-col items-center justify-between p-3 border transition-all duration-300 text-center select-none cursor-pointer text-[#2c211b]",
+                      "relative flex items-center gap-3 w-full p-2.5 text-left border transition-all duration-300 select-none cursor-pointer text-[#2c211b]",
                       isSelected
                         ? "border-[#2f6f78] bg-[#2f6f78]/5 ring-1 ring-[#2f6f78]"
                         : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",
                     ].join(" ")}
                   >
-                    <div className="relative w-full aspect-square mb-2 bg-[#f4ebe6] overflow-hidden">
+                    <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden">
                       <Image
                         src={imageUrl}
                         alt={p.title}
                         fill
                         className="object-cover transition-transform duration-300 hover:scale-105"
-                        sizes="(max-width: 768px) 50vw, 20vw"
+                        sizes="80px"
                       />
                     </div>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[11px] uppercase tracking-wider font-semibold">
-                        {p.title}
-                      </span>
-                      <span className="text-[11px] text-[#2c211b]/60 font-serif">
-                        {priceText}
+                    <div className="flex-1 min-w-0 pr-6">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold block truncate">
+                        {p.title} <span className="text-[#2c211b]/60 font-serif normal-case font-normal block sm:inline">({priceText})</span>
                       </span>
                     </div>
                     {/* Selected indicator */}
                     {isSelected && (
-                      <span className="absolute top-2 right-2 bg-[#2f6f78] text-white rounded-full p-0.5 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-3 h-3">
+                      <span className="absolute top-1/2 right-2.5 -translate-y-1/2 bg-[#2f6f78] text-white rounded-full p-0.5 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-2.5 h-2.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
                       </span>
@@ -460,16 +457,7 @@ export function ProductInfoBlock({
         )}
 
         {/* Social Proof Placeholder */}
-        <div className="border-t border-[#2c211b]/10 pt-5">
-          <h3 className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60 mb-3">
-            {labels.socialProof.heading}
-          </h3>
-          <div className="rounded-sm border border-dashed border-[#2c211b]/15 p-6 text-center">
-            <p className="text-xs text-[#2c211b]/40 italic">
-              {labels.socialProof.placeholder}
-            </p>
-          </div>
-        </div>
+
 
         {/* Collapsible Sections */}
         <div className="border-t border-[#2c211b]/10">

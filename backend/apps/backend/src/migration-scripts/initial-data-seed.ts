@@ -653,6 +653,96 @@ export default async function initial_data_seed({
             },
           ],
         },
+        {
+          title: "Шелковый мешочек",
+          category_ids: [packagingCategory.id],
+          description: "Шелковый мешочек для украшений",
+          handle: "silk-pouch",
+          weight: 30,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "SILK-POUCH",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 2,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 2,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 200,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Деревянный футляр",
+          category_ids: [packagingCategory.id],
+          description: "Деревянный футляр для украшений",
+          handle: "wooden-case",
+          weight: 200,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "WOODEN-CASE",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 10,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 1000,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
       ],
     },
   });
@@ -768,6 +858,42 @@ export default async function initial_data_seed({
           translations: {
             title: "Premium Gift Box",
             description: "Premium embossed SUNLUK gift box",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Шелковый мешочек",
+            description: "Шелковый мешочек для украшений",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Silk Pouch",
+            description: "Silk jewelry pouch",
+          },
+        },
+        {
+          reference_id: productResults[7].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Деревянный футляр",
+            description: "Деревянный футляр для украшений",
+          },
+        },
+        {
+          reference_id: productResults[7].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Wooden Case",
+            description: "Wooden jewelry case",
           },
         },
       ],

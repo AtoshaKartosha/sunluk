@@ -119,6 +119,8 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
 }
 
 
+const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case"];
+
 /**
  * List published products for a resolved region.
  *
@@ -145,7 +147,7 @@ export async function listProducts(
   };
 
   const filteredProducts = data.products.filter(
-    (p) => p.handle !== "velvet-pouch" && p.handle !== "gift-box"
+    (p) => !PACKAGING_HANDLES.includes(p.handle)
   );
 
   return { products: filteredProducts, count: filteredProducts.length };
@@ -202,7 +204,7 @@ export async function listRelatedProducts(
   const data = (await sdk.store.product.list({
     region_id: region.regionId,
     fields: LIST_FIELDS,
-    limit: limit + 3, // fetch extra in case excluded products appear
+    limit: limit + 6, // fetch extra in case excluded products appear
   })) as unknown as {
     products: ProductListItem[];
     count: number;
@@ -212,14 +214,13 @@ export async function listRelatedProducts(
     .filter(
       (p) =>
         p.handle !== excludeHandle &&
-        p.handle !== "velvet-pouch" &&
-        p.handle !== "gift-box"
+        !PACKAGING_HANDLES.includes(p.handle)
     )
     .slice(0, limit);
 }
 
 /**
- * Fetch the specific product details for packaging options (velvet pouch and gift box).
+ * Fetch the specific product details for packaging options.
  */
 export async function listPackagingProducts(
   region: ResolvedRegion,
@@ -233,10 +234,10 @@ export async function listPackagingProducts(
 
   // In Medusa v2, you can pass string | string[] to handle
   const data = (await sdk.store.product.list({
-    handle: ["velvet-pouch", "gift-box"],
+    handle: PACKAGING_HANDLES,
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
-    limit: 2,
+    limit: 4,
   })) as unknown as {
     products: ProductDetail[];
   };
