@@ -146,6 +146,10 @@ Support English and Russian translations in `messages/{ru,en}.json`:
 - Cart Drawer Component: `storefront/src/components/cart/CartDrawer.tsx`
 - Cart Helper Context: `storefront/src/components/cart/CartContext.tsx`
 - Seed Script: `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`
+- Product Data Layer Helper: `storefront/src/lib/medusa/products.ts`
+- PDP Page: `storefront/src/app/[locale]/products/[handle]/page.tsx`
+- Checkout Page: `storefront/src/app/[locale]/checkout/page.tsx`
+- Cabinet Order Detail Page: `storefront/src/app/[locale]/cabinet/orders/[id]/page.tsx`
 
 ## 13. Open Questions
 

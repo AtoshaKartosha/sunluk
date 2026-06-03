@@ -727,41 +727,52 @@ export default function CheckoutPage() {
               {/* Line items */}
               {hasItems ? (
                 <ul className="space-y-4 mb-6 pb-6 border-b border-[#2c211b]/8">
-                  {cart.items!.map((item) => (
-                    <li key={item.id} className="flex gap-4">
-                      {item.thumbnail && (
-                        <div className="w-14 h-14 shrink-0 bg-[#f4ebe6] overflow-hidden">
-                          <img
-                            src={item.thumbnail}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {item.title}
-                        </p>
-                        {item.variant?.title &&
-                          item.variant.title !== item.title && (
-                            <p className="text-xs text-[#2c211b]/40 mt-0.5 truncate">
-                              {item.variant.title}
+                  {(cart.items?.filter((item) => !item.metadata?.parent_line_item_id) ?? []).map((mainItem) => {
+                    const linkedPackaging = cart.items?.find(
+                      (item) => item.metadata?.parent_line_item_id === mainItem.id
+                    );
+                    const rowTotal = mainItem.total + (linkedPackaging?.total ?? 0);
+                    return (
+                      <li key={mainItem.id} className="flex gap-4">
+                        {mainItem.thumbnail && (
+                          <div className="w-14 h-14 shrink-0 bg-[#f4ebe6] overflow-hidden">
+                            <img
+                              src={mainItem.thumbnail}
+                              alt={mainItem.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {mainItem.title}
+                          </p>
+                          {mainItem.variant?.title &&
+                            mainItem.variant.title !== mainItem.title && (
+                              <p className="text-xs text-[#2c211b]/40 mt-0.5 truncate">
+                                {mainItem.variant.title}
+                              </p>
+                            )}
+                          {linkedPackaging && (
+                            <p className="text-xs text-[#2c211b]/50 mt-1 italic">
+                              + {linkedPackaging.title} ({formatPrice(linkedPackaging.unit_price, cart.currency_code)})
                             </p>
                           )}
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-[#2c211b]/50">
-                            × {item.quantity}
-                          </span>
-                          <span className="text-sm font-semibold">
-                            {formatPrice(
-                              item.total,
-                              cart.currency_code ?? "dkk",
-                            )}
-                          </span>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs text-[#2c211b]/50">
+                              × {mainItem.quantity}
+                            </span>
+                            <span className="text-sm font-semibold">
+                              {formatPrice(
+                                rowTotal,
+                                cart.currency_code ?? "dkk",
+                              )}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-[#2c211b]/50 mb-6">

@@ -98,6 +98,7 @@ interface OrderItem {
     title?: string | null;
     sku?: string | null;
   } | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export default async function OrderDetailPage({
@@ -246,49 +247,63 @@ export default async function OrderDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className={`${
-                      idx < items.length - 1 ? "border-b border-[#2c211b]/4" : ""
-                    }`}
-                  >
-                    <td className="px-6 sm:px-8 py-4">
-                      <div className="flex items-center gap-4">
-                        {item.thumbnail ? (
-                          <img
-                            src={item.thumbnail}
-                            alt={item.title}
-                            className="w-12 h-12 rounded-none object-cover border border-[#2c211b]/6"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-none bg-[#f4ebe6] flex items-center justify-center">
-                            <Package className="w-5 h-5 text-[#2c211b]/25" />
+                {(() => {
+                  const mainItems = items.filter((item) => !item.metadata?.parent_line_item_id);
+                  return mainItems.map((mainItem, idx) => {
+                    const linkedPackaging = items.find(
+                      (item) => item.metadata?.parent_line_item_id === mainItem.id
+                    );
+                    const rowTotal = mainItem.total + (linkedPackaging?.total ?? 0);
+                    return (
+                      <tr
+                        key={mainItem.id}
+                        className={`${
+                          idx < mainItems.length - 1 ? "border-b border-[#2c211b]/4" : ""
+                        }`}
+                      >
+                        <td className="px-6 sm:px-8 py-4">
+                          <div className="flex items-center gap-4">
+                            {mainItem.thumbnail ? (
+                              <img
+                                src={mainItem.thumbnail}
+                                alt={mainItem.title}
+                                className="w-12 h-12 rounded-none object-cover border border-[#2c211b]/6"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-none bg-[#f4ebe6] flex items-center justify-center">
+                                <Package className="w-5 h-5 text-[#2c211b]/25" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-[#2c211b]">
+                                {mainItem.title || t("untitledItem")}
+                              </p>
+                              {mainItem.variant?.title && (
+                                <p className="text-xs text-[#2c211b]/50 mt-0.5">
+                                  {mainItem.variant.title}
+                                </p>
+                              )}
+                              {linkedPackaging && (
+                                <p className="text-xs text-[#2c211b]/50 mt-1 italic">
+                                  + {linkedPackaging.title} ({formatPrice(linkedPackaging.unit_price, currencyCode)})
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <p className="font-medium text-[#2c211b]">
-                            {item.title || t("untitledItem")}
-                          </p>
-                          {item.variant?.title && (
-                            <p className="text-xs text-[#2c211b]/50 mt-0.5">
-                              {item.variant.title}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center text-[#2c211b]/70">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-4 text-right text-[#2c211b]/70 whitespace-nowrap">
-                      {formatPrice(item.unit_price, currencyCode)}
-                    </td>
-                    <td className="px-6 sm:px-8 py-4 text-right font-medium text-[#2c211b] whitespace-nowrap">
-                      {formatPrice(item.total, currencyCode)}
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="px-4 py-4 text-center text-[#2c211b]/70">
+                          {mainItem.quantity}
+                        </td>
+                        <td className="px-4 py-4 text-right text-[#2c211b]/70 whitespace-nowrap">
+                          {formatPrice(mainItem.unit_price, currencyCode)}
+                        </td>
+                        <td className="px-6 sm:px-8 py-4 text-right font-medium text-[#2c211b] whitespace-nowrap">
+                          {formatPrice(rowTotal, currencyCode)}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>

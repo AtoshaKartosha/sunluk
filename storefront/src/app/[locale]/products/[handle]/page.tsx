@@ -268,6 +268,11 @@ export default async function ProductDetailPage({ params }: Props) {
     // safe to leave empty
   }
 
+  // Tag-based packaging filter
+  const productTags = product.tags?.map((t) => t.value) ?? [];
+  const matchedPackaging = packagingProducts.filter((p) => productTags.includes(p.handle));
+  const allowedPackaging = matchedPackaging.length > 0 ? matchedPackaging : packagingProducts;
+
   // ---- Labels ----
 
   const pt = await getTranslations({ locale, namespace: "product" });
@@ -378,7 +383,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 product={product}
                 price={headlinePrice}
                 labels={productLabels}
-                packagingProducts={packagingProducts}
+                packagingProducts={allowedPackaging}
               />
             </div>
 

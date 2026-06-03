@@ -66,6 +66,7 @@ export interface ProductDetail extends ProductListItem {
   options: ProductOption[] | null;
   variants: ProductDetailVariant[] | null;
   categories: ProductCategory[] | null;
+  tags?: { id: string; value: string }[] | null;
 }
 
 export interface ProductListResult {
@@ -93,6 +94,7 @@ const DETAIL_FIELDS = [
   "*variants.options",
   "+variants.inventory_quantity",
   "*categories",
+  "*tags",
 ].join(",");
 
 // ---- Helpers ----
