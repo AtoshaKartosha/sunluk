@@ -217,7 +217,7 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: base product-list-to-product-detail slice implemented; PDP merchandising overhaul specified and pending implementation.
+Current status: base product-list-to-product-detail slice and PDP merchandising blocks (Facts, Related, JsonLd) fully implemented.
 
 Current implementation files:
 
@@ -230,16 +230,13 @@ Current implementation files:
 - `storefront/src/components/product/PriceDisplay.tsx`
 - `storefront/src/components/product/types.ts`
 - `storefront/src/components/product/index.ts`
-
-Pending implementation files:
-
 - `storefront/src/components/product/ProductFacts.tsx`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
+- `storefront/src/components/product/ProductJsonLd.tsx`
 
 Validation:
 
-- Pending after PDP merchandising implementation.
-
+- Next.js build completed cleanly.
 Notes:
 
 - `/` landing remains active.

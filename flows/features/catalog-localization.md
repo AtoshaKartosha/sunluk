@@ -235,9 +235,9 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: flow document only. No implementation has been applied yet.
+Current status: Completed. The prefix routing middleware, i18n loaders, and message files are fully integrated and active.
 
-Expected code files:
+Implementation files:
 
 - `storefront/src/middleware.ts`
 - `storefront/src/i18n/routing.ts`
@@ -257,7 +257,7 @@ Expected code files:
 
 Validation:
 
-- Not run yet.
+- Next.js build compiled and verified routing.
 
 ## 13. Open Questions
 

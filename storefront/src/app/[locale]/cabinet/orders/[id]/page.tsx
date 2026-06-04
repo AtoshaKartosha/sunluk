@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, XCircle, Truck } from "lucide-react";
-import { getCustomerOrder, getServerAuthToken } from "@/lib/medusa/customer-server";
+import { getCustomer, getCustomerOrder } from "@/lib/medusa/customer-server";
 import { getTranslations } from "next-intl/server";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
@@ -120,8 +120,8 @@ export default async function OrderDetailPage({
     return t_payment(status as Parameters<typeof t_payment>[0]) ?? status;
   }
 
-  const token = await getServerAuthToken();
-  if (!token) {
+  const customer = await getCustomer();
+  if (!customer) {
     redirect(`/${locale}/login`);
   }
 

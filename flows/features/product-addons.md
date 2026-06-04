@@ -141,7 +141,10 @@ Support English and Russian translations in `messages/{ru,en}.json`:
 
 ## 12. Implementation Trace
 
-*(To be filled by sub-agent during coding)*
+Current status: Completed. PDP includes packaging options grid with live price/currency rendering and stock availability/disabling checks. Adding a main item adds the linked packaging to the cart using metadata `parent_line_item_id`. Quantity adjustments and item removal are synchronized.
+
+Implementation files:
+
 - PDP Component: `storefront/src/components/product/ProductInfoBlock.tsx`
 - Cart Drawer Component: `storefront/src/components/cart/CartDrawer.tsx`
 - Cart Helper Context: `storefront/src/components/cart/CartContext.tsx`
@@ -150,7 +153,6 @@ Support English and Russian translations in `messages/{ru,en}.json`:
 - PDP Page: `storefront/src/app/[locale]/products/[handle]/page.tsx`
 - Checkout Page: `storefront/src/app/[locale]/checkout/page.tsx`
 - Cabinet Order Detail Page: `storefront/src/app/[locale]/cabinet/orders/[id]/page.tsx`
-
 ## 13. Open Questions
 
 - Should we support different packaging options per individual items of the same product (e.g. buying 2 of the same chain, one in a box and one in a pouch)? 

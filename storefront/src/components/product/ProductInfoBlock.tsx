@@ -5,6 +5,7 @@ import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductF
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
+import { ProductFacts } from "./ProductFacts";
 
 export interface ProductInfoBlockLabels {
   brand: string;
@@ -36,6 +37,7 @@ export interface ProductInfoBlockLabels {
   packagingHeading?: string;
   packagingNone?: string;
   packagingFree?: string;
+  packagingOutOfStock?: string;
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
@@ -103,6 +105,7 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   packagingHeading: "УПАКОВКА",
   packagingNone: "Без упаковки",
   packagingFree: "Бесплатно",
+  packagingOutOfStock: "Нет в наличии",
 };
 
 interface ProductInfoBlockProps {
@@ -185,7 +188,17 @@ export function ProductInfoBlock({
   const [selectionQuantity, setSelectionQuantity] = useState(1);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
   const [selectedPackaging, setSelectedPackaging] = useState<string>(() => {
-    return packagingProducts?.[0]?.handle || "velvet-pouch";
+    // Find first available packaging option
+    const firstAvailable = packagingProducts?.find((p) => {
+      const variant = p.variants?.[0];
+      if (!variant) return false;
+      return (
+        variant.manage_inventory === false ||
+        (variant.inventory_quantity ?? 0) > 0 ||
+        variant.allow_backorder === true
+      );
+    });
+    return firstAvailable?.handle || "";
   });
 
 
@@ -362,12 +375,23 @@ export function ProductInfoBlock({
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
+                
+                // Check if packaging variant is available
+                const isInStock = 
+                  variant.manage_inventory === false ||
+                  (variant.inventory_quantity ?? 0) > 0 ||
+                  variant.allow_backorder === true;
+                
                 const amount = variant.calculated_price?.calculated_amount;
                 const currency = variant.calculated_price?.currency_code;
                 const isFree = !amount;
                 const priceText = (isFree || !amount || !currency)
                   ? labels.packagingFree
                   : `+ ${formatPriceValue(amount, currency)}`;
+                
+                const displayText = isInStock 
+                  ? priceText 
+                  : `${priceText} (${labels.packagingOutOfStock || "Нет в наличии"})`;
 
                 // Fallback to our local generated images if no thumbnail is set on Medusa product
                 const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;
@@ -376,9 +400,11 @@ export function ProductInfoBlock({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setSelectedPackaging(p.handle)}
+                    onClick={() => isInStock && setSelectedPackaging(p.handle)}
+                    disabled={!isInStock}
                     className={[
-                      "relative flex items-center gap-3 w-full p-2.5 text-left border transition-all duration-300 select-none cursor-pointer text-[#2c211b]",
+                      "relative flex items-center gap-3 w-full p-2.5 text-left border transition-all duration-300 select-none text-[#2c211b]",
+                      isInStock ? "cursor-pointer" : "cursor-not-allowed opacity-50",
                       isSelected
                         ? "border-[#2f6f78] bg-[#2f6f78]/5 ring-1 ring-[#2f6f78]"
                         : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",
@@ -395,7 +421,7 @@ export function ProductInfoBlock({
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
                       <span className="text-[11px] uppercase tracking-wider font-semibold block truncate">
-                        {p.title} <span className="text-[#2c211b]/60 font-serif normal-case font-normal block sm:inline">({priceText})</span>
+                        {p.title} <span className="text-[#2c211b]/60 font-serif normal-case font-normal block sm:inline">({displayText})</span>
                       </span>
                     </div>
                     {/* Selected indicator */}
@@ -440,21 +466,7 @@ export function ProductInfoBlock({
         )}
 
         {/* Structured Product Facts */}
-        {facts.length > 0 && (
-          <div className="border-t border-[#2c211b]/10 pt-5">
-            <h3 className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60 mb-3">
-              {labels.factsHeading}
-            </h3>
-            <dl className="space-y-2">
-              {facts.map((f, i) => (
-                <div key={i} className="flex justify-between text-xs">
-                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{f.label}</dt>
-                  <dd className="text-[#2c211b] font-medium">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
+        <ProductFacts facts={facts} labels={{ heading: labels.factsHeading }} />
 
         {/* Social Proof Placeholder */}
 

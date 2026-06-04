@@ -150,16 +150,17 @@ Key namespaces:
 
 ## 12. Implementation Trace
 
-- Active branch: `feat/user-cabinet`
 - Next.js Router page routes:
-  - `storefront/src/app/login/page.tsx` — Login form with email/password, client-side validation, loading/error states, redirects authenticated users to /cabinet
-  - `storefront/src/app/register/page.tsx` — Registration form with first name, last name, email, password, client-side validation, loading/error states, redirects authenticated users to /cabinet
-  - `storefront/src/app/cabinet/page.tsx` — Personal cabinet dashboard: customer profile card + order history table with status icons, payment status, totals; server component with redirect to /login when unauthenticated
-  - `storefront/src/app/cabinet/LogoutButton.tsx` — Client component for logout action (clears cookie, clears SDK auth, redirects to /login)
-  - `storefront/src/app/cabinet/orders/[id]/page.tsx` — Order detail view: items table, subtotals, shipping/tax/discount/total, shipping/billing addresses, status badges; server component with 404 handling
+  - `storefront/src/app/[locale]/login/page.tsx` — Login form with email/password, client-side validation, loading/error states, redirects authenticated users to /cabinet
+  - `storefront/src/app/[locale]/register/page.tsx` — Registration form with first name, last name, email, password, client-side validation, loading/error states, redirects authenticated users to /cabinet
+  - `storefront/src/app/[locale]/cabinet/page.tsx` — Personal cabinet dashboard: customer profile card + order history table with status icons, payment status, totals; server component with redirect to /login when unauthenticated
+  - `storefront/src/app/[locale]/cabinet/loading.tsx` — Brutalist skeleton loader for cabinet layout to prevent CLS
+  - `storefront/src/app/[locale]/cabinet/LogoutButton.tsx` — Client component for logout action (clears cookie, clears SDK auth, redirects to /login)
+  - `storefront/src/app/[locale]/cabinet/orders/[id]/page.tsx` — Order detail view: items table, subtotals, shipping/tax/discount/total, shipping/billing addresses, status badges; server component with token validation redirects to /login
 - Medusa Service API extensions:
-  - `storefront/src/lib/medusa/customer.ts` — `OrderSummary` type, `CookieJwtStorage` interface, `CustomerStorage` client-side cookie I/O, `getServerAuthToken()` / `createServerAuthClient()` for per-request server SDK, `getClientMedusaClient()` singleton for browser, `loginCustomer()` / `registerCustomer()` / `logoutCustomer()` auth actions, `getCustomer()` / `getCustomerOrders()` / `getCustomerOrder()` server data fetchers
-- Localization: All strings are in Russian (primary), organized as `const T` objects in each page for easy future extraction to `next-intl` message files.
+  - `storefront/src/lib/medusa/customer.ts` — `OrderSummary` type, `CookieJwtStorage` interface, `CustomerStorage` client-side cookie I/O, `getServerAuthToken()` / `createServerAuthClient()` for per-request server SDK, `getClientMedusaClient()` singleton for browser, `loginCustomer()` / `registerCustomer()` / `logoutCustomer()` auth actions
+  - `storefront/src/lib/medusa/customer-server.ts` — `getCustomer()` / `getCustomerOrders()` / `getCustomerOrder()` server data fetchers
+- Localization: Fully integrated with next-intl message files `ru.json` and `en.json`.
 ## 13. Open Questions
 
 - Should guest orders be linkable to accounts retroactively? Deferred for v1.
