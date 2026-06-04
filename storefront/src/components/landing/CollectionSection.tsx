@@ -44,7 +44,7 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
               },
             },
           }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-16"
         >
           {PRODUCTS.map((product, i) => (
             <motion.div
@@ -55,7 +55,7 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
               }}
               className="group flex flex-col text-left bg-transparent transition-all duration-300"
             >
-              <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
+              <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-3 sm:mb-5 rounded-none relative">
                 <div
                   role="img"
                   aria-label={t(`collection.products.${i}.title`)}
@@ -64,17 +64,17 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-serif text-lg font-bold text-[#2c211b]">
+                <h3 className="font-serif text-sm sm:text-lg font-bold text-[#2c211b]">
                   {t(`collection.products.${i}.title`)}
                 </h3>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`w-3 h-3 rounded-full ${product.colorDot} border border-white shadow-inner`} />
-                  <span className="text-[10px] tracking-wide text-[#2c211b]/60 font-semibold">
+                  <span className="text-[9px] sm:text-[10px] tracking-wide text-[#2c211b]/60 font-semibold">
                     {t(`collection.products.${i}.material`)}
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-[#2c211b]/70 font-medium">
+              <p className="text-[10px] sm:text-xs text-[#2c211b]/70 font-medium">
                 {t(`collection.products.${i}.description`)}
               </p>
             </motion.div>

@@ -32,7 +32,7 @@ export function FeaturesSection() {
                 }
               }
             }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-0"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-0 order-2 lg:order-1"
           >
             {localizedFeatures.map((feature, i) => (
               <motion.div
@@ -67,7 +67,7 @@ export function FeaturesSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12"
+            className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12 order-1 lg:order-2"
           >
             <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
               {t("features.philosophy")}

@@ -19,7 +19,8 @@ export function HeroSection() {
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="absolute inset-y-0 right-0 w-full md:w-[54%] h-full overflow-hidden"
         >
-          <div className="absolute inset-y-0 left-0 w-[15%] bg-gradient-to-r from-[#f4ebe6] to-transparent md:-left-2 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f4ebe6] via-[#f4ebe6]/75 to-transparent z-10 md:hidden" />
+          <div className="hidden md:block absolute inset-y-0 left-0 w-[15%] bg-gradient-to-r from-[#f4ebe6] to-transparent md:-left-2 z-10" />
           <div 
             role="img"
             aria-label="Warm beach editorial sunglasses and premium chain with sea beads" 

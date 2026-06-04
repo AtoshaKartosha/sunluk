@@ -24,7 +24,7 @@ export function EditorialSection() {
                 }
               }
             }}
-            className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-[5px] p-[5px]"
+            className="lg:col-span-3 grid grid-cols-3 gap-[5px] p-[5px]"
           >
             {/* Model 1 */}
             <motion.div 
