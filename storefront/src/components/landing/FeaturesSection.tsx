@@ -1,11 +1,19 @@
 "use client";
-
 import { FEATURES, FEATURE_BORDER_CLASSES } from "@/lib/landing-data";
-
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { GemIcon, LeafIcon, ShieldIcon } from "./icons";
 
 export function FeaturesSection() {
+  const t = useTranslations("home");
+
+  // Map features with translated titles/descriptions but keep icons
+  const localizedFeatures = FEATURES.map((feature, i) => ({
+    ...feature,
+    title: t(`features.list.${i}.title`),
+    description: t(`features.list.${i}.description`),
+  }));
+
   return (
     <section className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
@@ -26,7 +34,7 @@ export function FeaturesSection() {
             }}
             className="grid grid-cols-1 sm:grid-cols-2 gap-0"
           >
-            {FEATURES.map((feature, i) => (
+            {localizedFeatures.map((feature, i) => (
               <motion.div
                 key={i}
                 variants={{
@@ -62,13 +70,13 @@ export function FeaturesSection() {
             className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12"
           >
             <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
-              ФИЛОСОФИЯ ДЕТАЛЕЙ
+              {t("features.philosophy")}
             </span>
             <h2 className="font-serif text-4xl sm:text-5xl font-light tracking-wide leading-[1.15] text-[#2c211b]">
-              Всё держится на деталях
+              {t("features.heading")}
             </h2>
             <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80">
-              Форма, фактура, металл и цвет подобраны так, чтобы аксессуар выглядел естественно рядом с очками.
+              {t("features.description")}
             </p>
             <div className="w-20 h-0.5 bg-[#2c211b]/20 mt-2" />
           </motion.div>

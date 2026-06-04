@@ -230,7 +230,7 @@ export default async function CabinetPage({
               </div>
               {ordersResult.count > 20 && (
                 <div className="px-6 py-4 text-center text-xs text-[#2c211b]/50 border-t border-[#2c211b]/6">
-                  Показаны последние 20 из {ordersResult.count} заказов
+                  {t("shownLastOrders", { count: 20, total: ordersResult.count })}
                 </div>
               )}
             </div>

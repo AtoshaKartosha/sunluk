@@ -1,10 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { CharReveal } from "./char-reveal";
 import { ArrowRightIcon } from "./icons";
 
 export function HeroSection() {
+  const t = useTranslations("home");
+
   return (
     <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-[#f4ebe6] overflow-hidden">
       {/* Hero Contents */}
@@ -32,14 +35,14 @@ export function HeroSection() {
             className="max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8"
           >
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b]">
-              <CharReveal text="МЕНЯЙ СЕБЯ." stagger={0.018} delay={0} y={24} duration={0.35} />
+              <CharReveal text={t("hero.title1")} stagger={0.018} delay={0} y={24} duration={0.35} />
               <br />
-              <CharReveal text="ВЫРАЖАЙ СЕБЯ." stagger={0.018} delay={0.14} y={24} duration={0.35} />
+              <CharReveal text={t("hero.title2")} stagger={0.018} delay={0.14} y={24} duration={0.35} />
             </h1>
             <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md">
-              <CharReveal text="Аксессуары для очков," stagger={0.01} delay={0.35} y={14} duration={0.28} />
+              <CharReveal text={t("hero.subtitle1")} stagger={0.01} delay={0.35} y={14} duration={0.28} />
               <br className="hidden sm:inline" />
-              <CharReveal text="которые становятся частью вашего стиля." stagger={0.01} delay={0.45} y={14} duration={0.28} />
+              <CharReveal text={t("hero.subtitle2")} stagger={0.01} delay={0.45} y={14} duration={0.28} />
             </p>
             <motion.a 
               initial={{ opacity: 0, y: 16 }}
@@ -50,7 +53,7 @@ export function HeroSection() {
               href="#collection"
               className="inline-flex items-center justify-center px-8 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg hover:translate-y-[-2px] group"
             >
-              СМОТРЕТЬ КОЛЛЕКЦИЮ
+              {t("hero.cta")}
               <ArrowRightIcon className="w-4 h-4 ml-3 group-hover:translate-x-1.5 transition-transform" />
             </motion.a>
           </motion.div>

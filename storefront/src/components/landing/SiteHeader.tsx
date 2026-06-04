@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { BRAND, NAV_LINKS } from "@/lib/landing-data";
 import type { NavLinkData } from "@/lib/landing-data";
 import { NavLink } from "@/components/landing/NavLink";
@@ -52,6 +52,7 @@ const XIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
   const links = navLinks ?? NAV_LINKS;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = useTranslations("header");
   const locale = useLocale();
 
   const { itemCount, openCart } = useCart();
@@ -84,16 +85,16 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-5 sm:gap-6">
-          <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Поиск">
+          <button className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label={t("search")}>
             <SearchIcon className="w-5 h-5" />
           </button>
-          <Link href={`/${locale}/cabinet`} className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label="Профиль">
+          <Link href={`/${locale}/cabinet`} className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label={t("profile")}>
             <UserIcon className="w-5 h-5" />
           </Link>
           <button
             onClick={openCart}
             className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 flex items-center gap-1.5 transition-colors duration-200"
-            aria-label="Корзина"
+            aria-label={t("cart")}
           >
             <div className="relative">
               <ShoppingBagIcon className="w-5 h-5" />
@@ -111,7 +112,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors"
-            aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-label={mobileMenuOpen ? t("closeMenu") : t("openMenu")}
           >
             {mobileMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
           </button>

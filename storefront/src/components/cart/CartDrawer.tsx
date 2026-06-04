@@ -72,6 +72,7 @@ export default function CartDrawer() {
     itemCount,
   } = useCart();
   const locale = useLocale();
+  const t = useTranslations("cart");
 
   // Esc to close
   useEffect(() => {
@@ -140,12 +141,12 @@ export default function CartDrawer() {
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Корзина"
+            aria-label={t("title")}
           >
             {/* ---- Header ---- */}
             <div className="flex items-center justify-between border-b border-[#2c211b]/10 px-5 py-4">
               <h2 className="font-serif text-lg font-medium tracking-wide text-[#2c211b]">
-                Корзина
+                {t("title")}
                 {itemCount > 0 && (
                   <span className="ml-2 text-sm text-[#2c211b]/50">
                     ({itemCount})
@@ -155,7 +156,7 @@ export default function CartDrawer() {
               <button
                 onClick={closeCart}
                 className="p-2 text-[#2c211b]/60 transition-colors hover:bg-[#2c211b]/5 hover:text-[#2c211b]"
-                aria-label="Закрыть корзину"
+                aria-label={t("close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -208,14 +209,15 @@ export default function CartDrawer() {
 // ---------------------------------------------------------------------------
 
 function EmptyState() {
+  const t = useTranslations("cart");
   return (
     <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
       <ShoppingBag className="mb-4 h-12 w-12 text-[#2c211b]/20" strokeWidth={1} />
       <p className="text-sm font-medium tracking-wide text-[#2c211b]/40">
-        Ваша корзина пуста
+        {t("emptyTitle")}
       </p>
       <p className="mt-1 text-xs text-[#2c211b]/30">
-        Добавьте товары из каталога, чтобы продолжить
+        {t("emptyDesc")}
       </p>
     </div>
   );
@@ -243,6 +245,7 @@ function CartLineItem({
   onRemove,
 }: CartLineItemProps) {
   const pt = useTranslations("product");
+  const t = useTranslations("cart");
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
   const optionLabel = lineItemOptionLabel(item);
@@ -308,7 +311,7 @@ function CartLineItem({
               onClick={decrement}
               disabled={disabled || item.quantity <= 1}
               className="flex h-8 w-8 items-center justify-center text-[#2c211b]/60 transition-colors hover:text-[#2c211b] disabled:opacity-30"
-              aria-label="Уменьшить количество"
+              aria-label={t("decrease")}
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
@@ -319,7 +322,7 @@ function CartLineItem({
               onClick={increment}
               disabled={disabled}
               className="flex h-8 w-8 items-center justify-center text-[#2c211b]/60 transition-colors hover:text-[#2c211b] disabled:opacity-30"
-              aria-label="Увеличить количество"
+              aria-label={t("increase")}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -336,7 +339,7 @@ function CartLineItem({
               onClick={() => onRemove(item.id)}
               disabled={disabled}
               className="p-1 text-[#2c211b]/30 transition-colors hover:bg-[#2c211b]/5 hover:text-destructive disabled:opacity-30"
-              aria-label={`Удалить ${item.title}`}
+              aria-label={`${t("remove")} ${item.title}`}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -370,18 +373,18 @@ function CartFooter({ cart, currency, disabled, locale }: CartFooterProps) {
 
   const rows: { label: string; value: number | null | undefined; positive?: boolean }[] = [];
 
-  rows.push({ label: "Подытог", value: subtotal });
+  rows.push({ label: t("subtotal"), value: subtotal });
 
   if (discountTotal != null && discountTotal !== 0) {
-    rows.push({ label: "Скидка", value: discountTotal, positive: false });
+    rows.push({ label: t("discount"), value: discountTotal, positive: false });
   }
 
   if (taxTotal != null && taxTotal !== 0) {
-    rows.push({ label: "Налог", value: taxTotal });
+    rows.push({ label: t("tax"), value: taxTotal });
   }
 
   if (shippingTotal != null) {
-    rows.push({ label: "Доставка", value: shippingTotal });
+    rows.push({ label: t("shipping"), value: shippingTotal });
   }
 
   return (

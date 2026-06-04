@@ -228,7 +228,7 @@ export default function CheckoutPage() {
         if (!cancelled) setShippingOptions(options);
       })
       .catch(() => {
-        if (!cancelled) setStepError("Не удалось загрузить варианты доставки.");
+        if (!cancelled) setStepError(t("errors.shippingOptionsFailed"));
       })
       .finally(() => {
         if (!cancelled) setShippingLoading(false);
@@ -265,7 +265,7 @@ export default function CheckoutPage() {
 
         setCurrentStep("shipping");
       } catch {
-        setStepError("Не удалось сохранить контактные данные. Попробуйте снова.");
+        setStepError(t("errors.contactSaveFailed"));
       } finally {
         setStepSubmitting(false);
       }
@@ -284,7 +284,7 @@ export default function CheckoutPage() {
         await addShippingMethod(cart.id, selectedShippingId);
         setCurrentStep("payment");
       } catch {
-        setStepError("Не удалось выбрать способ доставки. Попробуйте снова.");
+        setStepError(t("errors.shippingSelectFailed"));
       } finally {
         setStepSubmitting(false);
       }
@@ -310,13 +310,11 @@ export default function CheckoutPage() {
         } else {
           const errMsg =
             (result as { error?: { message?: string } }).error?.message ??
-            "Не удалось завершить оформление заказа.";
+            t("errors.orderCompletionFailed");
           setCompletionError(errMsg);
         }
       } catch {
-        setCompletionError(
-          "Произошла ошибка при оформлении заказа. Пожалуйста, попробуйте снова.",
-        );
+        setCompletionError(t("errors.orderCompletionError"));
       } finally {
         setCompleting(false);
       }

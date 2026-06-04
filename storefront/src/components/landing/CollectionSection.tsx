@@ -58,19 +58,25 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
               <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-5 rounded-none relative">
                 <div
                   role="img"
-                  aria-label={product.ariaLabel}
+                  aria-label={t(`collection.products.${i}.title`)}
                   className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
                   style={{ backgroundImage: `url('${product.image}')` }}
                 />
               </div>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-serif text-lg font-bold text-[#2c211b]">{product.title}</h3>
+                <h3 className="font-serif text-lg font-bold text-[#2c211b]">
+                  {t(`collection.products.${i}.title`)}
+                </h3>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`w-3 h-3 rounded-full ${product.colorDot} border border-white shadow-inner`} />
-                  <span className="text-[10px] tracking-wide text-[#2c211b]/60 font-semibold">{product.material}</span>
+                  <span className="text-[10px] tracking-wide text-[#2c211b]/60 font-semibold">
+                    {t(`collection.products.${i}.material`)}
+                  </span>
                 </div>
               </div>
-              <p className="text-xs text-[#2c211b]/70 font-medium">{product.description}</p>
+              <p className="text-xs text-[#2c211b]/70 font-medium">
+                {t(`collection.products.${i}.description`)}
+              </p>
             </motion.div>
           ))}
         </motion.div>

@@ -2,7 +2,86 @@
   "home": {
     "collectionLabel": "CURATED SELECTION",
     "collectionHeading": "SUNLUK COLLECTION",
-    "collectionCta": "CHOOSE ACCESSORIES"
+    "collectionCta": "CHOOSE ACCESSORIES",
+    "collection": {
+      "products": {
+        "0": {
+          "title": "Turquoise",
+          "material": "Color",
+          "description": "Accent color and natural motifs"
+        },
+        "1": {
+          "title": "Leather Loop",
+          "material": "Leather",
+          "description": "Genuine leather and premium metal"
+        },
+        "2": {
+          "title": "Silver Chain",
+          "material": "Steel",
+          "description": "Minimalism, rigor, and a light sheen"
+        },
+        "3": {
+          "title": "Sand Chain",
+          "material": "Gold",
+          "description": "Warm metal and sea sand shade"
+        }
+      }
+    },
+    "hero": {
+      "title1": "CHANGE YOURSELF.",
+      "title2": "EXPRESS YOURSELF.",
+      "subtitle1": "Eyewear accessories",
+      "subtitle2": "that become part of your style.",
+      "cta": "VIEW COLLECTION"
+    },
+    "editorial": {
+      "heading": "WEAR IT YOUR WAY",
+      "description": "SUNLUK — eyewear accessories that become a harmonious part of your look: on journeys, in a dynamic city, or on the shore of a warm sea.",
+      "cta": "VIEW COLLECTION",
+      "model1Aria": "Aesthetic look",
+      "model2Aria": "Elegant style",
+      "model3Aria": "Subtle detail"
+    },
+    "features": {
+      "heading": "Everything rests on details",
+      "description": "The shape, texture, metal, and color are selected so that the accessory looks natural alongside your glasses.",
+      "philosophy": "PHILOSOPHY OF DETAILS",
+      "list": {
+        "0": {
+          "title": "S-element",
+          "description": "Signature SUNLUK detail"
+        },
+        "1": {
+          "title": "Premium materials",
+          "description": "Curated materials that last."
+        },
+        "2": {
+          "title": "Lightweight",
+          "description": "Comfortable for all-day wear."
+        },
+        "3": {
+          "title": "Reliable",
+          "description": "Secure attachment for your glasses."
+        }
+      }
+    },
+    "about": {
+      "label": "ABOUT BRAND",
+      "heading": "ABOUT US",
+      "description": "SUNLUK is more than just an accessory. It is the freedom to express yourself every day — on journeys, in the city, and in moments that matter.",
+      "cta": "ORDER NOW",
+      "imageAria": "SUNLUK exclusive packaging boxes and accessories"
+    },
+    "newsletter": {
+      "label": "EXCLUSIVE OFFERS",
+      "heading": "BE THE FIRST",
+      "description": "Subscribe to receive news about new arrivals, limited drops, and special offers.",
+      "successTitle": "YOU HAVE SUCCESSFULLY SUBSCRIBED!",
+      "successDesc": "Thank you for your interest in SUNLUK. A welcome bonus email is on its way to you.",
+      "placeholder": "Your e-mail",
+      "cta": "SUBSCRIBE",
+      "note": "No spam. Unsubscribe at any time."
+    }
   },
   "catalog": {
     "breadcrumb": "CATALOG",
@@ -37,8 +116,8 @@
     "shippingItem4": "Easy returns or exchanges within 14 days of receipt.",
     "turquoise": "Turquoise",
     "leather": "Leather",
-    "silver": "Steel",
-    "gold-plated": "Gold",
+    "silver": "Silver",
+    "gold-plated": "Gold-plated",
     "selectAllOptions": "Select all options",
     "unavailable": "Unavailable",
     "outOfStock": "Out of stock",
@@ -63,14 +142,20 @@
     "packaging": {
       "heading": "PACKAGING",
       "none": "No packaging",
-      "free": "Free"
+      "free": "Free",
+      "outOfStock": "Out of stock"
     }
   },
   "header": {
     "catalog": "CATALOG",
     "collection": "COLLECTION",
     "about": "ABOUT",
-    "contacts": "CONTACTS"
+    "contacts": "CONTACTS",
+    "search": "Search",
+    "profile": "Profile",
+    "cart": "Cart",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu"
   },
   "footer": {
     "copyright": "© 2026 SUNLUK. All rights reserved.",
@@ -116,12 +201,12 @@
       }
     },
     "register": {
-      "title": "Registration",
+      "title": "Create Account",
       "subtitle": "Create an account",
       "firstNameLabel": "First Name",
-      "firstNamePlaceholder": "Ivan",
+      "firstNamePlaceholder": "John",
       "lastNameLabel": "Last Name",
-      "lastNamePlaceholder": "Petrov",
+      "lastNamePlaceholder": "Smith",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Password",
@@ -164,6 +249,7 @@
     "total": "Total",
     "viewDetails": "Details",
     "logout": "Log Out",
+    "shownLastOrders": "Showing the last {count} of {total} orders",
     "orderStatus": {
       "pending": "Pending",
       "received": "Received",
@@ -236,13 +322,13 @@
       "countryCode": "Country Code",
       "phone": "Phone",
       "emailPlaceholder": "your@email.com",
-      "firstNamePlaceholder": "Ivan",
-      "lastNamePlaceholder": "Ivanov",
-      "addressPlaceholder": "123 Example St., Apt. 42",
-      "cityPlaceholder": "Moscow",
-      "postalCodePlaceholder": "123456",
-      "countryCodePlaceholder": "dk",
-      "phonePlaceholder": "+7 (999) 123-45-67"
+      "firstNamePlaceholder": "John",
+      "lastNamePlaceholder": "Smith",
+      "addressPlaceholder": "Goethestr. 12",
+      "cityPlaceholder": "Munich",
+      "postalCodePlaceholder": "80331",
+      "countryCodePlaceholder": "DE",
+      "phonePlaceholder": "+49 170 1234567"
     },
     "shipping": {
       "heading": "SHIPPING METHOD",
@@ -271,6 +357,13 @@
       "tax": "Tax",
       "total": "Total"
     },
+    "errors": {
+      "shippingOptionsFailed": "Failed to load shipping options.",
+      "contactSaveFailed": "Failed to save contact information. Please try again.",
+      "shippingSelectFailed": "Failed to select shipping method. Please try again.",
+      "orderCompletionFailed": "Failed to complete the order.",
+      "orderCompletionError": "An error occurred while placing your order. Please try again."
+    },
     "success": {
       "title": "THANK YOU FOR YOUR ORDER!",
       "orderNumber": "ORDER NUMBER",
@@ -279,7 +372,22 @@
     }
   },
   "cart": {
+    "title": "Cart",
     "checkout": "Checkout",
-    "total": "Total"
+    "total": "Total",
+    "close": "Close cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyDesc": "Add items from the catalog to continue",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "tax": "Tax",
+    "shipping": "Shipping",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "remove": "Remove"
+  },
+  "metadata": {
+    "title": "SUNLUK — Eyewear Accessories",
+    "description": "Eyewear accessories that become a part of your style. SUNLUK — change yourself, express yourself."
   }
 }

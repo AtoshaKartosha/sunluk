@@ -2,7 +2,86 @@
   "home": {
     "collectionLabel": "ИЗЫСКАННЫЙ ВЫБОР",
     "collectionHeading": "КОЛЛЕКЦИЯ SUNLUK",
-    "collectionCta": "ВЫБРАТЬ АКСЕССУАР"
+    "collectionCta": "ВЫБРАТЬ АКСЕССУАР",
+    "collection": {
+      "products": {
+        "0": {
+          "title": "Бирюза",
+          "material": "Цвет",
+          "description": "Акцентный цвет и природные мотивы"
+        },
+        "1": {
+          "title": "Кожа",
+          "material": "Кожа",
+          "description": "Натуральная кожа и премиальный металл"
+        },
+        "2": {
+          "title": "Сталь",
+          "material": "Сталь",
+          "description": "Минимализм, строгость и лёгкий блеск"
+        },
+        "3": {
+          "title": "Золото",
+          "material": "Золото",
+          "description": "Тёплый металл и морской песчаный оттенок"
+        }
+      }
+    },
+    "hero": {
+      "title1": "МЕНЯЙ СЕБЯ.",
+      "title2": "ВЫРАЖАЙ СЕБЯ.",
+      "subtitle1": "Аксессуары для очков,",
+      "subtitle2": "которые становятся частью вашего стиля.",
+      "cta": "СМОТРЕТЬ КОЛЛЕКЦИЮ"
+    },
+    "editorial": {
+      "heading": "НОСИ ПО-СВОЕМУ",
+      "description": "SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.",
+      "cta": "СМОТРЕТЬ КОЛЛЕКЦИЮ",
+      "model1Aria": "Эстетичный образ",
+      "model2Aria": "Элегантный стиль",
+      "model3Aria": "Лаконичная деталь"
+    },
+    "features": {
+      "heading": "Всё держится на деталях",
+      "description": "Форма, фактура, металл и цвет подобраны так, чтобы аксессуар выглядел естественно рядом с очками.",
+      "philosophy": "ФИЛОСОФИЯ ДЕТАЛЕЙ",
+      "list": {
+        "0": {
+          "title": "S-элемент",
+          "description": "Фирменная деталь SUNLUK"
+        },
+        "1": {
+          "title": "Премиальные материалы",
+          "description": "Отборные материалы, которые служат долго."
+        },
+        "2": {
+          "title": "Лёгкие",
+          "description": "Комфортные на весь день."
+        },
+        "3": {
+          "title": "Надёжные",
+          "description": "Прочное крепление для ваших очков."
+        }
+      }
+    },
+    "about": {
+      "label": "О БРЕНДЕ",
+      "heading": "О НАС",
+      "description": "SUNLUK — это больше, чем аксессуар. Это свобода выражать себя каждый день — в путешествиях, в городе, в моменты, которые важны.",
+      "cta": "ЗАКАЗАТЬ АКСЕССУАР",
+      "imageAria": "SUNLUK эксклюзивные упаковочные коробки и аксессуары"
+    },
+    "newsletter": {
+      "label": "ЭКСКЛЮЗИВНЫЕ ПРЕДЛОЖЕНИЯ",
+      "heading": "БУДЬТЕ ПЕРВЫМИ",
+      "description": "Подпишитесь и узнавайте о новинках, лимитированных дропах и специальных предложениях.",
+      "successTitle": "ВЫ УСПЕШНО ПОДПИСАЛИСЬ!",
+      "successDesc": "Спасибо за интерес к SUNLUK. Письмо с приветственным бонусом уже летит к вам.",
+      "placeholder": "Ваш e-mail",
+      "cta": "ПОДПИСАТЬСЯ",
+      "note": "Никакого спама. Отписаться можно в любой момент."
+    }
   },
   "catalog": {
     "breadcrumb": "КАТАЛОГ",
@@ -63,14 +142,20 @@
     "packaging": {
       "heading": "УПАКОВКА",
       "none": "Без упаковки",
-      "free": "Бесплатно"
+      "free": "Бесплатно",
+      "outOfStock": "Нет в наличии"
     }
   },
   "header": {
     "catalog": "КАТАЛОГ",
     "collection": "КОЛЛЕКЦИЯ",
     "about": "О НАС",
-    "contacts": "КОНТАКТЫ"
+    "contacts": "КОНТАКТЫ",
+    "search": "Поиск",
+    "profile": "Профиль",
+    "cart": "Корзина",
+    "closeMenu": "Закрыть меню",
+    "openMenu": "Открыть меню"
   },
   "footer": {
     "copyright": "© 2026 SUNLUK. Все права защищены.",
@@ -106,13 +191,13 @@
       "hidePassword": "Скрыть пароль",
       "validation": {
         "emailRequired": "Email обязателен",
-        "emailInvalid": "Некорректный email",
+        "emailInvalid": "Некорректный email адрес",
         "passwordRequired": "Пароль обязателен",
-        "passwordMinLength": "Пароль должен содержать минимум 6 символов"
+        "passwordMinLength": "Пароль должен быть не менее 6 символов"
       },
       "errors": {
-        "invalidCredentials": "Неверный email или пароль. Попробуйте снова.",
-        "network": "Ошибка соединения. Проверьте интернет."
+        "invalidCredentials": "Неверный email или пароль. Пожалуйста, попробуйте снова.",
+        "network": "Ошибка сети. Проверьте подключение."
       }
     },
     "register": {
@@ -121,7 +206,7 @@
       "firstNameLabel": "Имя",
       "firstNamePlaceholder": "Иван",
       "lastNameLabel": "Фамилия",
-      "lastNamePlaceholder": "Петров",
+      "lastNamePlaceholder": "Иванов",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Пароль",
@@ -136,20 +221,20 @@
         "firstNameRequired": "Имя обязательно",
         "lastNameRequired": "Фамилия обязательна",
         "emailRequired": "Email обязателен",
-        "emailInvalid": "Некорректный email",
+        "emailInvalid": "Некорректный email адрес",
         "passwordRequired": "Пароль обязателен",
-        "passwordMinLength": "Пароль должен содержать минимум 6 символов"
+        "passwordMinLength": "Пароль должен быть не менее 6 символов"
       },
       "errors": {
-        "network": "Ошибка соединения. Проверьте интернет.",
-        "registrationFailed": "Не удалось создать аккаунт. Возможно, email уже занят.",
+        "network": "Ошибка сети. Проверьте подключение.",
+        "registrationFailed": "Не удалось создать аккаунт. Возможно, этот email уже используется.",
         "emailAlreadyExists": "Аккаунт с таким email уже существует."
       }
     }
   },
   "cabinet": {
     "title": "Личный кабинет",
-    "greeting": "Здравствуйте",
+    "greeting": "Привет",
     "profileSection": "Профиль",
     "emailLabel": "Email",
     "nameLabel": "Имя",
@@ -161,51 +246,52 @@
     "date": "Дата",
     "status": "Статус",
     "payment": "Оплата",
-    "total": "Сумма",
+    "total": "Итого",
     "viewDetails": "Подробнее",
     "logout": "Выйти",
+    "shownLastOrders": "Показаны последние {count} из {total} заказов",
     "orderStatus": {
-      "pending": "Ожидает",
+      "pending": "В ожидании",
       "received": "Получен",
-      "confirmed": "Подтверждён",
+      "confirmed": "Подтвержден",
       "processing": "В обработке",
       "shipped": "Отправлен",
       "delivered": "Доставлен",
-      "canceled": "Отменён",
-      "declined": "Отклонён",
-      "requires_action": "Требует действия"
+      "canceled": "Отменен",
+      "declined": "Отклонен",
+      "requires_action": "Требуется действие"
     },
     "paymentStatus": {
-      "captured": "Оплачен",
-      "authorized": "Авторизован",
-      "pending": "Ожидает",
-      "not_paid": "Не оплачен",
-      "refunded": "Возвращён",
-      "partially_refunded": "Частично возвращён",
-      "canceled": "Отменён",
-      "requires_action": "Требует действия"
+      "captured": "Оплачено",
+      "authorized": "Авторизовано",
+      "pending": "В ожидании",
+      "not_paid": "Не оплачено",
+      "refunded": "Возвращено",
+      "partially_refunded": "Частичный возврат",
+      "canceled": "Отменено",
+      "requires_action": "Требуется действие"
     },
     "order": {
-      "backToCabinet": "В кабинет",
+      "backToCabinet": "Назад в кабинет",
       "orderTitle": "Заказ",
       "notFound": "Заказ не найден",
       "notFoundDesc": "Возможно, он не существует или не принадлежит вашему аккаунту.",
-      "goToCabinet": "Вернуться в кабинет",
+      "goToCabinet": "Назад в кабинет",
       "status": "Статус",
       "payment": "Оплата",
-      "date": "Дата оформления",
+      "date": "Дата заказа",
       "itemsSection": "Товары в заказе",
       "quantity": "Кол-во",
       "price": "Цена",
-      "subtotal": "Сумма",
+      "subtotal": "Подытог",
       "totalsSection": "Итого",
       "itemSubtotal": "Товары",
       "shipping": "Доставка",
       "tax": "Налог",
       "discount": "Скидка",
-      "total": "Всего",
+      "total": "Итого",
       "shippingAddress": "Адрес доставки",
-      "billingAddress": "Платёжный адрес",
+      "billingAddress": "Адрес оплаты",
       "noAddress": "Не указан",
       "untitledItem": "Товар",
       "variant": "Вариант"
@@ -215,10 +301,10 @@
     "loading": "ЗАГРУЗКА КОРЗИНЫ…",
     "emptyTitle": "КОРЗИНА ПУСТА",
     "emptyDesc": "Добавьте товары в корзину, чтобы продолжить оформление заказа.",
-    "emptyCta": "В КАТАЛОГ",
-    "noItems": "Нет товаров в корзине.",
+    "emptyCta": "ПЕРЕЙТИ В КАТАЛОГ",
+    "noItems": "В корзине нет товаров.",
     "pageLabel": "ОФОРМЛЕНИЕ ЗАКАЗА",
-    "pageTitle": "ЧЕКАУТ",
+    "pageTitle": "ОФОРМЛЕНИЕ ЗАКАЗА",
     "steps": {
       "contact": "КОНТАКТЫ И АДРЕС",
       "shipping": "ДОСТАВКА",
@@ -241,7 +327,7 @@
       "addressPlaceholder": "ул. Примерная, д. 1, кв. 42",
       "cityPlaceholder": "Москва",
       "postalCodePlaceholder": "123456",
-      "countryCodePlaceholder": "dk",
+      "countryCodePlaceholder": "RU",
       "phonePlaceholder": "+7 (999) 123-45-67"
     },
     "shipping": {
@@ -271,6 +357,13 @@
       "tax": "Налог",
       "total": "Итого"
     },
+    "errors": {
+      "shippingOptionsFailed": "Не удалось загрузить варианты доставки.",
+      "contactSaveFailed": "Не удалось сохранить контактные данные. Попробуйте снова.",
+      "shippingSelectFailed": "Не удалось выбрать способ доставки. Попробуйте снова.",
+      "orderCompletionFailed": "Не удалось завершить оформление заказа.",
+      "orderCompletionError": "Произошла ошибка при оформлении заказа. Пожалуйста, попробуйте снова."
+    },
     "success": {
       "title": "СПАСИБО ЗА ЗАКАЗ!",
       "orderNumber": "НОМЕР ЗАКАЗА",
@@ -279,7 +372,23 @@
     }
   },
   "cart": {
+    "title": "Корзина",
     "checkout": "Перейти к оформлению",
-    "total": "Итого"
+    "total": "Итого",
+    "close": "Закрыть корзину",
+    "emptyTitle": "Ваша корзина пуста",
+    "emptyDesc": "Добавьте товары из каталога, чтобы продолжить",
+    "subtotal": "Подытог",
+    "discount": "Скидка",
+    "tax": "Налог",
+    "shipping": "Доставка",
+    "decrease": "Уменьшить количество",
+    "increase": "Увеличить количество",
+    "remove": "Удалить"
+  },
+  "metadata": {
+    "title": "SUNLUK — Аксессуары для очков",
+    "description": "Аксессуары для очков, которые становятся частью вашего стиля. SUNLUK — меняй себя, выражай себя."
   }
 }
+,path:

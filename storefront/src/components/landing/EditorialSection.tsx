@@ -1,9 +1,11 @@
 "use client";
-
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ArrowRightIcon } from "./icons";
 
 export function EditorialSection() {
+  const t = useTranslations("home");
+
   return (
     <section className="relative pt-0 pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto">
@@ -34,7 +36,7 @@ export function EditorialSection() {
             >
               <div 
                 role="img"
-                aria-label="Эстетичный образ" 
+                aria-label={t("editorial.model1Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model1.webp')" }}
               />
@@ -50,7 +52,7 @@ export function EditorialSection() {
             >
               <div 
                 role="img"
-                aria-label="Элегантный стиль" 
+                aria-label={t("editorial.model2Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model2.webp')" }}
               />
@@ -66,7 +68,7 @@ export function EditorialSection() {
             >
               <div 
                 role="img"
-                aria-label="Лаконичная деталь" 
+                aria-label={t("editorial.model3Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model3.webp')" }}
               />
@@ -83,17 +85,17 @@ export function EditorialSection() {
           >
             <div className="flex flex-col gap-4">
               <h2 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
-                НОСИ ПО-СВОЕМУ
+                {t("editorial.heading")}
               </h2>
               <p className="text-sm sm:text-base leading-relaxed text-[#2c211b]/80 mt-2">
-                SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.
+                {t("editorial.description")}
               </p>
             </div>
             <a 
               href="#collection" 
               className="inline-flex items-center text-xs font-medium tracking-widest uppercase text-[#5a3828] hover:text-[#2c211b] mt-6 group"
             >
-              СМОТРЕТЬ КОЛЛЕКЦИЮ
+              {t("editorial.cta")}
               <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </a>
           </motion.div>
