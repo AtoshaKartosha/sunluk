@@ -20,13 +20,15 @@ export function SiteFooter({
   const groups = footerGroups ?? getFooterGroups(activeLocale);
   const copy = copyright ?? getCopyright(activeLocale);
 
+  const [serviceGroup, ...secondaryGroups] = groups;
+
   return (
     <footer id="contacts" className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 sm:gap-16 mb-16 sm:mb-20">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12 lg:gap-16 mb-16 sm:mb-20">
 
-          {/* Column 1: Logo and social */}
+          {/* Logo and social */}
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <Link href={locale ? `/${locale}` : "/"} className="flex flex-col group">
               <div className="flex items-center gap-2">
@@ -54,7 +56,20 @@ export function SiteFooter({
             </div>
           </div>
 
-          {groups.map((group, i) => (
+          {serviceGroup && (
+            <div className="flex flex-col gap-4 sm:gap-5">
+              <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
+                {serviceGroup.title}
+              </h3>
+              <ul className="flex flex-col gap-2.5 text-xs font-medium">
+                {serviceGroup.links.map((link, j) => (
+                  <li key={j}><a href={link.href} className="hover:text-[#2f6f78] transition-colors">{link.label}</a></li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {secondaryGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-4 sm:gap-5">
               <h3 className="text-xs font-medium tracking-widest text-[#2c211b] uppercase">
                 {group.title}

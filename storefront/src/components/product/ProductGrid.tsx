@@ -17,7 +17,7 @@ import { useTranslations } from "next-intl";
 export function ProductGrid({
   products,
   emptyMessage,
-  gridClass = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  gridClass = "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   locale,
 }: ProductGridProps) {
   const t = useTranslations("catalog");
@@ -34,7 +34,7 @@ export function ProductGrid({
   }
 
   return (
-    <div className={`grid ${gridClass} gap-6 sm:gap-8`}>
+    <div className={`grid ${gridClass} gap-x-3 gap-y-6 sm:gap-8`}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} locale={locale} />
       ))}
