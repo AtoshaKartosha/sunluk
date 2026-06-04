@@ -34,6 +34,59 @@ type ChecklistItem = {
   passed: boolean
 }
 
+type ChecklistLocale = "en" | "ru"
+
+const copy = {
+  en: {
+    title: "Sunluk Product Checklist",
+    checksPassed: (passed: number, total: number) =>
+      `${passed} of ${total} checks passed`,
+    complete: "Complete",
+    remaining: (count: number) => `${count} remaining`,
+    productHasTitle: "Product has title",
+    productHasDescription: "Product has description",
+    productHasImage: "Product has thumbnail or image",
+    productHasVariant: "Product has at least one variant",
+    variantsHaveSku: "SKU present on every variant",
+    variantsHavePrices: "Prices exist for RUB and EUR on every variant",
+    variantsHaveInventory:
+      "Inventory configured or manage_inventory disabled for every variant",
+    packagingCategory: "Packaging product is in Packaging category",
+  },
+  ru: {
+    title: "Чеклист товара Sunluk",
+    checksPassed: (passed: number, total: number) =>
+      `Выполнено ${passed} из ${total} проверок`,
+    complete: "Готово",
+    remaining: (count: number) => `Осталось: ${count}`,
+    productHasTitle: "У товара заполнено название",
+    productHasDescription: "У товара заполнено описание",
+    productHasImage: "У товара есть thumbnail или изображение",
+    productHasVariant: "У товара есть хотя бы один вариант",
+    variantsHaveSku: "У каждого варианта указан SKU",
+    variantsHavePrices: "У каждого варианта есть цены RUB и EUR",
+    variantsHaveInventory:
+      "У каждого варианта настроен склад или отключен manage_inventory",
+    packagingCategory: "Товар-упаковка находится в категории Packaging",
+  },
+} as const
+
+function getAdminLocale(): ChecklistLocale {
+  if (typeof window === "undefined") {
+    return "en"
+  }
+
+  const storedLanguage =
+    window.localStorage.getItem("i18nextLng") ||
+    window.localStorage.getItem("medusa_admin_language")
+
+  const language = storedLanguage || window.navigator.language
+
+  return language.toLowerCase().startsWith("ru") ? "ru" : "en"
+}
+
+
+
 
 const ProductChecklistWidget = ({
   data: product,
@@ -42,17 +95,18 @@ const ProductChecklistWidget = ({
     return null
   }
 
+  const t = copy[getAdminLocale()]
   const checks: ChecklistItem[] = []
 
   // Check 1: Product has title
   checks.push({
-    label: "Product has title",
+    label: t.productHasTitle,
     passed: !!product.title && product.title.trim().length > 0,
   })
 
   // Check 2: Product has description
   checks.push({
-    label: "Product has description",
+    label: t.productHasDescription,
     passed: !!product.description && product.description.trim().length > 0,
   })
 
@@ -60,14 +114,14 @@ const ProductChecklistWidget = ({
   const hasThumbnail = !!product.thumbnail && product.thumbnail.trim().length > 0
   const hasImages = !!product.images && product.images.length > 0
   checks.push({
-    label: "Product has thumbnail or image",
+    label: t.productHasImage,
     passed: hasThumbnail || hasImages,
   })
 
   // Check 4: Product has at least one variant
   const hasVariants = !!product.variants && product.variants.length > 0
   checks.push({
-    label: "Product has at least one variant",
+    label: t.productHasVariant,
     passed: hasVariants,
   })
 
@@ -77,7 +131,7 @@ const ProductChecklistWidget = ({
       (variant) => !!variant.sku && variant.sku.trim().length > 0
     )
     checks.push({
-      label: "SKU present on every variant",
+      label: t.variantsHaveSku,
       passed: allVariantsHaveSku,
     })
   }
@@ -93,7 +147,7 @@ const ProductChecklistWidget = ({
       return hasRub && hasEur
     })
     checks.push({
-      label: "Prices exist for RUB and EUR on every variant",
+      label: t.variantsHavePrices,
       passed: allVariantsHaveRequiredPrices,
     })
   }
@@ -113,7 +167,7 @@ const ProductChecklistWidget = ({
       }
     )
     checks.push({
-      label: "Inventory configured or manage_inventory disabled for every variant",
+      label: t.variantsHaveInventory,
       passed: allVariantsHaveInventoryConfigured,
     })
   }
@@ -136,7 +190,7 @@ const ProductChecklistWidget = ({
           cat.handle?.toLowerCase().includes("upakovka")
       )
     checks.push({
-      label: "Packaging product is in Packaging category",
+      label: t.packagingCategory,
       passed: isInPackagingCategory,
     })
   }
@@ -149,23 +203,23 @@ const ProductChecklistWidget = ({
       <div className="flex items-center justify-between px-6 py-4">
         <div>
           <Text size="small" leading="compact" weight="plus">
-            Sunluk Product Checklist
+            {t.title}
           </Text>
           <Text
             size="small"
             leading="compact"
             className="text-ui-fg-subtle mt-0.5"
           >
-            {passedCount} of {totalCount} checks passed
+            {t.checksPassed(passedCount, totalCount)}
           </Text>
         </div>
         {passedCount === totalCount ? (
           <Badge color="green" size="small">
-            Complete
+            {t.complete}
           </Badge>
         ) : (
           <Badge color="orange" size="small">
-            {totalCount - passedCount} remaining
+            {t.remaining(totalCount - passedCount)}
           </Badge>
         )}
       </div>
