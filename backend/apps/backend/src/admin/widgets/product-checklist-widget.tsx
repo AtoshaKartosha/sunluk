@@ -88,9 +88,9 @@ function getAdminLocale(): ChecklistLocale {
 
 
 
-const ProductChecklistWidget = ({
+export default function ProductChecklistWidget({
   data: product,
-}: DetailWidgetProps<HttpTypesAdminProduct>) => {
+}: DetailWidgetProps<HttpTypesAdminProduct>) {
   if (!product) {
     return null
   }
@@ -256,5 +256,3 @@ const ProductChecklistWidget = ({
 export const config = defineWidgetConfig({
   zone: "product.details.after",
 })
-
-export default ProductChecklistWidget
