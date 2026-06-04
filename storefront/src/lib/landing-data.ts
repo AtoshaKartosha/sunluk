@@ -97,9 +97,9 @@ export const FEATURES: FeatureData[] = [
  * top-left, top-right, bottom-left, bottom-right.
  */
 export const FEATURE_BORDER_CLASSES = [
-  "border-b sm:border-r border-[#2c211b]/15",
+  "border-r border-b border-[#2c211b]/15",
   "border-b border-[#2c211b]/15",
-  "border-b sm:border-b-0 sm:border-r border-[#2c211b]/15",
+  "border-r border-[#2c211b]/15",
   "",
 ] as const;
 

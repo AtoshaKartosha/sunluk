@@ -7,7 +7,7 @@ export function EditorialSection() {
   const t = useTranslations("home");
 
   return (
-    <section className="relative pt-0 pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
+    <section className="relative pt-0 pb-6 sm:pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
           {/* 3 Models Container with 5px padding and 5px gap */}
@@ -24,7 +24,7 @@ export function EditorialSection() {
                 }
               }
             }}
-            className="lg:col-span-3 grid grid-cols-3 gap-[5px] p-[5px]"
+            className="lg:col-span-3 grid grid-cols-3 gap-[5px] -mx-4 sm:mx-0 pt-[5px] pb-[5px] px-0 sm:p-[5px]"
           >
             {/* Model 1 */}
             <motion.div 

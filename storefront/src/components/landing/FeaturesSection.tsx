@@ -32,7 +32,7 @@ export function FeaturesSection() {
                 }
               }
             }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-0 order-2 lg:order-1"
+            className="grid grid-cols-2 gap-0 order-2 lg:order-1"
           >
             {localizedFeatures.map((feature, i) => (
               <motion.div
@@ -41,22 +41,22 @@ export function FeaturesSection() {
                   hidden: { opacity: 0, y: 20 },
                   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
                 }}
-                className={`${FEATURE_BORDER_CLASSES[i]} p-8 sm:p-12 flex items-start gap-6`}
+                className={`${FEATURE_BORDER_CLASSES[i]} p-5 sm:p-12 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-6`}
               >
-                <div className="w-16 h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
+                <div className="w-10 h-10 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
                   {feature.icon === "S" ? (
-                    <span className="font-serif text-5xl sm:text-6xl font-light leading-none">S</span>
+                    <span className="font-serif text-4xl sm:text-6xl font-light leading-none">S</span>
                   ) : feature.icon === "gem" ? (
-                    <GemIcon className="w-12 h-12" />
+                    <GemIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   ) : feature.icon === "leaf" ? (
-                    <LeafIcon className="w-12 h-12" />
+                    <LeafIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   ) : (
-                    <ShieldIcon className="w-12 h-12" />
+                    <ShieldIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="font-serif text-lg font-bold text-[#2c211b]">{feature.title}</h3>
-                  <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-relaxed">{feature.description}</p>
+                <div className="flex flex-col gap-1 sm:gap-1.5">
+                  <h3 className="font-serif text-sm sm:text-lg font-bold text-[#2c211b] leading-tight">{feature.title}</h3>
+                  <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-tight sm:leading-relaxed">{feature.description}</p>
                 </div>
               </motion.div>
             ))}
