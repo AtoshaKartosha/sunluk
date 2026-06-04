@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useLocale } from "next-intl";
 import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
 import { ProductFacts } from "./ProductFacts";
-
 export interface ProductInfoBlockLabels {
   brand: string;
   vatIncluded: string;
@@ -178,9 +178,85 @@ function AccordionItem({
 export function ProductInfoBlock({
   product,
   price,
-  labels = DEFAULT_LABELS,
+  labels: propLabels,
   packagingProducts = [],
 }: ProductInfoBlockProps) {
+  const locale = useLocale();
+  const labels = useMemo(() => {
+    const defaultLabels = propLabels || DEFAULT_LABELS;
+    if (propLabels) return defaultLabels;
+    if (locale === "en") {
+      return {
+        brand: "SUNLUK ACCESSORIES",
+        vatIncluded: "VAT included",
+        handmade: "Handmade",
+        delivery: "Delivery to DE & Worldwide",
+        giftWrap: "Gift wrapping available",
+        materialsHeading: "MATERIALS & CARE",
+        materialsText: "Each SUNLUK piece is handcrafted by our artisans using premium certified materials:",
+        materialsItem1: "Durable and hypoallergenic cord/chain.",
+        materialsItem2: "Premium Italian hardware and clasps.",
+        materialsItem3: "Adjustable silicone loops for any eyewear temple size.",
+        materialsCare: "Care: Avoid direct contact with perfume, hairspray, and water. Wipe gently with a soft, chemical-free cloth.",
+        shippingHeading: "SHIPPING & RETURNS",
+        shippingText: "We ship worldwide from our warehouses in Munich (Germany) and Moscow (Russia):",
+        shippingItem1: "Orders shipped within 24 hours of payment.",
+        shippingItem2: "Free standard shipping on orders over 5,000 RUB or 50 EUR.",
+        shippingItem3: "Express courier delivery to your door in 2–4 business days.",
+        shippingItem4: "Easy returns or exchanges within 14 days of receipt.",
+        materialNames: {
+          turquoise: "Turquoise",
+          leather: "Leather",
+          silver: "Silver",
+          "gold-plated": "Gold-plated",
+          Turquoise: "Turquoise",
+          Leather: "Leather",
+          Silver: "Silver",
+          "Gold-plated": "Gold-plated",
+        },
+        variantSelector: {
+          selectAllOptions: "Select all options",
+          unavailable: "Unavailable",
+          outOfStock: "Out of stock",
+          invalidQuantity: "Enter quantity",
+          addToCart: "Add to cart",
+          quantity: "Quantity",
+          decreaseQuantity: "Decrease quantity",
+          increaseQuantity: "Increase quantity",
+          price: "Price",
+          cost: "Total",
+          inStock: "In stock",
+          lowStock: "Only a few left",
+          backorderAvailable: "Available for backorder",
+          notAvailable: "Out of stock",
+          deliveryPromise: "Free delivery",
+          adding: "Adding…",
+          materialNames: {
+            turquoise: "Turquoise",
+            leather: "Leather",
+            silver: "Silver",
+            "gold-plated": "Gold-plated",
+            Turquoise: "Turquoise",
+            Leather: "Leather",
+            Silver: "Silver",
+            "Gold-plated": "Gold-plated",
+          },
+        },
+        breadcrumbCatalog: "CATALOG",
+        socialProof: {
+          heading: "WHAT OUR CUSTOMERS SAY",
+          placeholder: "Reviews coming soon. Be the first!",
+        },
+        factsHeading: "SPECIFICATIONS",
+        packagingHeading: "PACKAGING",
+        packagingNone: "No packaging",
+        packagingFree: "Free",
+        packagingOutOfStock: "Out of stock",
+      };
+    }
+    return DEFAULT_LABELS;
+  }, [propLabels, locale]);
+
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
@@ -387,11 +463,11 @@ export function ProductInfoBlock({
                 const isFree = !amount;
                 const priceText = (isFree || !amount || !currency)
                   ? labels.packagingFree
-                  : `+ ${formatPriceValue(amount, currency)}`;
+                  : `+ ${formatPriceValue(amount, currency, locale)}`;
                 
                 const displayText = isInStock 
                   ? priceText 
-                  : `${priceText} (${labels.packagingOutOfStock || "Нет в наличии"})`;
+                  : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
 
                 // Fallback to our local generated images if no thumbnail is set on Medusa product
                 const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;

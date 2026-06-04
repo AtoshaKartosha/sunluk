@@ -120,6 +120,7 @@
     "gold-plated": "Золото",
     "selectAllOptions": "Выберите все параметры",
     "unavailable": "Недоступно",
+    "priceUponRequest": "Цена по запросу",
     "outOfStock": "Нет в наличии",
     "invalidQuantity": "Укажите количество",
     "addToCart": "В корзину",
@@ -147,6 +148,7 @@
     }
   },
   "header": {
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
     "catalog": "КАТАЛОГ",
     "collection": "КОЛЛЕКЦИЯ",
     "about": "О НАС",
@@ -159,6 +161,7 @@
   },
   "footer": {
     "copyright": "© 2026 SUNLUK. Все права защищены.",
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
     "serviceClients": "СЕРВИС КЛИЕНТОВ",
     "ourStory": "Наша история",
     "shippingReturns": "Доставка и возврат",

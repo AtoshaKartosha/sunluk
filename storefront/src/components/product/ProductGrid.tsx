@@ -12,18 +12,22 @@ interface ProductGridProps {
   locale?: Locale;
 }
 
+import { useTranslations } from "next-intl";
+
 export function ProductGrid({
   products,
-  emptyMessage = "Товары не найдены",
+  emptyMessage,
   gridClass = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   locale,
 }: ProductGridProps) {
+  const t = useTranslations("catalog");
+  const fallbackEmpty = emptyMessage ?? t("empty");
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="w-16 h-0.5 bg-[#2f6f78] mb-6" />
         <p className="text-lg text-[#2c211b]/60 font-medium tracking-wide uppercase">
-          {emptyMessage}
+          {fallbackEmpty}
         </p>
       </div>
     );

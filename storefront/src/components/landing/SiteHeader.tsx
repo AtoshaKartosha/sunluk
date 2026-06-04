@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { BRAND, NAV_LINKS } from "@/lib/landing-data";
+import { BRAND, getNavLinks } from "@/lib/landing-data";
 import type { NavLinkData } from "@/lib/landing-data";
+import type { Locale } from "@/i18n/routing";
 import { NavLink } from "@/components/landing/NavLink";
 import { useCart } from "@/components/cart/CartContext";
 import { LocaleSwitcher } from "@/components/product";
@@ -50,10 +51,10 @@ const XIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 );
 
 export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
-  const links = navLinks ?? NAV_LINKS;
+  const locale = useLocale() as Locale;
+  const links = navLinks ?? getNavLinks(locale);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const t = useTranslations("header");
-  const locale = useLocale();
 
   const { itemCount, openCart } = useCart();
 
@@ -72,7 +73,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
             </span>
           </div>
           <span className="text-[8px] sm:text-[9px] tracking-[0.05em] uppercase text-[#2c211b]/70 font-semibold mt-1">
-            {BRAND.subtitle}
+            {t("brandSubtitle")}
           </span>
         </Link>
 

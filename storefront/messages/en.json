@@ -120,6 +120,7 @@
     "gold-plated": "Gold-plated",
     "selectAllOptions": "Select all options",
     "unavailable": "Unavailable",
+    "priceUponRequest": "Price upon request",
     "outOfStock": "Out of stock",
     "invalidQuantity": "Enter quantity",
     "addToCart": "Add to cart",
@@ -147,6 +148,7 @@
     }
   },
   "header": {
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
     "catalog": "CATALOG",
     "collection": "COLLECTION",
     "about": "ABOUT",
@@ -159,6 +161,7 @@
   },
   "footer": {
     "copyright": "© 2026 SUNLUK. All rights reserved.",
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
     "serviceClients": "CUSTOMER SERVICE",
     "ourStory": "Our Story",
     "shippingReturns": "Shipping & Returns",

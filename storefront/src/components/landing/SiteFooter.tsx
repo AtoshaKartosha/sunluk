@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { InstagramIcon, SendIcon, YoutubeIcon } from "./icons";
-import { BRAND, FOOTER_GROUPS } from "@/lib/landing-data";
+import { BRAND, getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
+import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/routing";
 
 export function SiteFooter({
   footerGroups,
@@ -12,8 +14,11 @@ export function SiteFooter({
   copyright?: string;
   locale?: string;
 }) {
-  const groups = footerGroups ?? FOOTER_GROUPS;
-  const copy = copyright ?? "© 2026 SUNLUK. Все права защищены.";
+  const t = useTranslations("footer");
+  const defaultLocale = useLocale() as Locale;
+  const activeLocale = (locale as Locale) || defaultLocale;
+  const groups = footerGroups ?? getFooterGroups(activeLocale);
+  const copy = copyright ?? getCopyright(activeLocale);
 
   return (
     <footer id="contacts" className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
@@ -33,7 +38,7 @@ export function SiteFooter({
                 </span>
               </div>
               <span className="text-[8px] sm:text-[9px] tracking-[0.05em] uppercase text-[#2c211b]/70 font-semibold mt-1">
-                {BRAND.subtitle}
+                {t("brandSubtitle")}
               </span>
             </Link>
             <div className="flex items-center gap-4 mt-2">

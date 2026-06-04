@@ -5,6 +5,25 @@ import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import type { ReactNode } from "react";
+import { Montserrat, Geist_Mono } from "next/font/google";
+import "../globals.css";
+
+const montserrat = Montserrat({
+  variable: "--font-sans",
+  subsets: ["latin", "cyrillic"],
+});
+
+const montserratSerif = Montserrat({
+  variable: "--font-serif",
+  subsets: ["latin", "cyrillic"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin", "cyrillic"],
+});
+
+const fontClasses = `${montserrat.variable} ${montserratSerif.variable} ${geistMono.variable}`;
 
 /* ------------------------------------------------------------------ */
 /*  Locale layout                                                      */
@@ -46,11 +65,15 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <CartProvider>
-        <main className="flex-1">{children}</main>
-        <CartDrawer />
-      </CartProvider>
-    </NextIntlClientProvider>
+    <html lang={locale} className={`${fontClasses} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CartProvider>
+            <main className="flex-1">{children}</main>
+            <CartDrawer />
+          </CartProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }
