@@ -43,6 +43,11 @@ flowchart LR
     U1[Cabinet dashboard viewed]
     U2[Order history browsed]
   end
+
+  subgraph CICD["CI/CD\nflows/integrations/ci-cd.md"]
+    D0[Checks passed]
+    D1[VPS deployment complete]
+  end
   Admin -- "catalog:published" --> Catalog
   Admin -- "catalog:published" --> Localization
   Admin -- "catalog:translation-published" --> Localization
@@ -65,6 +70,7 @@ flowchart LR
 | Product Add-ons | `cart:line-items-added` | Cart and Checkout | Payload: `{ mainLineItem, packagingLineItem? }`. Line items successfully created and linked in Cart. |
 | Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |
 | Cart and Checkout | `order:placed` | Admin Operations | Payload: `{ orderId, cartId, customerId? }`; order appears in Medusa admin/order management. |
+| CI/CD | None | Commerce flows | Infrastructure-only v0; it does not emit or consume commerce domain events. |
 
 ## Non-negotiables
 
@@ -79,3 +85,4 @@ flowchart LR
 - Seeded commerce data: `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
 - Placeholder custom routes: `backend/apps/backend/src/api/store/custom/route.ts`, `backend/apps/backend/src/api/admin/custom/route.ts`.
 - Storefront entry points: `storefront/src/app/page.tsx`, `storefront/src/app/products/page.tsx`, `storefront/src/app/products/[handle]/page.tsx`.
+- CI/CD automation: `flows/integrations/ci-cd.md`.
