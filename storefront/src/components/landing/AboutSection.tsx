@@ -13,7 +13,7 @@ export function AboutSection() {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="relative h-96 lg:h-auto overflow-hidden bg-[#f4ebe6]"
+        className="relative h-64 lg:h-auto overflow-hidden bg-[#f4ebe6]"
       >
         <div 
           role="img"
