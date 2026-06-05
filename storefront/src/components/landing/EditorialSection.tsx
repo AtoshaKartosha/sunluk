@@ -29,8 +29,8 @@ export function EditorialSection() {
             {/* Model 1 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
@@ -45,8 +45,8 @@ export function EditorialSection() {
             {/* Model 2 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
@@ -61,8 +61,8 @@ export function EditorialSection() {
             {/* Model 3 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
@@ -77,8 +77,8 @@ export function EditorialSection() {
           </motion.div>
           {/* Text Editorial block without container wrapper */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:col-span-1 flex flex-col justify-between py-4"

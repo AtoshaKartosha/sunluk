@@ -17,8 +17,8 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
     <section id="collection" className="pt-8 sm:pt-32 pb-10 sm:pb-16 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="max-w-xl mx-auto mb-8 sm:mb-20"
@@ -50,8 +50,8 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
             <motion.div
               key={i}
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } },
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } },
               }}
               className="group flex flex-col text-left bg-transparent transition-all duration-300"
             >
@@ -73,8 +73,8 @@ export function CollectionSection({ locale }: CollectionSectionProps) {
           ))}
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}

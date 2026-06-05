@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-export const CharReveal = ({ text, className, stagger = 0.025, delay = 0, y = 24, duration = 0.5 }: { text: string; className?: string; stagger?: number; delay?: number; y?: number; duration?: number }) => {
+export const CharReveal = ({ text, className, stagger = 0.025, delay = 0, y = 0, duration = 0.5 }: { text: string; className?: string; stagger?: number; delay?: number; y?: number; duration?: number }) => {
   const words = text.split(" ");
   return (
     <motion.span
