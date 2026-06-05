@@ -10,16 +10,6 @@ import { NavLink } from "@/components/landing/NavLink";
 import { useCart } from "@/components/cart/CartContext";
 import { LocaleSwitcher } from "@/components/product";
 
-/* ------------------------------------------------------------------ */
-/*  inline SVGs – only the icons this component needs                 */
-/* ------------------------------------------------------------------ */
-const SearchIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.3-4.3" />
-  </svg>
-);
-
 const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -86,9 +76,6 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-3 sm:gap-6">
-          <button className="hidden sm:block text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label={t("search")}>
-            <SearchIcon className="w-5 h-5" />
-          </button>
           <Link href={`/${locale}/cabinet`} className="hidden sm:block text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label={t("profile")}>
             <UserIcon className="w-5 h-5" />
           </Link>
@@ -141,13 +128,6 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
               <UserIcon className="w-4 h-4" />
               <span>{t("profile")}</span>
             </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-[#2f6f78] transition-colors flex items-center justify-center gap-2"
-            >
-              <SearchIcon className="w-4 h-4" />
-              <span>{t("search")}</span>
-            </button>
           </div>
         </div>
       )}
