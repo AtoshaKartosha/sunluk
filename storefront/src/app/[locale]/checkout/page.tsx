@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/components/cart/CartContext";
+import type { StoreCart } from "@/components/cart/types";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import {
@@ -188,7 +189,7 @@ function StepIndicator({
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, loading } = useCart();
+  const { cart, loading, clearCart, setCart } = useCart();
   const locale = useLocale();
   const t = useTranslations("checkout");
   const tc = useTranslations("checkout.contact");
@@ -212,6 +213,9 @@ export default function CheckoutPage() {
   // ---- Payment state ----
   const [completing, setCompleting] = useState(false);
   const [completionError, setCompletionError] = useState<string | null>(null);
+  const selectedOrCartShippingId =
+    selectedShippingId ?? cart?.shipping_methods?.[0]?.shipping_option_id ?? null;
+
 
 
   // ---- Fetch shipping options when shipping step becomes active ----
@@ -237,7 +241,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentStep, cart?.id, shippingOptions.length]);
+  }, [currentStep, cart?.id, shippingOptions.length, t]);
 
   const handleContactSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -257,11 +261,12 @@ export default function CheckoutPage() {
           phone: contactForm.phone,
         };
 
-        await updateCart(cart.id, {
+        const updatedCart = await updateCart(cart.id, {
           email: contactForm.email,
           shipping_address: address,
           billing_address: address,
         });
+        setCart(updatedCart as unknown as StoreCart);
 
         setCurrentStep("shipping");
       } catch {
@@ -270,18 +275,19 @@ export default function CheckoutPage() {
         setStepSubmitting(false);
       }
     },
-    [cart, contactForm],
+    [cart, contactForm, setCart, t],
   );
 
   const handleShippingSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!cart?.id || !selectedShippingId) return;
+      if (!cart?.id || !selectedOrCartShippingId) return;
       setStepSubmitting(true);
       setStepError(null);
 
       try {
-        await addShippingMethod(cart.id, selectedShippingId);
+        const updatedCart = await addShippingMethod(cart.id, selectedOrCartShippingId);
+        setCart(updatedCart as unknown as StoreCart);
         setCurrentStep("payment");
       } catch {
         setStepError(t("errors.shippingSelectFailed"));
@@ -289,7 +295,7 @@ export default function CheckoutPage() {
         setStepSubmitting(false);
       }
     },
-    [cart, selectedShippingId],
+    [cart, selectedOrCartShippingId, setCart, t],
   );
 
   const handlePaymentSubmit = useCallback(
@@ -306,6 +312,7 @@ export default function CheckoutPage() {
 
         if (result.type === "order" && result.order) {
           clearCartId();
+          clearCart();
           router.push(`/${locale}/checkout/success?order_id=${result.order.id}`);
         } else {
           const errMsg =
@@ -319,7 +326,7 @@ export default function CheckoutPage() {
         setCompleting(false);
       }
     },
-    [cart, router, locale],
+    [cart, router, locale, clearCart, t],
   );
 
   const updateContactField = useCallback(
@@ -577,7 +584,7 @@ export default function CheckoutPage() {
                       <label
                         key={option.id}
                         className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
-                          selectedShippingId === option.id
+                          selectedOrCartShippingId === option.id
                             ? "border-[#2f6f78] bg-[#2f6f78]/5"
                             : "border-[#2c211b]/10 bg-white hover:border-[#2c211b]/25"
                         }`}
@@ -586,7 +593,7 @@ export default function CheckoutPage() {
                           type="radio"
                           name="shipping_option"
                           value={option.id}
-                          checked={selectedShippingId === option.id}
+                          checked={selectedOrCartShippingId === option.id}
                           onChange={() => setSelectedShippingId(option.id)}
                           className="accent-[#2f6f78]"
                         />
@@ -622,7 +629,7 @@ export default function CheckoutPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={stepSubmitting || !selectedShippingId}
+                    disabled={stepSubmitting || !selectedOrCartShippingId}
                     className="inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {stepSubmitting

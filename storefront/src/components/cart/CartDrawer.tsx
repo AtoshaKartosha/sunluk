@@ -195,6 +195,7 @@ export default function CartDrawer() {
                 currency={currency}
                 disabled={mutating}
                 locale={locale}
+                closeCart={closeCart}
               />
             )}
           </motion.aside>
@@ -359,8 +360,9 @@ interface CartFooterProps {
   currency: string;
   disabled: boolean;
   locale: string;
+  closeCart: () => void;
 }
-function CartFooter({ cart, currency, disabled, locale }: CartFooterProps) {
+function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterProps) {
   const t = useTranslations("cart");
 
   if (!cart) return null;
@@ -421,7 +423,11 @@ function CartFooter({ cart, currency, disabled, locale }: CartFooterProps) {
       <Link
         href={`/${locale}/checkout`}
         onClick={(e) => {
-          if (disabled) e.preventDefault();
+          if (disabled) {
+            e.preventDefault();
+            return;
+          }
+          closeCart();
         }}
         className={cn(
           "mt-4 flex w-full items-center justify-center px-6 py-3 text-sm font-medium tracking-widest uppercase transition-all duration-300",

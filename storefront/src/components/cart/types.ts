@@ -35,6 +35,21 @@ export interface StoreCartLineItem {
   metadata?: Record<string, unknown> | null;
 }
 
+export interface StoreCartAddress {
+  first_name?: string | null;
+  last_name?: string | null;
+  address_1?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  country_code?: string | null;
+  phone?: string | null;
+}
+
+export interface StoreCartShippingMethod {
+  id: string;
+  shipping_option_id: string;
+}
+
 export interface StoreCart {
   id: string;
   region_id?: string;
@@ -49,4 +64,8 @@ export interface StoreCart {
   item_subtotal: number;
   item_tax_total: number;
   item_count?: number;
+  shipping_methods?: StoreCartShippingMethod[];
+  email?: string | null;
+  shipping_address?: StoreCartAddress | null;
+  billing_address?: StoreCartAddress | null;
 }

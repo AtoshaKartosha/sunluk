@@ -32,13 +32,15 @@ interface CartContextType {
   removeItem: (lineItemId: string) => Promise<void>;
   openCart: () => void;
   closeCart: () => void;
+  clearCart: () => void;
+  setCart: React.Dispatch<React.SetStateAction<StoreCart | null>>;
 }
 
 // ---------------------------------------------------------------------------
 // localStorage helpers
 // ---------------------------------------------------------------------------
 
-const CART_ID_KEY = "medusa_cart_id";
+const CART_ID_KEY = "sunluk_cart_id";
 
 function getStoredCartId(): string | null {
   if (typeof window === "undefined") return null;
@@ -62,6 +64,7 @@ function clearStoredCartId(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(CART_ID_KEY);
+    localStorage.removeItem("medusa_cart_id");
   } catch {
     // No-op.
   }
@@ -72,7 +75,7 @@ function clearStoredCartId(): void {
 // ---------------------------------------------------------------------------
 
 const CART_FIELDS =
-  "*items,*items.variant,*items.product,region_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count";
+  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods";
 
 async function fetchCart(cartId: string): Promise<StoreCart> {
   const sdk = getMedusaClient();
@@ -145,7 +148,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
   const [loading, setLoading] = useState(() => {
     if (typeof window !== "undefined") {
-      return !!localStorage.getItem("sunluk_cart_id");
+      return !!localStorage.getItem(CART_ID_KEY);
     }
     return false;
   });
@@ -327,6 +330,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
+  const clearCart = useCallback(() => {
+    clearStoredCartId();
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("sunluk_cart_id");
+        localStorage.removeItem("medusa_cart_id");
+      } catch {
+        // No-op.
+      }
+    }
+    setCart(null);
+  }, []);
+
   // ---- Value ----
 
   const value = useMemo<CartContextType>(
@@ -341,6 +357,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       openCart,
       closeCart,
+      clearCart,
+      setCart,
     }),
     [
       cart,
@@ -353,6 +371,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       openCart,
       closeCart,
+      clearCart,
+      setCart,
     ],
   );
 
