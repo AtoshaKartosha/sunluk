@@ -55,9 +55,13 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
         {/* Logo & Subtitle */}
         <Link href={`/${locale}`} className="flex flex-col group">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-none border-2 border-[#2c211b] flex items-center justify-center font-serif text-xs font-medium leading-none group-hover:bg-[#2c211b] group-hover:text-[#f4ebe6] transition-colors duration-300">
-              S
-            </span>
+            <svg
+              viewBox="435.3 335.2 229.1 204.3"
+              className="w-6 h-6 fill-[#2c211b] transition-colors duration-300 group-hover:fill-[#2f6f78]"
+            >
+              <path d="M597.8,408h-73.5c-4.7,0-8.5,3.8-8.5,8.5s3.8,8.5,8.5,8.5h73.5c26.5,0,48,21.5,48,48s-21.5,48-48,48-26.5-5.8-35.6-15.8c0-.6.2-1.2.2-1.9,0-6.9-5.6-12.5-12.5-12.5s-12.5,5.6-12.5,12.5,5.1,11.9,11.5,12.4c12.4,14.1,30.2,22.3,49,22.3,35.9,0,65-29.2,65-65s-29.2-65-65-65ZM544.8,503.3c0-2.8,2.2-5,5-5s5,2.2,5,5-2.2,5-5,5-5-2.2-5-5Z" />
+              <path d="M501.9,466.7h73.5c4.7,0,8.5-3.8,8.5-8.5s-3.8-8.5-8.5-8.5h-73.5c-26.5,0-48-21.5-48-48,0-26.5,21.5-48,48-48s26.5,5.8,35.6,15.8c0,.6-.2,1.2-.2,1.9,0,6.9,5.6,12.5,12.5,12.5,6.9,0,12.5-5.6,12.5-12.5s-5.1-11.9-11.5-12.4c-12.4-14.1-30.2-22.3-49-22.3-35.9,0-65,29.2-65,65s29.2,65,65,65ZM554.9,371.4c0,2.8-2.2,5-5,5s-5-2.2-5-5,2.2-5,5-5,5,2.2,5,5Z" />
+            </svg>
             <span className="font-serif text-xl sm:text-2xl font-medium tracking-widest leading-none">
               {BRAND.name}
             </span>
