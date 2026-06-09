@@ -1,7 +1,7 @@
 "use client";
-
 import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 /* ------------------------------------------------------------------ */
 /*  inline SVG – only the icon this component needs                   */
@@ -17,6 +17,7 @@ const CheckCircleIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 /*  NewsletterSection                                                 */
 /* ------------------------------------------------------------------ */
 export default function NewsletterSection() {
+  const t = useTranslations("home");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -51,13 +52,13 @@ export default function NewsletterSection() {
             className="text-center lg:text-left flex flex-col items-center lg:items-start gap-4"
           >
             <span className="text-[10px] font-medium tracking-[0.4em] uppercase text-white/90 block">
-              ЭКСКЛЮЗИВНЫЕ ПРЕДЛОЖЕНИЯ
+              {t("newsletter.label")}
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide uppercase">
-              БУДЬТЕ ПЕРВЫМИ
+              {t("newsletter.heading")}
             </h2>
             <p className="text-sm sm:text-base text-white/80 max-w-lg leading-relaxed">
-              Подпишитесь и узнавайте о новинках, лимитированных дропах и специальных предложениях.
+              {t("newsletter.description")}
             </p>
           </motion.div>
           {/* Right Column: Form */}
@@ -71,8 +72,8 @@ export default function NewsletterSection() {
             {subscribed ? (
               <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-none border border-white/20 animate-fade-in flex flex-col items-center lg:items-start text-center lg:text-left gap-3">
                 <CheckCircleIcon className="w-10 h-10 text-white" />
-                <p className="text-sm font-bold tracking-wider uppercase">ВЫ УСПЕШНО ПОДПИСАЛИСЬ!</p>
-                <p className="text-xs text-white/85">Спасибо за интерес к SUNLUK. Письмо с приветственным бонусом уже летит к вам.</p>
+                <p className="text-sm font-bold tracking-wider uppercase">{t("newsletter.successTitle")}</p>
+                <p className="text-xs text-white/85">{t("newsletter.successDesc")}</p>
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="w-full flex flex-col sm:flex-row gap-3">
@@ -81,19 +82,19 @@ export default function NewsletterSection() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Ваш e-mail"
+                  placeholder={t("newsletter.placeholder")}
                   className="flex-1 px-5 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm font-medium transition-all rounded-none"
                 />
                 <button
                   type="submit"
                   className="px-8 py-4 bg-[#5a3828] hover:bg-white hover:text-[#5a3828] text-white text-xs font-medium tracking-widest uppercase transition-all duration-300 rounded-none shrink-0 cursor-pointer"
                 >
-                  ПОДПИСАТЬСЯ
+                  {t("newsletter.cta")}
                 </button>
               </form>
             )}
             <p className="text-[10px] text-white/60 text-center lg:text-left">
-              Никакого спама. Отписаться можно в любой момент.
+              {t("newsletter.note")}
             </p>
           </motion.div>
         </div>

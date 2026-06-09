@@ -1,8 +1,10 @@
 "use client";
-
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export function AboutSection() {
+  const t = useTranslations("home");
+
   return (
     <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-[#f4ebe6] overflow-hidden">
       {/* Left packaging/beach image */}
@@ -11,11 +13,11 @@ export function AboutSection() {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="relative h-96 lg:h-auto overflow-hidden bg-[#f4ebe6]"
+        className="relative h-64 lg:h-auto overflow-hidden bg-[#f4ebe6]"
       >
         <div 
           role="img"
-          aria-label="SUNLUK эксклюзивные упаковочные коробки и аксессуары" 
+          aria-label={t("about.imageAria")} 
           className="w-full h-full bg-cover bg-center"
           style={{ backgroundImage: "url('/images/about-packaging.webp')" }}
         />
@@ -30,20 +32,20 @@ export function AboutSection() {
           className="flex flex-col items-start gap-6 lg:-translate-y-12"
         >
           <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
-            О БРЕНДЕ
+            {t("about.label")}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#2c211b] uppercase">
-            О НАС
+            {t("about.heading")}
           </h2>
           <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-lg">
-            SUNLUK — это больше, чем аксессуар. Это свобода выражать себя каждый день — в путешествиях, в городе, в моменты, которые важны.
+            {t("about.description")}
           </p>
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="inline-flex items-center justify-center px-10 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg mt-4 rounded-none cursor-pointer"
           >
-            ЗАКАЗАТЬ АКСЕССУАР
+            {t("about.cta")}
           </motion.button>
         </motion.div>
       </div>

@@ -1,0 +1,395 @@
+{
+  "home": {
+    "collectionLabel": "CURATED SELECTION",
+    "collectionHeading": "SUNLUK COLLECTION",
+    "collectionCta": "CHOOSE ACCESSORIES",
+    "collection": {
+      "products": {
+        "0": {
+          "title": "Turquoise",
+          "material": "Color",
+          "description": "Accent color and natural motifs"
+        },
+        "1": {
+          "title": "Leather Loop",
+          "material": "Leather",
+          "description": "Genuine leather and premium metal"
+        },
+        "2": {
+          "title": "Silver Chain",
+          "material": "Steel",
+          "description": "Minimalism, rigor, and a light sheen"
+        },
+        "3": {
+          "title": "Sand Chain",
+          "material": "Gold",
+          "description": "Warm metal and sea sand shade"
+        }
+      }
+    },
+    "hero": {
+      "title1": "CHANGE YOURSELF.",
+      "title2": "EXPRESS YOURSELF.",
+      "subtitle1": "Eyewear accessories",
+      "subtitle2": "that become part of your style.",
+      "cta": "VIEW COLLECTION"
+    },
+    "editorial": {
+      "heading": "WEAR IT YOUR WAY",
+      "description": "SUNLUK — eyewear accessories that become a harmonious part of your look: on journeys, in a dynamic city, or on the shore of a warm sea.",
+      "cta": "VIEW COLLECTION",
+      "model1Aria": "Aesthetic look",
+      "model2Aria": "Elegant style",
+      "model3Aria": "Subtle detail"
+    },
+    "features": {
+      "heading": "Everything rests on details",
+      "description": "The shape, texture, metal, and color are selected so that the accessory looks natural alongside your glasses.",
+      "philosophy": "PHILOSOPHY OF DETAILS",
+      "list": {
+        "0": {
+          "title": "S-element",
+          "description": "Signature SUNLUK detail"
+        },
+        "1": {
+          "title": "Premium materials",
+          "description": "Curated materials that last."
+        },
+        "2": {
+          "title": "Lightweight",
+          "description": "Comfortable for all-day wear."
+        },
+        "3": {
+          "title": "Reliable",
+          "description": "Secure attachment for your glasses."
+        }
+      }
+    },
+    "about": {
+      "label": "ABOUT BRAND",
+      "heading": "ABOUT US",
+      "description": "SUNLUK is more than just an accessory. It is the freedom to express yourself every day — on journeys, in the city, and in moments that matter.",
+      "cta": "ORDER NOW",
+      "imageAria": "SUNLUK exclusive packaging boxes and accessories"
+    },
+    "newsletter": {
+      "label": "EXCLUSIVE OFFERS",
+      "heading": "BE THE FIRST",
+      "description": "Subscribe to receive news about new arrivals, limited drops, and special offers.",
+      "successTitle": "YOU HAVE SUCCESSFULLY SUBSCRIBED!",
+      "successDesc": "Thank you for your interest in SUNLUK. A welcome bonus email is on its way to you.",
+      "placeholder": "Your e-mail",
+      "cta": "SUBSCRIBE",
+      "note": "No spam. Unsubscribe at any time."
+    }
+  },
+  "catalog": {
+    "breadcrumb": "CATALOG",
+    "heading": "ALL PRODUCTS",
+    "empty": "No products found",
+    "regionUnsupported": "REGION NOT SUPPORTED",
+    "regionUnsupportedDesc": "Unfortunately, delivery to {countryCode} is temporarily unavailable.",
+    "errorHeading": "LOADING ERROR",
+    "errorDesc": "Failed to load the catalog. Please try again later.",
+    "retry": "TRY AGAIN",
+    "backToCatalog": "BACK TO CATALOG",
+    "notFound": "PRODUCT NOT FOUND",
+    "notFoundDesc": "The requested product was not found or is unavailable in your region."
+  },
+  "product": {
+    "brand": "SUNLUK ACCESSORIES",
+    "vatIncluded": "VAT included",
+    "handmade": "Handmade",
+    "delivery": "Delivery to DE & Worldwide",
+    "giftWrap": "Gift wrapping available",
+    "materialsHeading": "MATERIALS & CARE",
+    "materialsText": "Each SUNLUK piece is handcrafted by our artisans using premium certified materials:",
+    "materialsItem1": "Durable and hypoallergenic cord/chain.",
+    "materialsItem2": "Premium Italian hardware and clasps.",
+    "materialsItem3": "Adjustable silicone loops for any eyewear temple size.",
+    "materialsCare": "Care: Avoid direct contact with perfume, hairspray, and water. Wipe gently with a soft, chemical-free cloth.",
+    "shippingHeading": "SHIPPING & RETURNS",
+    "shippingText": "We ship worldwide from our warehouses in Munich (Germany) and Moscow (Russia):",
+    "shippingItem1": "Orders shipped within 24 hours of payment.",
+    "shippingItem2": "Free standard shipping on orders over 5,000 RUB or 50 EUR.",
+    "shippingItem3": "Express courier delivery to your door in 2–4 business days.",
+    "shippingItem4": "Easy returns or exchanges within 14 days of receipt.",
+    "turquoise": "Turquoise",
+    "leather": "Leather",
+    "silver": "Silver",
+    "gold-plated": "Gold-plated",
+    "selectAllOptions": "Select all options",
+    "unavailable": "Unavailable",
+    "priceUponRequest": "Price upon request",
+    "outOfStock": "Out of stock",
+    "invalidQuantity": "Enter quantity",
+    "addToCart": "Add to cart",
+    "quantity": "Quantity",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "inStock": "In stock",
+    "lowStock": "Only a few left",
+    "backorderAvailable": "Available for backorder",
+    "notAvailable": "Out of stock",
+    "price": "Price",
+    "cost": "Total",
+    "deliveryPromise": "Free delivery",
+    "adding": "Adding…",
+    "breadcrumbCatalog": "CATALOG",
+    "relatedHeading": "YOU MAY ALSO LIKE",
+    "factsHeading": "SPECIFICATIONS",
+    "socialHeading": "WHAT OUR CUSTOMERS SAY",
+    "socialPlaceholder": "Reviews coming soon. Be the first!",
+    "packaging": {
+      "heading": "PACKAGING",
+      "none": "No packaging",
+      "free": "Free",
+      "outOfStock": "Out of stock"
+    }
+  },
+  "header": {
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
+    "catalog": "CATALOG",
+    "collection": "COLLECTION",
+    "about": "ABOUT",
+    "contacts": "CONTACTS",
+    "profile": "Profile",
+    "cart": "Cart",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu"
+  },
+  "footer": {
+    "copyright": "© 2026 SUNLUK. All rights reserved.",
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
+    "serviceClients": "CUSTOMER SERVICE",
+    "ourStory": "Our Story",
+    "shippingReturns": "Shipping & Returns",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "shop": "SHOP",
+    "allProducts": "All Products",
+    "giftCards": "Gift Cards",
+    "questions": "QUESTIONS",
+    "contactUs": "Contact Us"
+  },
+  "localeSwitcher": {
+    "ru": "RU",
+    "en": "EN"
+  },
+  "auth": {
+    "brandSubtitle": "EYEWEAR ACCESSORIES",
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Welcome",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "loginButton": "Sign In",
+      "loggingIn": "Signing in…",
+      "noAccount": "No account?",
+      "registerLink": "Register",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "validation": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 6 characters"
+      },
+      "errors": {
+        "invalidCredentials": "Invalid email or password. Please try again.",
+        "network": "Network error. Check your connection."
+      }
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Create an account",
+      "firstNameLabel": "First Name",
+      "firstNamePlaceholder": "John",
+      "lastNameLabel": "Last Name",
+      "lastNamePlaceholder": "Smith",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "registerButton": "Register",
+      "registering": "Registering…",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign In",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "validation": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email address",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 6 characters"
+      },
+      "errors": {
+        "network": "Network error. Check your connection.",
+        "registrationFailed": "Could not create an account. The email may already be in use.",
+        "emailAlreadyExists": "An account with this email already exists."
+      }
+    }
+  },
+  "cabinet": {
+    "title": "My Account",
+    "greeting": "Hello",
+    "profileSection": "Profile",
+    "emailLabel": "Email",
+    "nameLabel": "Name",
+    "noName": "Not specified",
+    "ordersSection": "My Orders",
+    "noOrders": "You have no orders yet.",
+    "browseCatalog": "Browse Catalog",
+    "orderId": "Order #",
+    "date": "Date",
+    "status": "Status",
+    "payment": "Payment",
+    "total": "Total",
+    "viewDetails": "Details",
+    "logout": "Log Out",
+    "shownLastOrders": "Showing the last {count} of {total} orders",
+    "orderStatus": {
+      "pending": "Pending",
+      "received": "Received",
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "canceled": "Canceled",
+      "declined": "Declined",
+      "requires_action": "Requires Action"
+    },
+    "paymentStatus": {
+      "captured": "Paid",
+      "authorized": "Authorized",
+      "pending": "Pending",
+      "not_paid": "Not Paid",
+      "refunded": "Refunded",
+      "partially_refunded": "Partially Refunded",
+      "canceled": "Canceled",
+      "requires_action": "Requires Action"
+    },
+    "order": {
+      "backToCabinet": "Back to Cabinet",
+      "orderTitle": "Order",
+      "notFound": "Order Not Found",
+      "notFoundDesc": "It may not exist or does not belong to your account.",
+      "goToCabinet": "Back to Cabinet",
+      "status": "Status",
+      "payment": "Payment",
+      "date": "Order Date",
+      "itemsSection": "Items in Order",
+      "quantity": "Qty",
+      "price": "Price",
+      "subtotal": "Subtotal",
+      "totalsSection": "Totals",
+      "itemSubtotal": "Items",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "discount": "Discount",
+      "total": "Total",
+      "shippingAddress": "Shipping Address",
+      "billingAddress": "Billing Address",
+      "noAddress": "Not specified",
+      "untitledItem": "Item",
+      "variant": "Variant"
+    }
+  },
+  "checkout": {
+    "loading": "LOADING CART…",
+    "emptyTitle": "CART IS EMPTY",
+    "emptyDesc": "Add items to your cart to continue checkout.",
+    "emptyCta": "GO TO CATALOG",
+    "noItems": "No items in cart.",
+    "pageLabel": "CHECKOUT",
+    "pageTitle": "CHECKOUT",
+    "steps": {
+      "contact": "CONTACT & ADDRESS",
+      "shipping": "SHIPPING",
+      "payment": "PAYMENT"
+    },
+    "contact": {
+      "heading": "CONTACT & SHIPPING ADDRESS",
+      "desc": "Provide your contact details for order delivery.",
+      "email": "Email",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "address": "Address",
+      "city": "City",
+      "postalCode": "Postal Code",
+      "countryCode": "Country Code",
+      "phone": "Phone",
+      "emailPlaceholder": "your@email.com",
+      "firstNamePlaceholder": "John",
+      "lastNamePlaceholder": "Smith",
+      "addressPlaceholder": "Goethestr. 12",
+      "cityPlaceholder": "Munich",
+      "postalCodePlaceholder": "80331",
+      "countryCodePlaceholder": "DE",
+      "phonePlaceholder": "+49 170 1234567"
+    },
+    "shipping": {
+      "heading": "SHIPPING METHOD",
+      "desc": "Select a shipping method for your order.",
+      "loading": "Loading shipping options…",
+      "noneAvailable": "No shipping options available for your region."
+    },
+    "payment": {
+      "heading": "PAYMENT METHOD",
+      "desc": "Confirm your payment method to complete the order.",
+      "methodLabel": "Credit Card / Standard Payment",
+      "methodDesc": "Secure payment via the payment system"
+    },
+    "actions": {
+      "saving": "SAVING…",
+      "continue": "CONTINUE",
+      "back": "← BACK",
+      "continueToPayment": "CONTINUE TO PAYMENT",
+      "processing": "PROCESSING…",
+      "placeOrder": "PLACE ORDER"
+    },
+    "summary": {
+      "yourOrder": "YOUR ORDER",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "total": "Total"
+    },
+    "errors": {
+      "shippingOptionsFailed": "Failed to load shipping options.",
+      "contactSaveFailed": "Failed to save contact information. Please try again.",
+      "shippingSelectFailed": "Failed to select shipping method. Please try again.",
+      "orderCompletionFailed": "Failed to complete the order.",
+      "orderCompletionError": "An error occurred while placing your order. Please try again."
+    },
+    "success": {
+      "title": "THANK YOU FOR YOUR ORDER!",
+      "orderNumber": "ORDER NUMBER",
+      "confirmation": "Order confirmation and delivery details have been sent to your email.",
+      "backToCatalog": "BACK TO CATALOG"
+    }
+  },
+  "cart": {
+    "title": "Cart",
+    "checkout": "Checkout",
+    "total": "Total",
+    "close": "Close cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyDesc": "Add items from the catalog to continue",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "tax": "Tax",
+    "shipping": "Shipping",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "remove": "Remove"
+  },
+  "metadata": {
+    "title": "SUNLUK — Eyewear Accessories",
+    "description": "Eyewear accessories that become a part of your style. SUNLUK — change yourself, express yourself."
+  }
+}

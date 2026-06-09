@@ -1,11 +1,13 @@
 "use client";
-
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ArrowRightIcon } from "./icons";
 
 export function EditorialSection() {
+  const t = useTranslations("home");
+
   return (
-    <section className="relative pt-0 pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
+    <section className="relative pt-0 pb-6 sm:pb-16 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
           {/* 3 Models Container with 5px padding and 5px gap */}
@@ -22,19 +24,19 @@ export function EditorialSection() {
                 }
               }
             }}
-            className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-[5px] p-[5px]"
+            className="lg:col-span-3 grid grid-cols-3 gap-[5px] -mx-4 sm:mx-0 pt-[5px] pb-[5px] px-0 sm:p-[5px]"
           >
             {/* Model 1 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
               <div 
                 role="img"
-                aria-label="Эстетичный образ" 
+                aria-label={t("editorial.model1Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model1.webp')" }}
               />
@@ -43,14 +45,14 @@ export function EditorialSection() {
             {/* Model 2 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
               <div 
                 role="img"
-                aria-label="Элегантный стиль" 
+                aria-label={t("editorial.model2Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model2.webp')" }}
               />
@@ -59,14 +61,14 @@ export function EditorialSection() {
             {/* Model 3 */}
             <motion.div 
               variants={{
-                hidden: { opacity: 0, y: 30 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 60, damping: 15 } }
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { duration: 0.6 } }
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
               <div 
                 role="img"
-                aria-label="Лаконичная деталь" 
+                aria-label={t("editorial.model3Aria")} 
                 className="w-full h-full bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: "url('/images/model3.webp')" }}
               />
@@ -75,25 +77,25 @@ export function EditorialSection() {
           </motion.div>
           {/* Text Editorial block without container wrapper */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:col-span-1 flex flex-col justify-between py-4"
           >
             <div className="flex flex-col gap-4">
               <h2 className="font-serif text-3xl sm:text-4xl font-light tracking-wide text-[#2c211b] uppercase">
-                НОСИ ПО-СВОЕМУ
+                {t("editorial.heading")}
               </h2>
               <p className="text-sm sm:text-base leading-relaxed text-[#2c211b]/80 mt-2">
-                SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.
+                {t("editorial.description")}
               </p>
             </div>
             <a 
               href="#collection" 
               className="inline-flex items-center text-xs font-medium tracking-widest uppercase text-[#5a3828] hover:text-[#2c211b] mt-6 group"
             >
-              СМОТРЕТЬ КОЛЛЕКЦИЮ
+              {t("editorial.cta")}
               <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </a>
           </motion.div>

@@ -18,8 +18,10 @@ import {
   createStockLocationsWorkflow,
   createStoresWorkflow,
   createTaxRegionsWorkflow,
+  createTranslationsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
+  updateStoresWorkflow,
 } from "@medusajs/medusa/core-flows";
 
 export default async function initial_data_seed({
@@ -97,6 +99,42 @@ export default async function initial_data_seed({
       ],
     },
   });
+
+  logger.info("Seeding locales...");
+  const translationModuleService = container.resolve(Modules.TRANSLATION);
+
+  try {
+    const existing = await translationModuleService.listLocales({
+      code: ["ru-RU", "en-US"],
+    });
+    const existingCodes = new Set(existing.map((l) => l.code));
+    const toCreate: { code: string; name: string }[] = [];
+    if (!existingCodes.has("ru-RU")) {
+      toCreate.push({ code: "ru-RU", name: "Russian (Russia)" });
+    }
+    if (!existingCodes.has("en-US")) {
+      toCreate.push({ code: "en-US", name: "English (United States)" });
+    }
+    if (toCreate.length > 0) {
+      await translationModuleService.createLocales(toCreate);
+    }
+  } catch (err) {
+    logger.warn("Failed to create locales during seed: " + (err instanceof Error ? err.message : String(err)));
+  }
+
+  await updateStoresWorkflow(container).run({
+    input: {
+      selector: { id: store.id },
+      update: {
+        supported_locales: [
+          { locale_code: "ru-RU" },
+          { locale_code: "en-US" },
+        ],
+      },
+    },
+  });
+  logger.info("Finished seeding locales.");
+
   logger.info("Seeding region data...");
   const { result: regionResult } = await createRegionsWorkflow(container).run({
     input: {
@@ -314,13 +352,19 @@ export default async function initial_data_seed({
           name: "Accessories",
           is_active: true,
         },
+        {
+          name: "Packaging",
+          handle: "packaging",
+          is_active: true,
+        },
       ],
     },
   });
 
   const accessoriesCategory = categoryResult[0];
+  const packagingCategory = categoryResult[1];
 
-  await createProductsWorkflow(container).run({
+  const { result: productResults } = await createProductsWorkflow(container).run({
     input: {
       products: [
         {
@@ -519,11 +563,343 @@ export default async function initial_data_seed({
             },
           ],
         },
+        {
+          title: "Фирменный мешочек",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек SUNLUK",
+          handle: "velvet-pouch",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "VELVET-POUCH",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 0,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 0,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 0,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Подарочная коробка",
+          category_ids: [packagingCategory.id],
+          description: "Премиальная подарочная коробка SUNLUK с тиснением",
+          handle: "gift-box",
+          weight: 100,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "GIFT-BOX",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 5,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 5,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 500,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Шелковый мешочек",
+          category_ids: [packagingCategory.id],
+          description: "Шелковый мешочек для украшений",
+          handle: "silk-pouch",
+          weight: 30,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "SILK-POUCH",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 2,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 2,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 200,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+        {
+          title: "Деревянный футляр",
+          category_ids: [packagingCategory.id],
+          description: "Деревянный футляр для украшений",
+          handle: "wooden-case",
+          weight: 200,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "WOODEN-CASE",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 10,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 1000,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
       ],
     },
   });
   logger.info("Finished seeding product data.");
 
+  logger.info("Seeding product translations...");
+  await createTranslationsWorkflow(container).run({
+    input: {
+      translations: [
+        {
+          reference_id: productResults[0].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Бирюза",
+            description: "Акцентный цвет и природные мотивы",
+          },
+        },
+        {
+          reference_id: productResults[0].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Turquoise Chain",
+            description: "Accent color and natural motifs",
+          },
+        },
+        {
+          reference_id: productResults[1].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Leather Loop",
+            description: "Натуральная кожа и премиальный металл",
+          },
+        },
+        {
+          reference_id: productResults[1].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Leather Loop",
+            description: "Genuine leather and premium metal",
+          },
+        },
+        {
+          reference_id: productResults[2].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Silver Chain",
+            description: "Минимализм, строгость и лёгкий блеск",
+          },
+        },
+        {
+          reference_id: productResults[2].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Silver Chain",
+            description: "Minimalism, rigor, and a light sheen",
+          },
+        },
+        {
+          reference_id: productResults[3].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Sand Chain",
+            description: "Тёплый металл и морской песчаный оттенок",
+          },
+        },
+        {
+          reference_id: productResults[3].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Sand Chain",
+            description: "Warm metal and sea-sand shade",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек",
+            description: "Фирменный хлопковый мешочек SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Velvet Pouch",
+            description: "SUNLUK signature cotton pouch",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Подарочная коробка",
+            description: "Премиальная подарочная коробка SUNLUK с тиснением",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Premium Gift Box",
+            description: "Premium embossed SUNLUK gift box",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Шелковый мешочек",
+            description: "Шелковый мешочек для украшений",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Silk Pouch",
+            description: "Silk jewelry pouch",
+          },
+        },
+        {
+          reference_id: productResults[7].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Деревянный футляр",
+            description: "Деревянный футляр для украшений",
+          },
+        },
+        {
+          reference_id: productResults[7].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Wooden Case",
+            description: "Wooden jewelry case",
+          },
+        },
+      ],
+    },
+  });
+  logger.info("Finished seeding product translations.");
 
   logger.info("Seeding inventory levels.");
 

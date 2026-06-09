@@ -1,14 +1,24 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import type { ProductOption, ProductVariant } from "./types";
+import type {
+  ProductOption,
+  ProductVariant,
+  StockInfo,
+} from "./types";
+import type { VariantSelectorLabels } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { useCart } from "@/components/cart/CartContext";
 
-interface VariantSelectorProps {
+export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
+  /** When true, hides the option-picking UI (options are managed externally). */
   hideOptionButtons?: boolean;
+  /** Localized labels for all UI copy. */
+  labels: VariantSelectorLabels;
+  /** The selected packaging variant ID if any. */
+  selectedPackagingVariantId?: string | null;
   /** Callback invoked with resolved { productId?, variantId, quantity } when valid. */
   onSelectionChange?: (selection: {
     variantId: string | null;
@@ -16,6 +26,10 @@ interface VariantSelectorProps {
     valid: boolean;
     selectedOptions?: Record<string, string>;
     onOptionChange?: (optionId: string, value: string) => void;
+    /** The resolved variant, if any. */
+    resolvedVariant?: ProductVariant | null;
+    /** Derived stock/delivery info. */
+    stockInfo?: StockInfo | null;
   }) => void;
 }
 
@@ -35,10 +49,8 @@ function resolveVariant(
 
   return (
     variants.find((v) => {
-      const vOpts = v.options;
-      if (!vOpts || vOpts.length === 0) return false;
-      if (vOpts.length !== Object.keys(selected).length) return false;
-      return vOpts.every((vo) => selected[vo.option_id] === vo.value);
+      if (!v.options || v.options.length === 0) return false;
+      return v.options.every((o) => selected[o.option_id] === o.value);
     }) ?? null
   );
 }
@@ -53,31 +65,93 @@ function availableValues(
   selected: Record<string, string>,
   currentOptionId: string,
 ): string[] {
-  // Collect raw option values from the product option definition.
-  const raw = (options.find((o) => o.id === currentOptionId)?.values ?? []).map((value) =>
-    typeof value === "string" ? value : value.value,
-  );
+  const rawValues = options
+    .find((o) => o.id === currentOptionId)
+    ?.values?.map((v) => (typeof v === "string" ? v : v.value)) ?? [];
 
-  // Filter to values that exist on at least one variant compatible with other selections.
-  const filtered = raw.filter((val) =>
-    variants.some((v) => {
-      const vOpts = v.options;
-      if (!vOpts) return false;
-      return vOpts.every((vo) => {
-        if (vo.option_id === currentOptionId) return vo.value === val;
-        const sel = selected[vo.option_id];
-        return sel == null || sel === vo.value;
-      });
-    }),
-  );
+  if (rawValues.length === 0) return [];
 
-  return filtered.length > 0 ? filtered : raw;
+  return rawValues.filter((val) => {
+    return variants.some((v) => {
+      const vOpts = v.options ?? [];
+      const match = vOpts.find((o) => o.option_id === currentOptionId);
+      if (!match || match.value !== val) return false;
+
+      // Check that this variant is compatible with other current selections.
+      for (const [optId, optVal] of Object.entries(selected)) {
+        if (optId === currentOptionId) continue;
+        const otherMatch = vOpts.find((o) => o.option_id === optId);
+        if (!otherMatch || otherMatch.value !== optVal) return false;
+      }
+      return true;
+    });
+  });
+}
+
+/**
+ * Derive stock/delivery messaging from a variant for display near CTA.
+ */
+function deriveStockInfo(
+  variant: ProductVariant | null,
+  labels: VariantSelectorLabels,
+): StockInfo | null {
+  if (!variant) return null;
+
+  const qty = variant.inventory_quantity ?? 0;
+  const managed = variant.manage_inventory !== false;
+  const backorderable = variant.allow_backorder === true;
+
+  if (!managed) {
+    // No inventory tracking — assume available.
+    return {
+      available: true,
+      status: "inStock",
+      message: labels.inStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (qty > 5) {
+    return {
+      available: true,
+      status: "inStock",
+      message: labels.inStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (qty > 0) {
+    return {
+      available: true,
+      status: "lowStock",
+      message: labels.lowStock,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  if (backorderable) {
+    return {
+      available: true,
+      status: "backorderAvailable",
+      message: labels.backorderAvailable,
+      deliveryPromise: labels.deliveryPromise,
+    };
+  }
+
+  return {
+    available: false,
+    status: "outOfStock",
+    message: labels.notAvailable,
+    deliveryPromise: null,
+  };
 }
 
 export function VariantSelector({
   options,
   variants,
   hideOptionButtons = false,
+  labels,
+  selectedPackagingVariantId = null,
   onSelectionChange,
 }: VariantSelectorProps) {
   const safeOptions = useMemo(() => options ?? [], [options]);
@@ -102,10 +176,8 @@ export function VariantSelector({
       });
 
       if (inStockValues.length === 1) {
-        // Rule 3: only one material/value in stock out of several -> select it
         initial[opt.id] = inStockValues[0];
       } else if (optionValues.length > 0) {
-        // Rule 1 & 2: single or multiple overall -> select first in-stock or first overall
         const defaultValue =
           inStockValues.length > 0 ? inStockValues[0] : optionValues[0];
         initial[opt.id] = defaultValue;
@@ -123,6 +195,11 @@ export function VariantSelector({
     [safeVariants, selected],
   );
 
+  const stockInfo = useMemo(
+    () => deriveStockInfo(resolved, labels),
+    [resolved, labels],
+  );
+
   const allOptionsSelected = safeOptions.every((o) => selected[o.id] != null);
   const quantityValid = Number.isInteger(quantity) && quantity > 0;
 
@@ -132,6 +209,7 @@ export function VariantSelector({
   const stableCallback = useCallback(
     (s: typeof selected, q: number) => {
       const v = resolveVariant(safeVariants, s);
+      const si = deriveStockInfo(v, labels);
       onSelectionChange?.({
         variantId: v?.id ?? null,
         quantity: q,
@@ -144,14 +222,18 @@ export function VariantSelector({
         onOptionChange: (optionId: string, value: string) => {
           setSelected((prev) => ({ ...prev, [optionId]: value }));
         },
+        resolvedVariant: v ?? null,
+        stockInfo: si,
       });
     },
-    [safeOptions, safeVariants, onSelectionChange],
+    [safeOptions, safeVariants, onSelectionChange, labels],
   );
+
   // Notify parent of initial selection on mount.
   useEffect(() => {
     stableCallback(selected, quantity);
-  }, [stableCallback, selected, quantity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableCallback]);
 
   const handleOptionChange = useCallback(
     (optionId: string, value: string) => {
@@ -176,22 +258,35 @@ export function VariantSelector({
   const isInStock = resolved
     ? resolved.manage_inventory === false || (resolved.inventory_quantity ?? 0) > 0
     : null;
+  const isBackorderable = resolved?.allow_backorder === true;
+  const cartReady = valid && (isInStock !== false || isBackorderable);
 
   const buttonCopy = (() => {
-    if (!allOptionsSelected) return "Выберите все параметры";
-    if (!resolved) return "Недоступно";
-    if (isInStock === false) return "Нет в наличии";
-    if (!quantityValid) return "Укажите количество";
-    return "В корзину";
+    if (!allOptionsSelected) return labels.selectAllOptions;
+    if (!resolved) return labels.unavailable;
+    if (isInStock === false && !isBackorderable) return labels.outOfStock;
+    if (!quantityValid) return labels.invalidQuantity;
+    return labels.addToCart;
   })();
-
-  const cartReady = valid && isInStock !== false;
 
   const handleAddToCart = async () => {
     if (!resolved?.id || !cartReady || addingInProgress) return;
     setAddingInProgress(true);
     try {
-      await addItem(resolved.id, quantity);
+      const updatedCart = await addItem(resolved.id, quantity);
+      if (selectedPackagingVariantId && updatedCart) {
+        // Find the main line item we just added/updated.
+        const mainLineItem = updatedCart.items?.find(
+          (item) =>
+            item.variant_id === resolved.id &&
+            !item.metadata?.parent_line_item_id,
+        );
+        if (mainLineItem) {
+          await addItem(selectedPackagingVariantId, quantity, {
+            parent_line_item_id: mainLineItem.id,
+          });
+        }
+      }
     } catch {
       // Error is handled by the context; button stays enabled for retry.
     } finally {
@@ -199,10 +294,12 @@ export function VariantSelector({
     }
   };
 
+  const showOptions = !hideOptionButtons && safeVariants.length > 1;
+
   return (
     <div className="flex flex-col gap-5">
       {/* Options */}
-      {!hideOptionButtons &&
+      {showOptions &&
         safeOptions.map((opt) => {
           const values = availableValues(
             safeOptions,
@@ -222,17 +319,7 @@ export function VariantSelector({
               <div className="flex flex-wrap gap-2">
                 {values.map((val) => {
                   const isSelected = selected[opt.id] === val;
-                  const translations: Record<string, string> = {
-                    turquoise: "Бирюза",
-                    leather: "Кожа",
-                    silver: "Сталь",
-                    "gold-plated": "Золото",
-                    Turquoise: "Бирюза",
-                    Leather: "Кожа",
-                    Silver: "Сталь",
-                    "Gold-plated": "Золото",
-                  };
-                  const displayVal = translations[val] || val;
+                  const displayVal = labels.materialNames[val] || val;
                   return (
                     <button
                       key={val}
@@ -254,108 +341,102 @@ export function VariantSelector({
           );
         })}
 
-      {/* Variant price */}
-      {resolved?.calculated_price && (
-        <div className={`flex flex-col gap-1.5 pt-4 ${hideOptionButtons ? "" : "border-t border-[#2c211b]/10"}`}>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
-              {quantity > 1 ? "Стоимость" : "Цена"}
-            </span>
+      {/* Stock + delivery messaging & Price */}
+      {stockInfo && (
+        <div className={["flex items-center justify-between", showOptions ? "border-t border-[#2c211b]/10 pt-4" : ""].join(" ")}>
+          <div className="flex flex-col gap-1">
+            <p
+              className={[
+                "text-xs font-medium uppercase tracking-wider",
+                stockInfo.available ? "text-[#2f6f78]" : "text-red-600",
+              ].join(" ")}
+            >
+              {stockInfo.message}
+            </p>
+            {stockInfo.deliveryPromise && stockInfo.available && (
+              <p className="text-xs text-[#2c211b]/50">
+                {stockInfo.deliveryPromise}
+              </p>
+            )}
+          </div>
+          {resolved?.calculated_price && (
             <div className="flex items-baseline gap-2">
-              {quantity > 1 && (
-                <span className="text-xs text-[#2c211b]/40 font-mono mr-1">
-                  {quantity} × <PriceDisplay price={resolved.calculated_price} className="text-xs text-[#2c211b]/60" /> =
-                </span>
-              )}
               <PriceDisplay
-                price={{
-                  calculated_amount: resolved.calculated_price.calculated_amount * quantity,
-                  currency_code: resolved.calculated_price.currency_code,
-                }}
-                className={quantity > 1 ? "text-lg font-bold text-[#2f6f78]" : "text-base"}
+                price={resolved.calculated_price}
+                className="text-xl sm:text-2xl font-light font-serif text-[#2c211b]"
               />
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Stock note */}
-      {resolved && (
-        <p
-          className={[
-            "text-xs font-medium",
-            isInStock ? "text-[#2f6f78]" : "text-red-600",
-          ].join(" ")}
-        >
-          {isInStock ? "В наличии" : "Нет в наличии"}
-        </p>
-      )}
-
-      {/* Quantity */}
+      {/* Quantity & CTA */}
       <div className="flex flex-col gap-2">
         <label
           htmlFor="variant-qty"
           className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/70"
         >
-          Количество
+          {labels.quantity}
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(quantity - 1)}
+              disabled={quantity <= 1}
+              className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label={labels.decreaseQuantity}
+            >
+              −
+            </button>
+            <input
+              id="variant-qty"
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) handleQuantityChange(v);
+              }}
+              className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button
+              type="button"
+              onClick={() => handleQuantityChange(quantity + 1)}
+              className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 transition-colors"
+              aria-label={labels.increaseQuantity}
+            >
+              +
+            </button>
+          </div>
+
           <button
+            id="pdp-primary-cta"
             type="button"
-            onClick={() => handleQuantityChange(quantity - 1)}
-            disabled={quantity <= 1}
-            className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            aria-label="Уменьшить количество"
+            disabled={!cartReady || addingInProgress}
+            aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
+            onClick={handleAddToCart}
+            className={[
+              "flex-1 h-9 inline-flex items-center justify-center px-6 text-xs font-medium tracking-widest uppercase transition-all duration-300",
+              cartReady && !addingInProgress
+                ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
+                : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
+            ].join(" ")}
           >
-            −
-          </button>
-          <input
-            id="variant-qty"
-            type="number"
-            min={1}
-            value={quantity}
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10);
-              if (!isNaN(v)) handleQuantityChange(v);
-            }}
-            className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <button
-            type="button"
-            onClick={() => handleQuantityChange(quantity + 1)}
-            className="w-9 h-9 flex items-center justify-center border border-[#2c211b]/20 text-[#2c211b] hover:border-[#2c211b]/50 transition-colors"
-            aria-label="Увеличить количество"
-          >
-            +
+            {addingInProgress ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {labels.adding}
+              </span>
+            ) : (
+              buttonCopy
+            )}
           </button>
         </div>
       </div>
-
-      {/* CTA */}
-      <button
-        type="button"
-        disabled={!cartReady || addingInProgress}
-        aria-disabled={(!cartReady || addingInProgress) ? "true" : undefined}
-        onClick={handleAddToCart}
-        className={[
-          "inline-flex items-center justify-center px-10 py-4 text-xs font-medium tracking-widest uppercase transition-all duration-300",
-          cartReady && !addingInProgress
-            ? "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 cursor-pointer"
-            : "bg-[#2c211b]/10 text-[#2c211b]/30 cursor-not-allowed",
-        ].join(" ")}
-      >
-        {addingInProgress ? (
-          <span className="flex items-center gap-2">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            Добавление...
-          </span>
-        ) : (
-          buttonCopy
-        )}
-      </button>
     </div>
   );
 }

@@ -23,18 +23,24 @@ interface CartContextType {
   mutating: boolean;
   isOpen: boolean;
   itemCount: number;
-  addItem: (variantId: string, quantity: number) => Promise<void>;
+  addItem: (
+    variantId: string,
+    quantity: number,
+    metadata?: Record<string, unknown>,
+  ) => Promise<StoreCart | undefined>;
   updateItem: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
   openCart: () => void;
   closeCart: () => void;
+  clearCart: () => void;
+  setCart: React.Dispatch<React.SetStateAction<StoreCart | null>>;
 }
 
 // ---------------------------------------------------------------------------
 // localStorage helpers
 // ---------------------------------------------------------------------------
 
-const CART_ID_KEY = "medusa_cart_id";
+const CART_ID_KEY = "sunluk_cart_id";
 
 function getStoredCartId(): string | null {
   if (typeof window === "undefined") return null;
@@ -58,6 +64,7 @@ function clearStoredCartId(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(CART_ID_KEY);
+    localStorage.removeItem("medusa_cart_id");
   } catch {
     // No-op.
   }
@@ -68,7 +75,7 @@ function clearStoredCartId(): void {
 // ---------------------------------------------------------------------------
 
 const CART_FIELDS =
-  "*items,*items.variant,*items.product,region_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count";
+  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods";
 
 async function fetchCart(cartId: string): Promise<StoreCart> {
   const sdk = getMedusaClient();
@@ -94,11 +101,12 @@ async function addCartLineItem(
   cartId: string,
   variantId: string,
   quantity: number,
+  metadata?: Record<string, unknown>,
 ): Promise<StoreCart> {
   const sdk = getMedusaClient();
   const result = (await sdk.store.cart.createLineItem(
     cartId,
-    { variant_id: variantId, quantity },
+    { variant_id: variantId, quantity, metadata },
     { fields: CART_FIELDS },
   )) as unknown as { cart: StoreCart };
   return result.cart;
@@ -140,7 +148,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
   const [loading, setLoading] = useState(() => {
     if (typeof window !== "undefined") {
-      return !!localStorage.getItem("sunluk_cart_id");
+      return !!localStorage.getItem(CART_ID_KEY);
     }
     return false;
   });
@@ -203,14 +211,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = useMemo(
     () =>
-      cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
+      cart?.items
+        ?.filter((item) => !item.metadata?.parent_line_item_id)
+        .reduce((sum, item) => sum + item.quantity, 0) ?? 0,
     [cart],
   );
 
   // ---- Mutations ----
 
   const addItem = useCallback(
-    async (variantId: string, quantity: number) => {
+    async (
+      variantId: string,
+      quantity: number,
+      metadata?: Record<string, unknown>,
+    ) => {
       setMutating(true);
       try {
         const region = await ensureRegion();
@@ -225,12 +239,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Add the line item.
-        const updated = await addCartLineItem(currentId, variantId, quantity);
+        const updated = await addCartLineItem(
+          currentId,
+          variantId,
+          quantity,
+          metadata,
+        );
         setCart(updated);
         setIsOpen(true);
-      } catch {
+        return updated;
+      } catch (err) {
         // Mutations that fail leave the previous cart projection in place
         // so the user can retry. A production app would surface the error.
+        throw err;
       } finally {
         setMutating(false);
       }
@@ -245,15 +266,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
+        const linkedItem = cart?.items?.find(
+          (item) => item.metadata?.parent_line_item_id === lineItemId,
+        );
+
         if (quantity <= 0) {
-          const updated = await deleteCartLineItem(currentId, lineItemId);
+          let updated = await deleteCartLineItem(currentId, lineItemId);
+          if (linkedItem) {
+            updated = await deleteCartLineItem(currentId, linkedItem.id);
+          }
           setCart(updated);
         } else {
-          const updated = await updateCartLineItem(
+          let updated = await updateCartLineItem(
             currentId,
             lineItemId,
             quantity,
           );
+          if (linkedItem) {
+            updated = await updateCartLineItem(
+              currentId,
+              linkedItem.id,
+              quantity,
+            );
+          }
           setCart(updated);
         }
       } catch {
@@ -272,7 +307,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const updated = await deleteCartLineItem(currentId, lineItemId);
+        const linkedItem = cart?.items?.find(
+          (item) => item.metadata?.parent_line_item_id === lineItemId,
+        );
+
+        let updated = await deleteCartLineItem(currentId, lineItemId);
+        if (linkedItem) {
+          updated = await deleteCartLineItem(currentId, linkedItem.id);
+        }
         setCart(updated);
       } catch {
         // Leave previous projection in place.
@@ -288,6 +330,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
+  const clearCart = useCallback(() => {
+    clearStoredCartId();
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("sunluk_cart_id");
+        localStorage.removeItem("medusa_cart_id");
+      } catch {
+        // No-op.
+      }
+    }
+    setCart(null);
+  }, []);
+
   // ---- Value ----
 
   const value = useMemo<CartContextType>(
@@ -302,6 +357,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       openCart,
       closeCart,
+      clearCart,
+      setCart,
     }),
     [
       cart,
@@ -314,6 +371,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       openCart,
       closeCart,
+      clearCart,
+      setCart,
     ],
   );
 

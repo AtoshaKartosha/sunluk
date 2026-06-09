@@ -1,4 +1,4 @@
-import { getMedusaClient } from "../medusa";
+import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
 
 // ---- Types ----
@@ -38,6 +38,12 @@ export interface ProductOption {
   values: ProductOptionValue[] | string[];
 }
 
+export interface ProductCategory {
+  id: string;
+  name: string;
+  handle: string;
+}
+
 export interface ProductImage {
   id: string;
   url: string;
@@ -56,8 +62,11 @@ export interface ProductListItem {
 /** Full product shape for the detail page. */
 export interface ProductDetail extends ProductListItem {
   description: string | null;
+  subtitle: string | null;
   options: ProductOption[] | null;
   variants: ProductDetailVariant[] | null;
+  categories: ProductCategory[] | null;
+  tags?: { id: string; value: string }[] | null;
 }
 
 export interface ProductListResult {
@@ -76,7 +85,7 @@ const LIST_FIELDS = [
 ].join(",");
 
 const DETAIL_FIELDS = [
-  "id", "title", "handle", "thumbnail", "description",
+  "id", "title", "handle", "thumbnail", "description", "subtitle",
   "*images",
   "*options",
   "*options.values",
@@ -84,6 +93,8 @@ const DETAIL_FIELDS = [
   "*variants.calculated_price",
   "*variants.options",
   "+variants.inventory_quantity",
+  "*categories",
+  "*tags",
 ].join(",");
 
 // ---- Helpers ----
@@ -110,6 +121,8 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
 }
 
 
+const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case"];
+
 /**
  * List published products for a resolved region.
  *
@@ -118,10 +131,13 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
  */
 export async function listProducts(
   region: ResolvedRegion,
+  medusaLocale?: string,
 ): Promise<ProductListResult> {
   ensureRegion(region);
 
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
 
   const data = (await sdk.store.product.list({
     region_id: region.regionId,
@@ -132,7 +148,11 @@ export async function listProducts(
     count: number;
   };
 
-  return { products: data.products, count: data.count };
+  const filteredProducts = data.products.filter(
+    (p) => !PACKAGING_HANDLES.includes(p.handle)
+  );
+
+  return { products: filteredProducts, count: filteredProducts.length };
 }
 
 /**
@@ -144,10 +164,13 @@ export async function listProducts(
 export async function getProduct(
   handle: string,
   region: ResolvedRegion,
+  medusaLocale?: string,
 ): Promise<ProductDetail | null> {
   ensureRegion(region);
 
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
 
   const data = (await sdk.store.product.list({
     handle,
@@ -160,4 +183,66 @@ export async function getProduct(
 
   const product = data.products[0];
   return product ? normalizeProductOptions(product) : null;
+}
+
+/**
+ * List related products for a PDP, excluding the given handle.
+ *
+ * Falls back to recent products when no category filter is available.
+ * Returns at most `limit` products (default 4).
+ */
+export async function listRelatedProducts(
+  region: ResolvedRegion,
+  excludeHandle: string,
+  medusaLocale?: string,
+  limit = 4,
+): Promise<ProductListItem[]> {
+  ensureRegion(region);
+
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
+
+  const data = (await sdk.store.product.list({
+    region_id: region.regionId,
+    fields: LIST_FIELDS,
+    limit: limit + 6, // fetch extra in case excluded products appear
+  })) as unknown as {
+    products: ProductListItem[];
+    count: number;
+  };
+
+  return data.products
+    .filter(
+      (p) =>
+        p.handle !== excludeHandle &&
+        !PACKAGING_HANDLES.includes(p.handle)
+    )
+    .slice(0, limit);
+}
+
+/**
+ * Fetch the specific product details for packaging options.
+ */
+export async function listPackagingProducts(
+  region: ResolvedRegion,
+  medusaLocale?: string,
+): Promise<ProductDetail[]> {
+  ensureRegion(region);
+
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
+
+  // In Medusa v2, you can pass string | string[] to handle
+  const data = (await sdk.store.product.list({
+    handle: PACKAGING_HANDLES,
+    region_id: region.regionId,
+    fields: DETAIL_FIELDS,
+    limit: 4,
+  })) as unknown as {
+    products: ProductDetail[];
+  };
+
+  return data.products.map(normalizeProductOptions);
 }

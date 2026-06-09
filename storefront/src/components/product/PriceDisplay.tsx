@@ -9,9 +9,12 @@ interface PriceDisplayProps {
   unavailableCopy?: string;
 }
 
-function formatPriceValue(amount: number, currencyCode: string): string {
+import { useLocale, useTranslations } from "next-intl";
+
+export function formatPriceValue(amount: number, currencyCode: string, locale: string = "ru"): string {
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    const bcp47 = locale === "en" ? "en-US" : "ru-RU";
+    return new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: currencyCode.toUpperCase(),
       minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -25,15 +28,19 @@ function formatPriceValue(amount: number, currencyCode: string): string {
 export function PriceDisplay({
   price,
   className = "",
-  unavailableCopy = "Цена по запросу",
+  unavailableCopy,
 }: PriceDisplayProps) {
+  const locale = useLocale();
+  const t = useTranslations("product");
+  const fallbackCopy = unavailableCopy ?? t("priceUponRequest");
+
   if (!price || price.calculated_amount == null) {
     return (
       <span
         className={`text-sm text-[#2c211b]/50 italic ${className}`}
         aria-label="Price unavailable"
       >
-        {unavailableCopy}
+        {fallbackCopy}
       </span>
     );
   }
@@ -41,6 +48,7 @@ export function PriceDisplay({
   const formatted = formatPriceValue(
     price.calculated_amount,
     price.currency_code ?? "dkk",
+    locale,
   );
 
   return (

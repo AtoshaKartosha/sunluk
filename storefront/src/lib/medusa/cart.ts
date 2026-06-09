@@ -3,7 +3,7 @@ import { getMedusaClient } from "../medusa";
 const CART_ID_KEY = "sunluk_cart_id";
 
 const CART_FIELDS =
-  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,*items,*region";
+  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods";
 
 // ---------------------------------------------------------------------------
 // Cart ID persistence (localStorage)
@@ -22,6 +22,7 @@ function storeCartId(id: string): void {
 export function clearCartId(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(CART_ID_KEY);
+  window.localStorage.removeItem("medusa_cart_id");
 }
 
 // ---------------------------------------------------------------------------

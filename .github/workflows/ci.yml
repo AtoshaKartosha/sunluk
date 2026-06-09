@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            storefront/package-lock.json
+            backend/package-lock.json
+
+      # ── Storefront ──────────────────────────────────────────────
+      - name: Install storefront dependencies
+        run: npm ci --prefix storefront
+
+      - name: Storefront lint
+        run: npm run lint --prefix storefront
+
+      - name: Storefront build
+        run: npm run build --prefix storefront
+        env:
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_ci_placeholder
+
+      # ── Backend ─────────────────────────────────────────────────
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Backend lint
+        run: npm run lint --prefix backend
+
+      - name: Backend test
+        run: |
+          # Only run tests if any test files exist; otherwise skip gracefully.
+          if find backend -path '*/node_modules' -prune -o \( -name '*.test.ts' -o -name '*.test.js' -o -name '*.spec.ts' -o -name '*.spec.js' \) -print | grep -q .; then
+            npm run test --prefix backend
+          else
+            echo "No test files found — skipping."
+          fi
+
+      - name: Backend build
+        run: npm run build --prefix backend

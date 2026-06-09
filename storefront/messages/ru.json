@@ -1,0 +1,396 @@
+{
+  "home": {
+    "collectionLabel": "ИЗЫСКАННЫЙ ВЫБОР",
+    "collectionHeading": "КОЛЛЕКЦИЯ SUNLUK",
+    "collectionCta": "ВЫБРАТЬ АКСЕССУАР",
+    "collection": {
+      "products": {
+        "0": {
+          "title": "Бирюза",
+          "material": "Цвет",
+          "description": "Акцентный цвет и природные мотивы"
+        },
+        "1": {
+          "title": "Кожа",
+          "material": "Кожа",
+          "description": "Натуральная кожа и премиальный металл"
+        },
+        "2": {
+          "title": "Сталь",
+          "material": "Сталь",
+          "description": "Минимализм, строгость и лёгкий блеск"
+        },
+        "3": {
+          "title": "Золото",
+          "material": "Золото",
+          "description": "Тёплый металл и морской песчаный оттенок"
+        }
+      }
+    },
+    "hero": {
+      "title1": "МЕНЯЙ СЕБЯ.",
+      "title2": "ВЫРАЖАЙ СЕБЯ.",
+      "subtitle1": "Аксессуары для очков,",
+      "subtitle2": "которые становятся частью вашего стиля.",
+      "cta": "СМОТРЕТЬ КОЛЛЕКЦИЮ"
+    },
+    "editorial": {
+      "heading": "НОСИ ПО-СВОЕМУ",
+      "description": "SUNLUK — аксессуары для очков, которые становятся гармоничной частью образа: в путешествиях, в динамичном городе, на берегу тёплого моря.",
+      "cta": "СМОТРЕТЬ КОЛЛЕКЦИЮ",
+      "model1Aria": "Эстетичный образ",
+      "model2Aria": "Элегантный стиль",
+      "model3Aria": "Лаконичная деталь"
+    },
+    "features": {
+      "heading": "Всё держится на деталях",
+      "description": "Форма, фактура, металл и цвет подобраны так, чтобы аксессуар выглядел естественно рядом с очками.",
+      "philosophy": "ФИЛОСОФИЯ ДЕТАЛЕЙ",
+      "list": {
+        "0": {
+          "title": "S-элемент",
+          "description": "Фирменная деталь SUNLUK"
+        },
+        "1": {
+          "title": "Премиальные материалы",
+          "description": "Отборные материалы, которые служат долго."
+        },
+        "2": {
+          "title": "Лёгкие",
+          "description": "Комфортные на весь день."
+        },
+        "3": {
+          "title": "Надёжные",
+          "description": "Прочное крепление для ваших очков."
+        }
+      }
+    },
+    "about": {
+      "label": "О БРЕНДЕ",
+      "heading": "О НАС",
+      "description": "SUNLUK — это больше, чем аксессуар. Это свобода выражать себя каждый день — в путешествиях, в городе, в моменты, которые важны.",
+      "cta": "ЗАКАЗАТЬ АКСЕССУАР",
+      "imageAria": "SUNLUK эксклюзивные упаковочные коробки и аксессуары"
+    },
+    "newsletter": {
+      "label": "ЭКСКЛЮЗИВНЫЕ ПРЕДЛОЖЕНИЯ",
+      "heading": "БУДЬТЕ ПЕРВЫМИ",
+      "description": "Подпишитесь и узнавайте о новинках, лимитированных дропах и специальных предложениях.",
+      "successTitle": "ВЫ УСПЕШНО ПОДПИСАЛИСЬ!",
+      "successDesc": "Спасибо за интерес к SUNLUK. Письмо с приветственным бонусом уже летит к вам.",
+      "placeholder": "Ваш e-mail",
+      "cta": "ПОДПИСАТЬСЯ",
+      "note": "Никакого спама. Отписаться можно в любой момент."
+    }
+  },
+  "catalog": {
+    "breadcrumb": "КАТАЛОГ",
+    "heading": "ВСЕ ТОВАРЫ",
+    "empty": "Товары не найдены",
+    "regionUnsupported": "РЕГИОН НЕ ПОДДЕРЖИВАЕТСЯ",
+    "regionUnsupportedDesc": "К сожалению, доставка в регион {countryCode} временно недоступна.",
+    "errorHeading": "ОШИБКА ЗАГРУЗКИ",
+    "errorDesc": "Не удалось загрузить каталог. Пожалуйста, попробуйте позже.",
+    "retry": "ПОПРОБОВАТЬ СНОВА",
+    "backToCatalog": "ВЕРНУТЬСЯ В КАТАЛОГ",
+    "notFound": "ТОВАР НЕ НАЙДЕН",
+    "notFoundDesc": "Запрошенный товар не найден или недоступен в вашем регионе."
+  },
+  "product": {
+    "brand": "АКСЕССУАРЫ SUNLUK",
+    "vatIncluded": "НДС включен",
+    "handmade": "Ручная работа",
+    "delivery": "Доставка в DE и РФ",
+    "giftWrap": "Упаковка в подарок",
+    "materialsHeading": "МАТЕРИАЛЫ И УХОД",
+    "materialsText": "Каждое изделие SUNLUK создается вручную нашими мастерами из премиальных сертифицированных материалов:",
+    "materialsItem1": "Износостойкий и гипоаллергенный шнур/цепочка.",
+    "materialsItem2": "Итальянская премиум фурнитура и фурнитурные карабины.",
+    "materialsItem3": "Регулируемые силиконовые петли для дужек очков любого размера.",
+    "materialsCare": "Рекомендация: Избегайте прямого контакта с парфюмерией, лаком для волос и водой. Протирайте мягкой салфеткой без химии.",
+    "shippingHeading": "ДОСТАВКА И ВОЗВРАТ",
+    "shippingText": "Мы отправляем заказы по всему миру из складов в Мюнхене (Германия) и Москве (Россия):",
+    "shippingItem1": "Отправка в течение 24 часов после оплаты.",
+    "shippingItem2": "Бесплатная стандартная доставка при сумме заказа от 5 000 руб или 50 EUR.",
+    "shippingItem3": "Возможность экспресс-доставки курьером до двери за 2-4 рабочих дня.",
+    "shippingItem4": "Простой возврат или обмен в течение 14 дней с момента получения.",
+    "turquoise": "Бирюза",
+    "leather": "Кожа",
+    "silver": "Сталь",
+    "gold-plated": "Золото",
+    "selectAllOptions": "Выберите все параметры",
+    "unavailable": "Недоступно",
+    "priceUponRequest": "Цена по запросу",
+    "outOfStock": "Нет в наличии",
+    "invalidQuantity": "Укажите количество",
+    "addToCart": "В корзину",
+    "quantity": "Количество",
+    "decreaseQuantity": "Уменьшить количество",
+    "increaseQuantity": "Увеличить количество",
+    "inStock": "В наличии",
+    "lowStock": "Осталось мало",
+    "backorderAvailable": "Доступно под заказ",
+    "notAvailable": "Нет в наличии",
+    "price": "Цена",
+    "cost": "Стоимость",
+    "deliveryPromise": "Бесплатная доставка",
+    "adding": "Добавление...",
+    "breadcrumbCatalog": "КАТАЛОГ",
+    "relatedHeading": "ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ",
+    "factsHeading": "ХАРАКТЕРИСТИКИ",
+    "socialHeading": "ПОКУПАТЕЛИ ГОВОРЯТ",
+    "socialPlaceholder": "Отзывы скоро появятся. Станьте первым!",
+    "packaging": {
+      "heading": "УПАКОВКА",
+      "none": "Без упаковки",
+      "free": "Бесплатно",
+      "outOfStock": "Нет в наличии"
+    }
+  },
+  "header": {
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
+    "catalog": "КАТАЛОГ",
+    "collection": "КОЛЛЕКЦИЯ",
+    "about": "О НАС",
+    "contacts": "КОНТАКТЫ",
+    "profile": "Профиль",
+    "cart": "Корзина",
+    "closeMenu": "Закрыть меню",
+    "openMenu": "Открыть меню"
+  },
+  "footer": {
+    "copyright": "© 2026 SUNLUK. Все права защищены.",
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
+    "serviceClients": "СЕРВИС КЛИЕНТОВ",
+    "ourStory": "Наша история",
+    "shippingReturns": "Доставка и возврат",
+    "terms": "Условия и положения",
+    "privacy": "Политика конфиденциальности",
+    "shop": "МАГАЗИН",
+    "allProducts": "Все товары",
+    "giftCards": "Подарочные карты",
+    "questions": "ВОПРОСЫ",
+    "contactUs": "Связаться с нами"
+  },
+  "localeSwitcher": {
+    "ru": "RU",
+    "en": "EN"
+  },
+  "auth": {
+    "brandSubtitle": "АКСЕССУАРЫ ДЛЯ ОЧКОВ",
+    "login": {
+      "title": "Вход в аккаунт",
+      "subtitle": "Добро пожаловать",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "loginButton": "Войти",
+      "loggingIn": "Вход...",
+      "noAccount": "Нет аккаунта?",
+      "registerLink": "Зарегистрироваться",
+      "showPassword": "Показать пароль",
+      "hidePassword": "Скрыть пароль",
+      "validation": {
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Некорректный email адрес",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMinLength": "Пароль должен быть не менее 6 символов"
+      },
+      "errors": {
+        "invalidCredentials": "Неверный email или пароль. Пожалуйста, попробуйте снова.",
+        "network": "Ошибка сети. Проверьте подключение."
+      }
+    },
+    "register": {
+      "title": "Регистрация",
+      "subtitle": "Создайте аккаунт",
+      "firstNameLabel": "Имя",
+      "firstNamePlaceholder": "Иван",
+      "lastNameLabel": "Фамилия",
+      "lastNamePlaceholder": "Иванов",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "registerButton": "Зарегистрироваться",
+      "registering": "Регистрация...",
+      "hasAccount": "Уже есть аккаунт?",
+      "loginLink": "Войти",
+      "showPassword": "Показать пароль",
+      "hidePassword": "Скрыть пароль",
+      "validation": {
+        "firstNameRequired": "Имя обязательно",
+        "lastNameRequired": "Фамилия обязательна",
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Некорректный email адрес",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMinLength": "Пароль должен быть не менее 6 символов"
+      },
+      "errors": {
+        "network": "Ошибка сети. Проверьте подключение.",
+        "registrationFailed": "Не удалось создать аккаунт. Возможно, этот email уже используется.",
+        "emailAlreadyExists": "Аккаунт с таким email уже существует."
+      }
+    }
+  },
+  "cabinet": {
+    "title": "Личный кабинет",
+    "greeting": "Привет",
+    "profileSection": "Профиль",
+    "emailLabel": "Email",
+    "nameLabel": "Имя",
+    "noName": "Не указано",
+    "ordersSection": "Мои заказы",
+    "noOrders": "У вас пока нет заказов.",
+    "browseCatalog": "Перейти в каталог",
+    "orderId": "Заказ №",
+    "date": "Дата",
+    "status": "Статус",
+    "payment": "Оплата",
+    "total": "Итого",
+    "viewDetails": "Подробнее",
+    "logout": "Выйти",
+    "shownLastOrders": "Показаны последние {count} из {total} заказов",
+    "orderStatus": {
+      "pending": "В ожидании",
+      "received": "Получен",
+      "confirmed": "Подтвержден",
+      "processing": "В обработке",
+      "shipped": "Отправлен",
+      "delivered": "Доставлен",
+      "canceled": "Отменен",
+      "declined": "Отклонен",
+      "requires_action": "Требуется действие"
+    },
+    "paymentStatus": {
+      "captured": "Оплачено",
+      "authorized": "Авторизовано",
+      "pending": "В ожидании",
+      "not_paid": "Не оплачено",
+      "refunded": "Возвращено",
+      "partially_refunded": "Частичный возврат",
+      "canceled": "Отменено",
+      "requires_action": "Требуется действие"
+    },
+    "order": {
+      "backToCabinet": "Назад в кабинет",
+      "orderTitle": "Заказ",
+      "notFound": "Заказ не найден",
+      "notFoundDesc": "Возможно, он не существует или не принадлежит вашему аккаунту.",
+      "goToCabinet": "Назад в кабинет",
+      "status": "Статус",
+      "payment": "Оплата",
+      "date": "Дата заказа",
+      "itemsSection": "Товары в заказе",
+      "quantity": "Кол-во",
+      "price": "Цена",
+      "subtotal": "Подытог",
+      "totalsSection": "Итого",
+      "itemSubtotal": "Товары",
+      "shipping": "Доставка",
+      "tax": "Налог",
+      "discount": "Скидка",
+      "total": "Итого",
+      "shippingAddress": "Адрес доставки",
+      "billingAddress": "Адрес оплаты",
+      "noAddress": "Не указан",
+      "untitledItem": "Товар",
+      "variant": "Вариант"
+    }
+  },
+  "checkout": {
+    "loading": "ЗАГРУЗКА КОРЗИНЫ…",
+    "emptyTitle": "КОРЗИНА ПУСТА",
+    "emptyDesc": "Добавьте товары в корзину, чтобы продолжить оформление заказа.",
+    "emptyCta": "ПЕРЕЙТИ В КАТАЛОГ",
+    "noItems": "В корзине нет товаров.",
+    "pageLabel": "ОФОРМЛЕНИЕ ЗАКАЗА",
+    "pageTitle": "ОФОРМЛЕНИЕ ЗАКАЗА",
+    "steps": {
+      "contact": "КОНТАКТЫ И АДРЕС",
+      "shipping": "ДОСТАВКА",
+      "payment": "ОПЛАТА"
+    },
+    "contact": {
+      "heading": "КОНТАКТЫ И АДРЕС ДОСТАВКИ",
+      "desc": "Укажите контактные данные для получения заказа.",
+      "email": "Email",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "address": "Адрес",
+      "city": "Город",
+      "postalCode": "Индекс",
+      "countryCode": "Код страны",
+      "phone": "Телефон",
+      "emailPlaceholder": "your@email.com",
+      "firstNamePlaceholder": "Иван",
+      "lastNamePlaceholder": "Иванов",
+      "addressPlaceholder": "ул. Примерная, д. 1, кв. 42",
+      "cityPlaceholder": "Москва",
+      "postalCodePlaceholder": "123456",
+      "countryCodePlaceholder": "RU",
+      "phonePlaceholder": "+7 (999) 123-45-67"
+    },
+    "shipping": {
+      "heading": "СПОСОБ ДОСТАВКИ",
+      "desc": "Выберите способ доставки вашего заказа.",
+      "loading": "Загрузка вариантов доставки…",
+      "noneAvailable": "Нет доступных вариантов доставки для вашего региона."
+    },
+    "payment": {
+      "heading": "СПОСОБ ОПЛАТЫ",
+      "desc": "Подтвердите способ оплаты для завершения заказа.",
+      "methodLabel": "Банковская карта / Стандартная оплата",
+      "methodDesc": "Защищённый платёж через платёжную систему"
+    },
+    "actions": {
+      "saving": "СОХРАНЕНИЕ…",
+      "continue": "ПРОДОЛЖИТЬ",
+      "back": "← НАЗАД",
+      "continueToPayment": "ПРОДОЛЖИТЬ К ОПЛАТЕ",
+      "processing": "ОФОРМЛЕНИЕ…",
+      "placeOrder": "ОФОРМИТЬ ЗАКАЗ"
+    },
+    "summary": {
+      "yourOrder": "ВАШ ЗАКАЗ",
+      "subtotal": "Подытог",
+      "shipping": "Доставка",
+      "tax": "Налог",
+      "total": "Итого"
+    },
+    "errors": {
+      "shippingOptionsFailed": "Не удалось загрузить варианты доставки.",
+      "contactSaveFailed": "Не удалось сохранить контактные данные. Попробуйте снова.",
+      "shippingSelectFailed": "Не удалось выбрать способ доставки. Попробуйте снова.",
+      "orderCompletionFailed": "Не удалось завершить оформление заказа.",
+      "orderCompletionError": "Произошла ошибка при оформлении заказа. Пожалуйста, попробуйте снова."
+    },
+    "success": {
+      "title": "СПАСИБО ЗА ЗАКАЗ!",
+      "orderNumber": "НОМЕР ЗАКАЗА",
+      "confirmation": "Подтверждение заказа и детали доставки отправлены на вашу электронную почту.",
+      "backToCatalog": "ВЕРНУТЬСЯ В КАТАЛОГ"
+    }
+  },
+  "cart": {
+    "title": "Корзина",
+    "checkout": "Перейти к оформлению",
+    "total": "Итого",
+    "close": "Закрыть корзину",
+    "emptyTitle": "Ваша корзина пуста",
+    "emptyDesc": "Добавьте товары из каталога, чтобы продолжить",
+    "subtotal": "Подытог",
+    "discount": "Скидка",
+    "tax": "Налог",
+    "shipping": "Доставка",
+    "decrease": "Уменьшить количество",
+    "increase": "Увеличить количество",
+    "remove": "Удалить"
+  },
+  "metadata": {
+    "title": "SUNLUK — Аксессуары для очков",
+    "description": "Аксессуары для очков, которые становятся частью вашего стиля. SUNLUK — меняй себя, выражай себя."
+  }
+}
+,path:

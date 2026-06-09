@@ -2,12 +2,13 @@
 
 ## 1. Intent
 
-Let authorized managers configure Sunluk Commerce in Medusa Admin, publish catalog and commerce settings for the storefront, and manage orders created by checkout.
+Let authorized managers configure Sunluk Commerce in Medusa Admin, publish catalog and commerce settings for the storefront, maintain localized product content, and manage orders created by checkout.
 
 Success criteria:
 
-- Only authenticated admin users can change catalog, region, shipping, payment, promotion, inventory, and order state.
+- Only authenticated admin users can change catalog, translations, region, shipping, payment, promotion, inventory, and order state.
 - Published catalog/configuration changes are consumed by storefront catalog and checkout flows through Medusa APIs.
+- Product translations for supported storefront locales are stored in Medusa and become available to localized storefront catalog reads.
 - Orders created by checkout become visible and actionable in admin order management.
 - Storefront does not bypass admin-configured Medusa state.
 
@@ -17,6 +18,7 @@ In scope:
 
 - Admin authentication boundary.
 - Product/category/variant/price/inventory/sales-channel management.
+- Product locale and translation management for supported storefront languages.
 - Region, shipping, payment, and promotion configuration.
 - Order visibility and operational follow-up after checkout.
 
@@ -52,11 +54,14 @@ flowchart TD
   Auth -->|yes| Dashboard[Admin dashboard]
   Dashboard --> ChangeType{Change type}
   ChangeType -->|Catalog| Catalog[Create/update product, variant, category, price, inventory, sales channel]
+  ChangeType -->|Translations| Translations[Edit supported locales and translated product content]
   ChangeType -->|Commerce settings| Settings[Update region, shipping, payment, promotion]
   ChangeType -->|Order operations| Orders[View/process order]
   Catalog --> Publish[Persist in Medusa]
+  Translations --> PublishTranslations[Persist translation records in Medusa]
   Settings --> Publish
   Publish --> NotifyCatalog[Emit catalog:published]
+  PublishTranslations --> NotifyLocalization[Emit catalog:translation-published]
   Publish --> NotifyCheckout[Emit commerce:settings-updated]
   Orders --> OrderState[Update operational order state in Medusa]
 ```
@@ -68,14 +73,25 @@ stateDiagram-v2
   [*] --> Unauthenticated
   Unauthenticated --> Authenticated: valid admin login
   Authenticated --> EditingCatalog: admin edits product/catalog data
+  Authenticated --> EditingTranslations: admin edits localized product content
   Authenticated --> EditingSettings: admin edits commerce settings
   Authenticated --> ManagingOrders: admin opens order management
   EditingCatalog --> Published: Medusa persists publishable catalog state
+  EditingCatalog --> CatalogSaveRejected: validation failure, stale edit, or auth expiry
+  EditingTranslations --> TranslationsPublished: Medusa persists translation records
+  EditingTranslations --> TranslationSaveRejected: invalid locale, stale edit, or auth expiry
   EditingSettings --> SettingsActive: Medusa persists active commerce settings
+  EditingSettings --> SettingsRejected: validation failure or auth expiry
   ManagingOrders --> OrderUpdated: admin updates operational order state
+  ManagingOrders --> OrderUpdateRejected: illegal transition or stale order state
   Published --> Authenticated
+  TranslationsPublished --> Authenticated
   SettingsActive --> Authenticated
   OrderUpdated --> Authenticated
+  CatalogSaveRejected --> Authenticated
+  TranslationSaveRejected --> Authenticated
+  SettingsRejected --> Authenticated
+  OrderUpdateRejected --> Authenticated
   Authenticated --> Unauthenticated: logout/session expires
 ```
 
@@ -89,10 +105,13 @@ flowchart LR
   Backend --> DB[(PostgreSQL commerce state)]
   DB --> Backend
   Backend --> CatalogEvent[catalog:published]
+  Backend --> TranslationEvent[catalog:translation-published]
   Backend --> SettingsEvent[commerce:settings-updated]
   Checkout[Cart and Checkout] --> OrderEvent[order:placed]
   OrderEvent --> Backend
   CatalogEvent --> Catalog[Catalog Browsing]
+  CatalogEvent --> Localization[Catalog Localization]
+  TranslationEvent --> Localization
   SettingsEvent --> Cart[Cart and Checkout]
 ```
 
@@ -118,10 +137,13 @@ Storefront projection:
 | Direction | Name | Target flow | Payload | Allowed when | Reject reason |
 |---|---|---|---|---|---|
 | Outgoing | `catalog:published` | Catalog Browsing | `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }` | Authenticated admin persists publishable catalog/product/price/inventory/sales-channel changes | Admin auth failure, validation failure, unpublished/non-storefront-visible state |
+| Outgoing | `catalog:published` | Catalog Localization | `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }` | Authenticated admin persists publishable source product content | Admin auth failure, validation failure, unpublished/non-storefront-visible state |
+| Outgoing | `catalog:translation-published` | Catalog Localization | `{ productIds, locales }` | Authenticated admin saves translations for supported storefront locales | Admin auth failure, validation failure, unsupported locale mapping, conflicting translation state |
 | Outgoing | `commerce:settings-updated` | Cart and Checkout | `{ regionIds?, shippingOptionIds?, paymentProviderIds?, priceListIds? }` | Authenticated admin persists checkout-affecting settings | Admin auth failure, validation failure, provider/configuration error |
 | Incoming | `order:placed` | Admin Operations | `{ orderId, cartId, customerId? }` | Medusa checkout creates an order | Not applicable to admin; absent if checkout fails |
 | Internal | `admin:login` | None | `{ email }` | Credentials/session accepted by Medusa | Invalid credentials/session |
 | Internal | `admin:catalog-saved` | None | `{ entityType, entityIds }` | Admin role can edit entity and validation passes | Forbidden, invalid schema, conflicting state |
+| Internal | `admin:translation-saved` | None | `{ productIds, locales }` | Admin role can edit translations and locale configuration is valid | Forbidden, invalid locale, missing source product, conflicting translation state |
 | Internal | `admin:order-updated` | None | `{ orderId, operation }` | Admin role can perform operation and order is in a legal state | Forbidden, stale order state, invalid transition |
 
 ## 7. Edge Cases
@@ -132,11 +154,13 @@ Storefront projection:
 - Order is placed while admin order list is open: admin projection refresh/polling/manual reload must reveal the new order before operational action.
 - Two admins edit the same entity: Medusa validation/state wins; stale admin forms must not overwrite newer authoritative state silently.
 - Admin attempts an illegal order transition: reject through Medusa; do not invent storefront-side compensating state.
+- Admin publishes a product before RU/EN translations are complete: source product may be sellable, but localization flow must decide whether storefront shows fallback content or release QA blocks publication.
+- Admin saves translations for a locale that storefront does not route (`ru`/`en` only in v1): Medusa may store the translation, but storefront ignores it until routing is expanded.
 
 ## 8. Side Effects
 
-- Persist commerce configuration in Medusa/PostgreSQL.
-- Storefront catalog and checkout projections change after the next Store API read/revalidation.
+- Persist commerce configuration and translation records in Medusa/PostgreSQL.
+- Storefront catalog, localization, and checkout projections change after the next Store API read/revalidation.
 - Orders created by checkout become visible in Medusa Admin.
 - Future provider integrations may create side effects with payment, storage, search, monitoring, or fulfillment systems; those require dedicated integration flows before implementation.
 
@@ -179,11 +203,15 @@ Current status: flow document only. The repository contains default Medusa Admin
 - What admin roles are required for Sunluk launch beyond Medusa defaults?
 - Which launch markets must be configured first?
 - Which payment providers are required for launch per market?
+- Should publication be blocked when either RU or EN translation is missing, or is source-language fallback acceptable during rollout?
 - Should fulfillment, refunds, returns, and order transfer each receive dedicated flows before implementation?
 
 ## 14. Review Checklist
 
 - [x] Admin/storefront permission boundary is explicit.
-- [x] Cross-flow `catalog:published`, `commerce:settings-updated`, and `order:placed` are declared.
-- [x] Medusa remains the authority for commerce-critical state.
+- [x] Cross-flow `catalog:published`, `catalog:translation-published`, `commerce:settings-updated`, and `order:placed` are declared.
+- [x] Medusa remains the authority for commerce-critical state and translated product content.
+- [x] Admin save rejection paths are represented for catalog, translations, settings, and orders.
+- [x] Translation publication policy is surfaced as an open question instead of silently assumed.
+- [x] Unsupported storefront locales remain ignored until routing explicitly enables them.
 - [x] Custom provider/integration decisions are open questions, not silently assumed.

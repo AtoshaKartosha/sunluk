@@ -213,10 +213,16 @@ All agents must execute runtime commands strictly within the project's isolated 
 |---|---|
 | **Docker: start all** | `docker compose up -d` |
 | **Docker: stop all** | `docker compose down` |
+| **Local PostgreSQL: setup/init** | `npm run db:setup:local` |
+| **Local PostgreSQL: start** | `npm run db:start:local` |
+| **Local PostgreSQL: stop** | `npm run db:stop:local` |
+| **Local PostgreSQL: status** | `npm run db:status:local` |
+| **Backend local prepare** | `npm run backend:prepare:local` |
 | **Storefront dev server** | `npm run dev --prefix storefront` |
 | **Storefront build** | `npm run build --prefix storefront` |
 | **Storefront linter** | `npm run lint --prefix storefront` |
 | **Medusa dev server** | `npm run dev --prefix backend` |
+| **Medusa local dev server** | `npm run dev:backend:local` |
 | **Medusa build** | `npm run build --prefix backend` |
 | **Backend tests** | `npm run test --prefix backend` |
 | **Backend linter** | `npm run lint --prefix backend` |
@@ -311,13 +317,21 @@ COMMERCE_BACKEND: "MedusaJS"
 ADMIN_STACK: "Medusa Admin"
 
 DATABASE: "PostgreSQL"
-CACHE_AND_JOBS: "Redis"
-STORAGE: "S3-compatible storage"
+CACHE_AND_JOBS: "Redis (optional in local dev; in-memory fallback allowed)"
+STORAGE: "S3-compatible storage (optional in local auth/basic dev flows)"
 SEARCH_LATER: "Meilisearch or Typesense"
 MONITORING: "Sentry + uptime monitoring + backups"
 
 PAYMENTS_DE: "Mollie or Stripe + PayPal + Klarna"
 PAYMENTS_RU: "Custom Medusa payment provider for YooKassa / CloudPayments / T-Bank / SBP"
+
+LOCAL_DEV_PREFERRED_MODE: "Windows local services over WSL Docker when backend runs on Windows"
+LOCAL_DB_SETUP_CMD: "npm run db:setup:local"
+LOCAL_DB_START_CMD: "npm run db:start:local"
+LOCAL_DB_STOP_CMD: "npm run db:stop:local"
+LOCAL_DB_STATUS_CMD: "npm run db:status:local"
+LOCAL_BACKEND_PREPARE_CMD: "npm run backend:prepare:local"
+LOCAL_BACKEND_DEV_CMD: "npm run dev:backend:local"
 
 STOREFRONT_DEV_CMD: "npm run dev --prefix storefront"
 STOREFRONT_BUILD_CMD: "npm run build --prefix storefront"

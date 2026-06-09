@@ -1,4 +1,4 @@
-import { getMedusaClient } from "../medusa";
+import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 
 // ---- Types ----
 
@@ -28,11 +28,14 @@ export type ResolvedRegion = RegionResult | RegionUnsupported;
  */
 export async function resolveRegion(
   countryCode?: string,
+  medusaLocale?: string,
 ): Promise<ResolvedRegion> {
   const code =
     countryCode ?? process.env.NEXT_PUBLIC_DEFAULT_REGION ?? "dk";
 
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale
+    ? getMedusaClientWithLocale(medusaLocale)
+    : getMedusaClient();
 
   const { regions } = (await sdk.store.region.list({
     fields: "id,name,currency_code,*countries",

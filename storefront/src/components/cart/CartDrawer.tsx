@@ -4,6 +4,7 @@ import { useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
@@ -70,6 +71,8 @@ export default function CartDrawer() {
     mutating,
     itemCount,
   } = useCart();
+  const locale = useLocale();
+  const t = useTranslations("cart");
 
   // Esc to close
   useEffect(() => {
@@ -110,6 +113,7 @@ export default function CartDrawer() {
   );
 
   const items = cart?.items ?? [];
+  const mainItems = items.filter((item) => !item.metadata?.parent_line_item_id);
 
   return (
     <AnimatePresence>
@@ -137,12 +141,12 @@ export default function CartDrawer() {
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-label="Корзина"
+            aria-label={t("title")}
           >
             {/* ---- Header ---- */}
             <div className="flex items-center justify-between border-b border-[#2c211b]/10 px-5 py-4">
               <h2 className="font-serif text-lg font-medium tracking-wide text-[#2c211b]">
-                Корзина
+                {t("title")}
                 {itemCount > 0 && (
                   <span className="ml-2 text-sm text-[#2c211b]/50">
                     ({itemCount})
@@ -151,8 +155,8 @@ export default function CartDrawer() {
               </h2>
               <button
                 onClick={closeCart}
-                className="rounded-full p-2 text-[#2c211b]/60 transition-colors hover:bg-[#2c211b]/5 hover:text-[#2c211b]"
-                aria-label="Закрыть корзину"
+                className="p-2 text-[#2c211b]/60 transition-colors hover:bg-[#2c211b]/5 hover:text-[#2c211b]"
+                aria-label={t("close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -160,30 +164,38 @@ export default function CartDrawer() {
 
             {/* ---- Body ---- */}
             <div className="flex-1 overflow-y-auto">
-              {items.length === 0 ? (
+              {mainItems.length === 0 ? (
                 <EmptyState />
               ) : (
                 <ul className="divide-y divide-[#2c211b]/5">
-                  {items.map((item) => (
-                    <CartLineItem
-                      key={item.id}
-                      item={item}
-                      currency={currency}
-                      disabled={mutating}
-                      onUpdate={handleUpdate}
-                      onRemove={handleRemove}
-                    />
-                  ))}
+                  {mainItems.map((item) => {
+                    const linkedItem = items.find(
+                      (i) => i.metadata?.parent_line_item_id === item.id
+                    );
+                    return (
+                      <CartLineItem
+                        key={item.id}
+                        item={item}
+                        linkedItem={linkedItem}
+                        currency={currency}
+                        disabled={mutating}
+                        onUpdate={handleUpdate}
+                        onRemove={handleRemove}
+                      />
+                    );
+                  })}
                 </ul>
               )}
             </div>
 
             {/* ---- Footer ---- */}
-            {items.length > 0 && (
+            {mainItems.length > 0 && (
               <CartFooter
                 cart={cart as StoreCart | null}
                 currency={currency}
                 disabled={mutating}
+                locale={locale}
+                closeCart={closeCart}
               />
             )}
           </motion.aside>
@@ -198,14 +210,15 @@ export default function CartDrawer() {
 // ---------------------------------------------------------------------------
 
 function EmptyState() {
+  const t = useTranslations("cart");
   return (
     <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
       <ShoppingBag className="mb-4 h-12 w-12 text-[#2c211b]/20" strokeWidth={1} />
       <p className="text-sm font-medium tracking-wide text-[#2c211b]/40">
-        Ваша корзина пуста
+        {t("emptyTitle")}
       </p>
       <p className="mt-1 text-xs text-[#2c211b]/30">
-        Добавьте товары из каталога, чтобы продолжить
+        {t("emptyDesc")}
       </p>
     </div>
   );
@@ -217,6 +230,7 @@ function EmptyState() {
 
 interface CartLineItemProps {
   item: StoreCartLineItem;
+  linkedItem?: StoreCartLineItem | null;
   currency: string;
   disabled: boolean;
   onUpdate: (lineItemId: string, quantity: number) => void;
@@ -225,11 +239,14 @@ interface CartLineItemProps {
 
 function CartLineItem({
   item,
+  linkedItem = null,
   currency,
   disabled,
   onUpdate,
   onRemove,
 }: CartLineItemProps) {
+  const pt = useTranslations("product");
+  const t = useTranslations("cart");
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
   const optionLabel = lineItemOptionLabel(item);
@@ -243,6 +260,10 @@ function CartLineItem({
     onUpdate(item.id, item.quantity + 1);
   };
 
+  const totalUnitPrice = unitPrice != null
+    ? unitPrice + (linkedItem ? (linkedItem.unit_price ?? 0) : 0)
+    : null;
+
   return (
     <li className="flex gap-4 px-5 py-4">
       {/* Thumbnail */}
@@ -250,10 +271,10 @@ function CartLineItem({
         <img
           src={thumbnail}
           alt={item.title}
-          className="h-20 w-20 flex-shrink-0 rounded-md border border-[#2c211b]/10 object-cover"
+          className="h-20 w-20 flex-shrink-0 border border-[#2c211b]/10 object-cover"
         />
       ) : (
-        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-md border border-[#2c211b]/10 bg-[#2c211b]/3">
+        <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center border border-[#2c211b]/10 bg-[#2c211b]/3">
           <ShoppingBag className="h-6 w-6 text-[#2c211b]/15" />
         </div>
       )}
@@ -270,16 +291,28 @@ function CartLineItem({
           {optionLabel && (
             <p className="mt-0.5 text-xs text-[#2c211b]/40">{optionLabel}</p>
           )}
+          {linkedItem && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
+              <span className="font-medium text-[#2f6f78]">
+                + {linkedItem.title}
+              </span>
+              <span className="text-[#2c211b]/40">
+                ({linkedItem.unit_price === 0 || !linkedItem.unit_price
+                  ? pt("packaging.free").toLowerCase()
+                  : `+ ${formatPrice(linkedItem.unit_price, currency)}`})
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="mt-2 flex items-center justify-between">
           {/* Quantity controls */}
-          <div className="flex items-center gap-0.5 rounded-md border border-[#2c211b]/15 bg-white">
+          <div className="flex items-center gap-0.5 border border-[#2c211b]/15 bg-white">
             <button
               onClick={decrement}
               disabled={disabled || item.quantity <= 1}
               className="flex h-8 w-8 items-center justify-center text-[#2c211b]/60 transition-colors hover:text-[#2c211b] disabled:opacity-30"
-              aria-label="Уменьшить количество"
+              aria-label={t("decrease")}
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
@@ -290,7 +323,7 @@ function CartLineItem({
               onClick={increment}
               disabled={disabled}
               className="flex h-8 w-8 items-center justify-center text-[#2c211b]/60 transition-colors hover:text-[#2c211b] disabled:opacity-30"
-              aria-label="Увеличить количество"
+              aria-label={t("increase")}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -299,15 +332,15 @@ function CartLineItem({
           <div className="flex items-center gap-3">
             {/* Unit price */}
             <span className="text-sm font-medium tabular-nums text-[#2c211b]">
-              {unitPrice != null ? formatPrice(unitPrice, currency) : "—"}
+              {totalUnitPrice != null ? formatPrice(totalUnitPrice, currency) : "—"}
             </span>
 
             {/* Remove */}
             <button
               onClick={() => onRemove(item.id)}
               disabled={disabled}
-              className="rounded p-1 text-[#2c211b]/30 transition-colors hover:bg-[#2c211b]/5 hover:text-destructive disabled:opacity-30"
-              aria-label={`Удалить ${item.title}`}
+              className="p-1 text-[#2c211b]/30 transition-colors hover:bg-[#2c211b]/5 hover:text-destructive disabled:opacity-30"
+              aria-label={`${t("remove")} ${item.title}`}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -326,9 +359,12 @@ interface CartFooterProps {
   cart: StoreCart | null;
   currency: string;
   disabled: boolean;
+  locale: string;
+  closeCart: () => void;
 }
+function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterProps) {
+  const t = useTranslations("cart");
 
-function CartFooter({ cart, currency, disabled }: CartFooterProps) {
   if (!cart) return null;
 
   const subtotal = cart.subtotal;
@@ -339,18 +375,18 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
 
   const rows: { label: string; value: number | null | undefined; positive?: boolean }[] = [];
 
-  rows.push({ label: "Подытог", value: subtotal });
+  rows.push({ label: t("subtotal"), value: subtotal });
 
   if (discountTotal != null && discountTotal !== 0) {
-    rows.push({ label: "Скидка", value: discountTotal, positive: false });
+    rows.push({ label: t("discount"), value: discountTotal, positive: false });
   }
 
   if (taxTotal != null && taxTotal !== 0) {
-    rows.push({ label: "Налог", value: taxTotal });
+    rows.push({ label: t("tax"), value: taxTotal });
   }
 
   if (shippingTotal != null) {
-    rows.push({ label: "Доставка", value: shippingTotal });
+    rows.push({ label: t("shipping"), value: shippingTotal });
   }
 
   return (
@@ -376,7 +412,7 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
           </div>
         ))}
         <div className="flex justify-between border-t border-[#2c211b]/10 pt-2 text-base font-semibold">
-          <span className="text-[#2c211b]">Итого</span>
+          <span className="text-[#2c211b]">{t("total")}</span>
           <span className="tabular-nums text-[#2c211b]">
             {total != null ? formatPrice(total, currency) : "—"}
           </span>
@@ -385,17 +421,21 @@ function CartFooter({ cart, currency, disabled }: CartFooterProps) {
 
       {/* CTA */}
       <Link
-        href="/checkout"
+        href={`/${locale}/checkout`}
         onClick={(e) => {
-          if (disabled) e.preventDefault();
+          if (disabled) {
+            e.preventDefault();
+            return;
+          }
+          closeCart();
         }}
         className={cn(
-          "mt-4 flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-medium tracking-widest uppercase transition-all duration-300",
+          "mt-4 flex w-full items-center justify-center px-6 py-3 text-sm font-medium tracking-widest uppercase transition-all duration-300",
           "bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2c211b]/90 active:scale-[0.98]",
           disabled && "pointer-events-none opacity-50",
         )}
       >
-        Перейти к оформлению
+        {t("checkout")}
       </Link>
     </div>
   );
