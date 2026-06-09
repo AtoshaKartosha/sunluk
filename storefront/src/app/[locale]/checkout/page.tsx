@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useCart } from "@/components/cart/CartContext";
@@ -741,9 +742,12 @@ export default function CheckoutPage() {
                       <li key={mainItem.id} className="flex gap-4">
                         {mainItem.thumbnail && (
                           <div className="w-14 h-14 shrink-0 bg-[#f4ebe6] overflow-hidden">
-                            <img
+                            <Image
                               src={mainItem.thumbnail}
-                              alt={mainItem.title}
+                              alt={mainItem.title || "Product thumbnail"}
+                              width={56}
+                              height={56}
+                              unoptimized
                               className="w-full h-full object-cover"
                             />
                           </div>

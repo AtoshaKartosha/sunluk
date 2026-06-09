@@ -4,6 +4,7 @@ import { useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
@@ -268,9 +269,12 @@ function CartLineItem({
     <li className="flex gap-4 px-5 py-4">
       {/* Thumbnail */}
       {thumbnail ? (
-        <img
+        <Image
           src={thumbnail}
-          alt={item.title}
+          alt={item.title || "Product thumbnail"}
+          width={80}
+          height={80}
+          unoptimized
           className="h-20 w-20 flex-shrink-0 border border-[#2c211b]/10 object-cover"
         />
       ) : (
