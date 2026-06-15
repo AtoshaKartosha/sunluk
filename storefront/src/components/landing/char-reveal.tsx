@@ -2,8 +2,35 @@
 
 import { motion } from "framer-motion";
 
-export const CharReveal = ({ text, className, stagger = 0.025, delay = 0, y = 0, duration = 0.5 }: { text: string; className?: string; stagger?: number; delay?: number; y?: number; duration?: number }) => {
+type CharRevealProps = {
+  text: string;
+  className?: string;
+  stagger?: number;
+  delay?: number;
+  y?: number;
+  duration?: number;
+  playAnimation?: boolean;
+};
+
+export const CharReveal = ({
+  text,
+  className,
+  stagger = 0.025,
+  delay = 0,
+  y = 0,
+  duration = 0.5,
+  playAnimation = true,
+}: CharRevealProps) => {
   const words = text.split(" ");
+
+  if (!playAnimation) {
+    return (
+      <span className={className} aria-label={text}>
+        {text}
+      </span>
+    );
+  }
+
   return (
     <motion.span
       initial="hidden"

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
+import { PathnameHistoryTracker } from "@/components/navigation/pathname-history";
 import type { ReactNode } from "react";
 import { Montserrat, Geist_Mono } from "next/font/google";
 import "../globals.css";
@@ -69,6 +70,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
+            <PathnameHistoryTracker />
             <main className="flex-1">{children}</main>
             <CartDrawer />
           </CartProvider>
