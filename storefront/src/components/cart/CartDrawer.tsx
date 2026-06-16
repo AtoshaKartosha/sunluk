@@ -261,10 +261,6 @@ function CartLineItem({
     onUpdate(item.id, item.quantity + 1);
   };
 
-  const totalUnitPrice = unitPrice != null
-    ? unitPrice + (linkedItem ? (linkedItem.unit_price ?? 0) : 0)
-    : null;
-
   return (
     <li className="flex gap-4 px-5 py-4">
       {/* Thumbnail */}
@@ -336,7 +332,7 @@ function CartLineItem({
           <div className="flex items-center gap-3">
             {/* Unit price */}
             <span className="text-sm font-medium tabular-nums text-[#2c211b]">
-              {totalUnitPrice != null ? formatPrice(totalUnitPrice, currency) : "—"}
+              {unitPrice != null ? formatPrice(unitPrice, currency) : "—"}
             </span>
 
             {/* Remove */}

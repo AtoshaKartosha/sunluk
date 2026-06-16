@@ -737,7 +737,6 @@ export default function CheckoutPage() {
                     const linkedPackaging = cart.items?.find(
                       (item) => item.metadata?.parent_line_item_id === mainItem.id
                     );
-                    const rowTotal = mainItem.total + (linkedPackaging?.total ?? 0);
                     return (
                       <li key={mainItem.id} className="flex gap-4">
                         {mainItem.thumbnail && (
@@ -762,22 +761,27 @@ export default function CheckoutPage() {
                                 {mainItem.variant.title}
                               </p>
                             )}
-                          {linkedPackaging && (
-                            <p className="text-xs text-[#2c211b]/50 mt-1 italic">
-                              + {linkedPackaging.title} ({formatPrice(linkedPackaging.unit_price, cart.currency_code)})
-                            </p>
-                          )}
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-xs text-[#2c211b]/50">
                               × {mainItem.quantity}
                             </span>
                             <span className="text-sm font-semibold">
                               {formatPrice(
-                                rowTotal,
+                                mainItem.total,
                                 cart.currency_code ?? "dkk",
                               )}
                             </span>
                           </div>
+                          {linkedPackaging && (
+                            <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
+                              <span className="text-xs text-[#2c211b]/50 italic truncate">
+                                + {linkedPackaging.title}
+                              </span>
+                              <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
+                                {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </li>
                     );

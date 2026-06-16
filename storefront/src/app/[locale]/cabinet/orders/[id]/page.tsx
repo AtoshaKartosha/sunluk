@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -160,7 +161,6 @@ export default async function OrderDetailPage({
   const shippingTotal = ((order as Record<string, unknown>).shipping_total as number) ?? 0;
   const taxTotal = ((order as Record<string, unknown>).tax_total as number) ?? 0;
   const discountTotal = ((order as Record<string, unknown>).discount_total as number) ?? 0;
-  const subtotal = ((order as Record<string, unknown>).subtotal as number) ?? 0;
   const total = ((order as Record<string, unknown>).total as number) ?? 0;
   const itemTotal = ((order as Record<string, unknown>).item_total as number) ?? 0;
   const displayId = ((order as Record<string, unknown>).display_id as number) ?? 0;
@@ -254,57 +254,77 @@ export default async function OrderDetailPage({
                     const linkedPackaging = items.find(
                       (item) => item.metadata?.parent_line_item_id === mainItem.id
                     );
-                    const rowTotal = mainItem.total + (linkedPackaging?.total ?? 0);
                     return (
-                      <tr
-                        key={mainItem.id}
-                        className={`${
-                          idx < mainItems.length - 1 ? "border-b border-[#2c211b]/4" : ""
-                        }`}
-                      >
-                        <td className="px-6 sm:px-8 py-4">
-                          <div className="flex items-center gap-4">
-                            {mainItem.thumbnail ? (
-                              <Image
-                                src={mainItem.thumbnail}
-                                alt={mainItem.title || "Product thumbnail"}
-                                width={48}
-                                height={48}
-                                unoptimized
-                                className="w-12 h-12 rounded-none object-cover border border-[#2c211b]/6"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-none bg-[#f4ebe6] flex items-center justify-center">
-                                <Package className="w-5 h-5 text-[#2c211b]/25" />
+                      <Fragment key={mainItem.id}>
+                        <tr
+                          className={`${
+                            linkedPackaging || idx < mainItems.length - 1 ? "border-b border-[#2c211b]/4" : ""
+                          }`}
+                        >
+                          <td className="px-6 sm:px-8 py-4">
+                            <div className="flex items-center gap-4">
+                              {mainItem.thumbnail ? (
+                                <Image
+                                  src={mainItem.thumbnail}
+                                  alt={mainItem.title || "Product thumbnail"}
+                                  width={48}
+                                  height={48}
+                                  unoptimized
+                                  className="w-12 h-12 rounded-none object-cover border border-[#2c211b]/6"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-none bg-[#f4ebe6] flex items-center justify-center">
+                                  <Package className="w-5 h-5 text-[#2c211b]/25" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium text-[#2c211b]">
+                                  {mainItem.title || t("untitledItem")}
+                                </p>
+                                {mainItem.variant?.title && (
+                                  <p className="text-xs text-[#2c211b]/50 mt-0.5">
+                                    {mainItem.variant.title}
+                                  </p>
+                                )}
                               </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-[#2c211b]">
-                                {mainItem.title || t("untitledItem")}
-                              </p>
-                              {mainItem.variant?.title && (
-                                <p className="text-xs text-[#2c211b]/50 mt-0.5">
-                                  {mainItem.variant.title}
-                                </p>
-                              )}
-                              {linkedPackaging && (
-                                <p className="text-xs text-[#2c211b]/50 mt-1 italic">
-                                  + {linkedPackaging.title} ({formatPrice(linkedPackaging.unit_price, currencyCode)})
-                                </p>
-                              )}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-center text-[#2c211b]/70">
-                          {mainItem.quantity}
-                        </td>
-                        <td className="px-4 py-4 text-right text-[#2c211b]/70 whitespace-nowrap">
-                          {formatPrice(mainItem.unit_price, currencyCode)}
-                        </td>
-                        <td className="px-6 sm:px-8 py-4 text-right font-medium text-[#2c211b] whitespace-nowrap">
-                          {formatPrice(rowTotal, currencyCode)}
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-4 py-4 text-center text-[#2c211b]/70">
+                            {mainItem.quantity}
+                          </td>
+                          <td className="px-4 py-4 text-right text-[#2c211b]/70 whitespace-nowrap">
+                            {formatPrice(mainItem.unit_price, currencyCode)}
+                          </td>
+                          <td className="px-6 sm:px-8 py-4 text-right font-medium text-[#2c211b] whitespace-nowrap">
+                            {formatPrice(mainItem.total, currencyCode)}
+                          </td>
+                        </tr>
+                        {linkedPackaging && (
+                          <tr
+                            className={`${
+                              idx < mainItems.length - 1 ? "border-b border-[#2c211b]/4" : ""
+                            }`}
+                          >
+                            <td className="px-6 sm:px-8 py-3">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 shrink-0" aria-hidden="true" />
+                                <p className="text-sm text-[#2c211b]/60 italic">
+                                  + {linkedPackaging.title}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-center text-[#2c211b]/50">
+                              {linkedPackaging.quantity}
+                            </td>
+                            <td className="px-4 py-3 text-right text-[#2c211b]/50 whitespace-nowrap">
+                              {formatPrice(linkedPackaging.unit_price, currencyCode)}
+                            </td>
+                            <td className="px-6 sm:px-8 py-3 text-right font-medium text-[#2c211b]/70 whitespace-nowrap">
+                              {formatPrice(linkedPackaging.total, currencyCode)}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     );
                   });
                 })()}
@@ -349,7 +369,7 @@ export default async function OrderDetailPage({
             <dl className="space-y-3">
               <div className="flex justify-between text-sm">
                 <dt className="text-[#2c211b]/60">{t("itemSubtotal")}</dt>
-                <dd className="text-[#2c211b]">{formatPrice(itemTotal || subtotal, currencyCode)}</dd>
+                <dd className="text-[#2c211b]">{formatPrice(itemTotal, currencyCode)}</dd>
               </div>
               {shippingTotal > 0 && (
                 <div className="flex justify-between text-sm">
