@@ -1,4 +1,5 @@
 import { getMedusaClient } from "../medusa";
+import type { RegionResult } from "./regions";
 
 const CART_ID_KEY = "sunluk_cart_id";
 
@@ -9,30 +10,68 @@ const CART_FIELDS =
 // Cart ID persistence (localStorage)
 // ---------------------------------------------------------------------------
 
-function getStoredCartId(): string | null {
+/**
+ * Read the stored cart id. Returns `null` on the server or when localStorage
+ * is unavailable (e.g. private-mode Safari).
+ */
+export function getStoredCartId(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(CART_ID_KEY);
+  try {
+    return window.localStorage.getItem(CART_ID_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function storeCartId(id: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(CART_ID_KEY, id);
+  try {
+    window.localStorage.setItem(CART_ID_KEY, id);
+  } catch {
+    // Storage unavailable — cart is kept in memory only.
+  }
 }
 
+/**
+ * Drop the stored cart id (and the legacy `medusa_cart_id` key). Used on cart
+ * completion and whenever a stored id turns out to be stale.
+ */
 export function clearCartId(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(CART_ID_KEY);
-  window.localStorage.removeItem("medusa_cart_id");
+  try {
+    window.localStorage.removeItem(CART_ID_KEY);
+    window.localStorage.removeItem("medusa_cart_id");
+  } catch {
+    // No-op.
+  }
 }
 
 // ---------------------------------------------------------------------------
-// API helpers
+// Error detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect a "cart not found" / 404 response from an SDK cart call. Used to
+ * decide when a stored cart id is stale and should be cleared + the cart
+ * recreated for the region. Centralised here so every caller (initial fetch
+ * and add/update/remove mutations) shares one definition.
+ */
+export function isCartNotFound(err: unknown): boolean {
+  if (typeof err !== "object" || err == null) return false;
+  const message = (err as Record<string, unknown>).message;
+  if (typeof message !== "string") return false;
+  return message.includes("404") || message.includes("not found");
+}
+
+// ---------------------------------------------------------------------------
+// Cart API helpers
 // ---------------------------------------------------------------------------
 
 /**
  * Retrieve the current cart from Medusa if a cart_id is stored locally,
  * validating that it still exists and is not completed. Returns `null` when
- * no valid cart exists (no stored id, 404, or completed cart).
+ * no valid cart exists (no stored id, 404, or completed cart); clears the
+ * stale id in those cases.
  */
 export async function getCart() {
   const cartId = getStoredCartId();
@@ -40,36 +79,29 @@ export async function getCart() {
 
   try {
     const sdk = getMedusaClient();
-    const { cart } = await sdk.store.cart.retrieve(cartId, { fields: CART_FIELDS });
-    // If cart is completed (order placed), clear it locally.
+    const { cart } = await sdk.store.cart.retrieve(cartId, {
+      fields: CART_FIELDS,
+    });
+    // Cart is completed (order placed) — clear it locally.
     if ((cart as Record<string, unknown>).completed_at) {
       clearCartId();
       return null;
     }
     return cart;
   } catch (err: unknown) {
-    // 404 or any error → stale id, clear it.
-    if (
-      typeof err === "object" &&
-      err != null &&
-      "message" in err &&
-      typeof (err as Record<string, unknown>).message === "string" &&
-      ((err as Record<string, string>).message.includes("404") ||
-        (err as Record<string, string>).message.includes("not found"))
-    ) {
-      clearCartId();
-    }
+    if (isCartNotFound(err)) clearCartId();
     return null;
   }
 }
 
 /**
- * Create a new cart for the given region.
+ * Create a new cart for the given region, including its currency code, and
+ * persist the id locally. Single creation path for the whole storefront.
  */
-export async function createCart(regionId: string) {
+export async function createCart(region: RegionResult) {
   const sdk = getMedusaClient();
   const { cart } = await sdk.store.cart.create(
-    { region_id: regionId },
+    { region_id: region.regionId, currency_code: region.currencyCode },
     { fields: CART_FIELDS },
   );
   storeCartId(cart.id);
@@ -77,34 +109,19 @@ export async function createCart(regionId: string) {
 }
 
 /**
- * Get existing cart or create a new one for the region.
- */
-export async function getOrCreateCart(regionId: string) {
-  const existing = await getCart();
-  if (existing) {
-    // If region mismatched, the existing cart is for a different region;
-    // clear and create a new one.
-    if (existing.region_id !== regionId) {
-      clearCartId();
-      return createCart(regionId);
-    }
-    return existing;
-  }
-  return createCart(regionId);
-}
-
-/**
- * Add a product variant to the cart.
+ * Add a product variant to the cart. Optional `metadata` is forwarded to the
+ * SDK (used to link add-on items to their parent line item).
  */
 export async function addLineItem(
   cartId: string,
   variantId: string,
   quantity: number,
+  metadata?: Record<string, unknown>,
 ) {
   const sdk = getMedusaClient();
   const { cart } = await sdk.store.cart.createLineItem(
     cartId,
-    { variant_id: variantId, quantity },
+    { variant_id: variantId, quantity, metadata },
     { fields: CART_FIELDS },
   );
   return cart;
@@ -129,17 +146,19 @@ export async function updateLineItem(
 }
 
 /**
- * Remove a line item from the cart.
+ * Remove a line item from the cart. Re-fetches the cart afterwards to
+ * guarantee a fully-populated projection for the UI regardless of what the
+ * delete endpoint returns.
  */
 export async function removeLineItem(cartId: string, lineItemId: string) {
   const sdk = getMedusaClient();
-  const result = await sdk.store.cart.deleteLineItem(
-    cartId,
-    lineItemId,
-    { fields: CART_FIELDS },
-  );
-  // deleteLineItem returns { deleted, parent: cart }
-  return result.parent;
+  await sdk.store.cart.deleteLineItem(cartId, lineItemId, {
+    fields: CART_FIELDS,
+  });
+  const { cart } = await sdk.store.cart.retrieve(cartId, {
+    fields: CART_FIELDS,
+  });
+  return cart;
 }
 
 // ---------------------------------------------------------------------------

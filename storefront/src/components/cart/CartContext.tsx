@@ -9,8 +9,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { getMedusaClient } from "@/lib/medusa";
 import { resolveRegion, type RegionResult } from "@/lib/medusa/regions";
+import {
+  addLineItem,
+  clearCartId,
+  createCart,
+  getCart,
+  getStoredCartId,
+  isCartNotFound,
+  removeLineItem,
+  updateLineItem,
+} from "@/lib/medusa/cart";
 import type { StoreCart } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -37,108 +46,6 @@ interface CartContextType {
 }
 
 // ---------------------------------------------------------------------------
-// localStorage helpers
-// ---------------------------------------------------------------------------
-
-const CART_ID_KEY = "sunluk_cart_id";
-
-function getStoredCartId(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem(CART_ID_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function storeCartId(id: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(CART_ID_KEY, id);
-  } catch {
-    // Storage full or unavailable — non-critical for cart.
-  }
-}
-
-function clearStoredCartId(): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(CART_ID_KEY);
-    localStorage.removeItem("medusa_cart_id");
-  } catch {
-    // No-op.
-  }
-}
-
-// ---------------------------------------------------------------------------
-// API helpers (thin wrappers around the SDK, until lib/medusa/cart.ts lands)
-// ---------------------------------------------------------------------------
-
-const CART_FIELDS =
-  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods";
-
-async function fetchCart(cartId: string): Promise<StoreCart> {
-  const sdk = getMedusaClient();
-  const result = (await sdk.store.cart.retrieve(cartId, {
-    fields: CART_FIELDS,
-  })) as unknown as { cart: StoreCart };
-  return result.cart;
-}
-
-async function createMedusaCart(region: RegionResult): Promise<StoreCart> {
-  const sdk = getMedusaClient();
-  const result = (await sdk.store.cart.create(
-    {
-      region_id: region.regionId,
-      currency_code: region.currencyCode,
-    },
-    { fields: CART_FIELDS },
-  )) as unknown as { cart: StoreCart };
-  return result.cart;
-}
-
-async function addCartLineItem(
-  cartId: string,
-  variantId: string,
-  quantity: number,
-  metadata?: Record<string, unknown>,
-): Promise<StoreCart> {
-  const sdk = getMedusaClient();
-  const result = (await sdk.store.cart.createLineItem(
-    cartId,
-    { variant_id: variantId, quantity, metadata },
-    { fields: CART_FIELDS },
-  )) as unknown as { cart: StoreCart };
-  return result.cart;
-}
-
-async function updateCartLineItem(
-  cartId: string,
-  lineItemId: string,
-  quantity: number,
-): Promise<StoreCart> {
-  const sdk = getMedusaClient();
-  const result = (await sdk.store.cart.updateLineItem(
-    cartId,
-    lineItemId,
-    { quantity },
-    { fields: CART_FIELDS },
-  )) as unknown as { cart: StoreCart };
-  return result.cart;
-}
-
-async function deleteCartLineItem(
-  cartId: string,
-  lineItemId: string,
-): Promise<StoreCart> {
-  const sdk = getMedusaClient();
-  // deleteLineItem returns a different shape; fetch the full cart afterward
-  // to keep the response shape consistent.
-  await sdk.store.cart.deleteLineItem(cartId, lineItemId);
-  return fetchCart(cartId);
-}
-
-// ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
@@ -146,12 +53,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== "undefined") {
-      return !!localStorage.getItem(CART_ID_KEY);
-    }
-    return false;
-  });
+  const [loading, setLoading] = useState(() => !!getStoredCartId());
   const [mutating, setMutating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const regionRef = useRef<RegionResult | null>(null);
@@ -160,23 +62,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ---- Initialise on mount: restore cart from storage ----
   useEffect(() => {
     mountedRef.current = true;
-    const cartId = getStoredCartId();
-
-    if (!cartId) {
-      return;
-    }
+    if (!getStoredCartId()) return;
 
     (async () => {
       try {
-        const restored = await fetchCart(cartId);
+        const restored = await getCart();
         if (mountedRef.current) {
-          setCart(restored);
-        }
-      } catch {
-        // Cart may be completed, deleted, or expired — clear the stale id.
-        clearStoredCartId();
-        if (mountedRef.current) {
-          setCart(null);
+          setCart(restored as unknown as StoreCart | null);
         }
       } finally {
         if (mountedRef.current) {
@@ -207,6 +99,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return resolved;
   }, []);
 
+  // ---- Stale-cart recovery ----
+  //
+  // Runs `run` against `cartId`. When the SDK reports the cart as not found
+  // (e.g. it was completed or expired server-side), the zombie id is cleared
+  // and a fresh cart is created for the region. The operation is retried only
+  // when `retry` is true — add works against any cart, but update/remove
+  // target line items that no longer exist on a fresh cart, so recovery just
+  // replaces the zombie projection with the empty cart.
+  const runWithRecovery = useCallback(
+    async <T,>(
+      cartId: string,
+      run: (id: string) => Promise<T>,
+      retry: boolean,
+    ): Promise<T> => {
+      try {
+        return await run(cartId);
+      } catch (err) {
+        if (!isCartNotFound(err)) throw err;
+        clearCartId();
+        const region = await ensureRegion();
+        const fresh = (await createCart(region)) as unknown as StoreCart;
+        setCart(fresh);
+        if (retry) return await run(fresh.id);
+        return fresh as unknown as T;
+      }
+    },
+    [ensureRegion],
+  );
+
   // ---- Derived ----
 
   const itemCount = useMemo(
@@ -232,31 +153,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         // Create a new cart if one doesn't exist.
         if (!currentId) {
-          const newCart = await createMedusaCart(region);
-          currentId = newCart.id;
-          storeCartId(currentId);
-          setCart(newCart);
+          const fresh = (await createCart(region)) as unknown as StoreCart;
+          currentId = fresh.id;
+          setCart(fresh);
         }
 
-        // Add the line item.
-        const updated = await addCartLineItem(
+        // Add the line item (recreating the cart if the stored id is stale).
+        const updated = await runWithRecovery(
           currentId,
-          variantId,
-          quantity,
-          metadata,
+          async (id) =>
+            (await addLineItem(id, variantId, quantity, metadata)) as unknown as StoreCart,
+          true,
         );
         setCart(updated);
         setIsOpen(true);
         return updated;
-      } catch (err) {
-        // Mutations that fail leave the previous cart projection in place
-        // so the user can retry. A production app would surface the error.
-        throw err;
       } finally {
         setMutating(false);
       }
     },
-    [cart, ensureRegion],
+    [cart, ensureRegion, runWithRecovery],
   );
 
   const updateItem = useCallback(
@@ -270,34 +186,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           (item) => item.metadata?.parent_line_item_id === lineItemId,
         );
 
-        if (quantity <= 0) {
-          let updated = await deleteCartLineItem(currentId, lineItemId);
-          if (linkedItem) {
-            updated = await deleteCartLineItem(currentId, linkedItem.id);
-          }
-          setCart(updated);
-        } else {
-          let updated = await updateCartLineItem(
-            currentId,
-            lineItemId,
-            quantity,
-          );
-          if (linkedItem) {
-            updated = await updateCartLineItem(
-              currentId,
-              linkedItem.id,
-              quantity,
-            );
-          }
-          setCart(updated);
-        }
+        const updated = await runWithRecovery(
+          currentId,
+          async (id): Promise<StoreCart> => {
+            if (quantity <= 0) {
+              let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
+              if (linkedItem) {
+                next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+              }
+              return next;
+            }
+            let next = (await updateLineItem(id, lineItemId, quantity)) as unknown as StoreCart;
+            if (linkedItem) {
+              next = (await updateLineItem(id, linkedItem.id, quantity)) as unknown as StoreCart;
+            }
+            return next;
+          },
+          false,
+        );
+        setCart(updated);
       } catch {
-        // Leave previous projection in place.
+        // Non-recoverable failure — leave the previous projection in place.
       } finally {
         setMutating(false);
       }
     },
-    [cart],
+    [cart, runWithRecovery],
   );
 
   const removeItem = useCallback(
@@ -311,18 +225,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           (item) => item.metadata?.parent_line_item_id === lineItemId,
         );
 
-        let updated = await deleteCartLineItem(currentId, lineItemId);
-        if (linkedItem) {
-          updated = await deleteCartLineItem(currentId, linkedItem.id);
-        }
+        const updated = await runWithRecovery(
+          currentId,
+          async (id): Promise<StoreCart> => {
+            let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
+            if (linkedItem) {
+              next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+            }
+            return next;
+          },
+          false,
+        );
         setCart(updated);
       } catch {
-        // Leave previous projection in place.
+        // Non-recoverable failure — leave the previous projection in place.
       } finally {
         setMutating(false);
       }
     },
-    [cart],
+    [cart, runWithRecovery],
   );
 
   // ---- Drawer controls ----
@@ -331,15 +252,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const clearCart = useCallback(() => {
-    clearStoredCartId();
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.removeItem("sunluk_cart_id");
-        localStorage.removeItem("medusa_cart_id");
-      } catch {
-        // No-op.
-      }
-    }
+    clearCartId();
     setCart(null);
   }, []);
 
