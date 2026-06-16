@@ -7,6 +7,7 @@ import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
 import { ProductFacts } from "./ProductFacts";
+import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
   brand: string;
   vatIncluded: string;
@@ -261,18 +262,13 @@ export function ProductInfoBlock({
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
   const [selectionValid, setSelectionValid] = useState(false);
-  const [selectionQuantity, setSelectionQuantity] = useState(1);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
   const [selectedPackaging, setSelectedPackaging] = useState<string>(() => {
     // Find first available packaging option
     const firstAvailable = packagingProducts?.find((p) => {
       const variant = p.variants?.[0];
       if (!variant) return false;
-      return (
-        variant.manage_inventory === false ||
-        (variant.inventory_quantity ?? 0) > 0 ||
-        variant.allow_backorder === true
-      );
+      return projectAvailability(variant).available;
     });
     return firstAvailable?.handle || "";
   });
@@ -315,7 +311,6 @@ export function ProductInfoBlock({
         setStockInfo(selection.stockInfo);
       }
       setSelectionValid(selection.valid);
-      setSelectionQuantity(selection.quantity);
     },
     [],
   );
@@ -452,11 +447,8 @@ export function ProductInfoBlock({
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
                 
-                // Check if packaging variant is available
-                const isInStock = 
-                  variant.manage_inventory === false ||
-                  (variant.inventory_quantity ?? 0) > 0 ||
-                  variant.allow_backorder === true;
+                // ponytail: shared availability projection (single source of truth)
+                const isInStock = projectAvailability(variant).available;
                 
                 const amount = variant.calculated_price?.calculated_amount;
                 const currency = variant.calculated_price?.currency_code;
@@ -585,7 +577,7 @@ export function ProductInfoBlock({
             {headlinePrice && (
               <PriceDisplay
                 price={{
-                  calculated_amount: headlinePrice.calculated_amount * (selectionQuantity || 1),
+                  calculated_amount: headlinePrice.calculated_amount,
                   currency_code: headlinePrice.currency_code,
                 }}
                 className="text-sm font-semibold font-serif text-[#2c211b]"

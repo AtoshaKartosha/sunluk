@@ -36,6 +36,70 @@ export interface VariantProjection {
   selectedOptions: Record<string, string>;
 }
 
+/** Inventory-derived availability projection shared by all PDP stock UI. */
+export interface AvailabilityProjection {
+  /** Inventory is tracked for this variant. */
+  managed: boolean;
+  /** Units on hand (0 when null/untracked). */
+  quantity: number;
+  /** Physically available OR not inventory-tracked (excludes backorder). */
+  inStock: boolean;
+  /** Purchasable: in stock (or untracked) or backorderable. */
+  available: boolean;
+  /** Backorder is permitted. */
+  backorderable: boolean;
+  /** Tracked and 1–5 units on hand. */
+  lowStock: boolean;
+  /** Status label key consumed by the stock messaging UI. */
+  status: "inStock" | "lowStock" | "outOfStock" | "backorderAvailable";
+}
+
+// ---- Availability ----
+
+/** Low-stock heuristic cutoff: qty 1–5 reads as "low". */
+const LOW_STOCK_THRESHOLD = 5;
+
+/**
+ * Single source of truth for inventory-derived availability.
+ *
+ * Accepts any variant exposing Medusa's inventory fields and returns the
+ * booleans + status key every PDP caller consumes. A pure projection of
+ * backend inventory authority — no local totals or currency math.
+ */
+export function projectAvailability(
+  variant:
+    | Pick<ResolvableVariant, "manage_inventory" | "inventory_quantity" | "allow_backorder">
+    | null
+    | undefined,
+): AvailabilityProjection {
+  const managed = variant?.manage_inventory !== false;
+  const quantity = variant?.inventory_quantity ?? 0;
+  const backorderable = variant?.allow_backorder === true;
+  const inStock = !managed || quantity > 0;
+  const lowStock = managed && quantity > 0 && quantity <= LOW_STOCK_THRESHOLD;
+
+  let status: AvailabilityProjection["status"];
+  if (!managed || quantity > LOW_STOCK_THRESHOLD) {
+    status = "inStock";
+  } else if (quantity > 0) {
+    status = "lowStock";
+  } else if (backorderable) {
+    status = "backorderAvailable";
+  } else {
+    status = "outOfStock";
+  }
+
+  return {
+    managed,
+    quantity,
+    inStock,
+    available: inStock || backorderable,
+    backorderable,
+    lowStock,
+    status,
+  };
+}
+
 // ---- Variant resolution ----
 
 /**
@@ -96,8 +160,7 @@ export function defaultVariantOptions(
       vars.some((v) => {
         const matched = v.options?.find((o) => o.option_id === opt.id);
         if (!matched) return false;
-        const inStock =
-          v.manage_inventory === false || (v.inventory_quantity ?? 0) > 0;
+        const inStock = projectAvailability(v).inStock;
         return matched.value === val && inStock;
       }),
     );
@@ -150,17 +213,14 @@ export function projectVariant<V extends ResolvableVariant>(
     };
   }
 
-  const inv = resolved.manage_inventory !== false;
-  const qty = resolved.inventory_quantity ?? null;
-  const backorder = resolved.allow_backorder === true;
-  const available = !inv || (qty !== null && qty > 0) || backorder;
+  const availability = projectAvailability(resolved);
 
   return {
     variantId: resolved.id,
     price: resolved.calculated_price ?? null,
-    isAvailable: available,
-    inventoryQuantity: qty,
-    allowBackorder: backorder,
+    isAvailable: availability.available,
+    inventoryQuantity: resolved.inventory_quantity ?? null,
+    allowBackorder: availability.backorderable,
     selectedOptions: selected,
   };
 }

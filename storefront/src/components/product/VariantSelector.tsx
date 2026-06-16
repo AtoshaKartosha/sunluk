@@ -9,6 +9,7 @@ import type {
 import type { VariantSelectorLabels } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { useCart } from "@/components/cart/CartContext";
+import { defaultVariantOptions, projectAvailability } from "@/lib/price";
 
 export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
@@ -97,52 +98,20 @@ function deriveStockInfo(
 ): StockInfo | null {
   if (!variant) return null;
 
-  const qty = variant.inventory_quantity ?? 0;
-  const managed = variant.manage_inventory !== false;
-  const backorderable = variant.allow_backorder === true;
+  const { available, status } = projectAvailability(variant);
 
-  if (!managed) {
-    // No inventory tracking — assume available.
-    return {
-      available: true,
-      status: "inStock",
-      message: labels.inStock,
-      deliveryPromise: labels.deliveryPromise,
-    };
-  }
-
-  if (qty > 5) {
-    return {
-      available: true,
-      status: "inStock",
-      message: labels.inStock,
-      deliveryPromise: labels.deliveryPromise,
-    };
-  }
-
-  if (qty > 0) {
-    return {
-      available: true,
-      status: "lowStock",
-      message: labels.lowStock,
-      deliveryPromise: labels.deliveryPromise,
-    };
-  }
-
-  if (backorderable) {
-    return {
-      available: true,
-      status: "backorderAvailable",
-      message: labels.backorderAvailable,
-      deliveryPromise: labels.deliveryPromise,
-    };
-  }
+  const messageByStatus: Record<StockInfo["status"], string> = {
+    inStock: labels.inStock,
+    lowStock: labels.lowStock,
+    backorderAvailable: labels.backorderAvailable,
+    outOfStock: labels.notAvailable,
+  };
 
   return {
-    available: false,
-    status: "outOfStock",
-    message: labels.notAvailable,
-    deliveryPromise: null,
+    available,
+    status,
+    message: messageByStatus[status],
+    deliveryPromise: available ? labels.deliveryPromise : null,
   };
 }
 
@@ -157,34 +126,9 @@ export function VariantSelector({
   const safeOptions = useMemo(() => options ?? [], [options]);
   const safeVariants = useMemo(() => variants ?? [], [variants]);
 
-  const [selected, setSelected] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    for (const opt of options ?? []) {
-      const optionValues = (opt.values ?? []).map((v) =>
-        typeof v === "string" ? v : v.value,
-      );
-      if (optionValues.length === 0) continue;
-
-      const inStockValues = optionValues.filter((val) => {
-        return (variants ?? []).some((v) => {
-          const matchedOpt = v.options?.find((o) => o.option_id === opt.id);
-          if (!matchedOpt) return false;
-          const inStock =
-            v.manage_inventory === false || (v.inventory_quantity ?? 0) > 0;
-          return matchedOpt.value === val && inStock;
-        });
-      });
-
-      if (inStockValues.length === 1) {
-        initial[opt.id] = inStockValues[0];
-      } else if (optionValues.length > 0) {
-        const defaultValue =
-          inStockValues.length > 0 ? inStockValues[0] : optionValues[0];
-        initial[opt.id] = defaultValue;
-      }
-    }
-    return initial;
-  });
+  const [selected, setSelected] = useState<Record<string, string>>(() =>
+    defaultVariantOptions(options, variants),
+  );
   const [quantity, setQuantity] = useState(1);
   const [addingInProgress, setAddingInProgress] = useState(false);
 
@@ -255,16 +199,13 @@ export function VariantSelector({
     [selected, stableCallback],
   );
 
-  const isInStock = resolved
-    ? resolved.manage_inventory === false || (resolved.inventory_quantity ?? 0) > 0
-    : null;
-  const isBackorderable = resolved?.allow_backorder === true;
-  const cartReady = valid && (isInStock !== false || isBackorderable);
+  const availability = resolved ? projectAvailability(resolved) : null;
+  const cartReady = valid && (availability?.available ?? false);
 
   const buttonCopy = (() => {
     if (!allOptionsSelected) return labels.selectAllOptions;
     if (!resolved) return labels.unavailable;
-    if (isInStock === false && !isBackorderable) return labels.outOfStock;
+    if (!availability?.available) return labels.outOfStock;
     if (!quantityValid) return labels.invalidQuantity;
     return labels.addToCart;
   })();
