@@ -180,7 +180,12 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: flow document only. Storefront cart and checkout pages/actions are not implemented yet.
+Current status: Completed. Cart id is persisted via `CartContext` (localStorage); all cart mutations and totals come from Medusa through `lib/medusa/cart.ts` (single source of cart SDK calls); the contact/shipping/payment checkout wizard lives in `app/[locale]/checkout/page.tsx`; order confirmation in `app/[locale]/checkout/success/page.tsx`. Stale carts are recreated on mutation 404.
+
+Implementation files:
+- `storefront/src/components/cart/CartContext.tsx`, `storefront/src/components/cart/CartDrawer.tsx`
+- `storefront/src/lib/medusa/cart.ts`
+- `storefront/src/app/[locale]/checkout/page.tsx`, `storefront/src/app/[locale]/checkout/success/page.tsx`
 
 ## 13. Open Questions
 

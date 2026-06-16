@@ -141,7 +141,7 @@ Support English and Russian translations in `messages/{ru,en}.json`:
 
 ## 12. Implementation Trace
 
-Current status: Completed. PDP includes packaging options grid with live price/currency rendering and stock availability/disabling checks. Adding a main item adds the linked packaging to the cart using metadata `parent_line_item_id`. Quantity adjustments and item removal are synchronized.
+Current status: Completed. PDP includes packaging options grid with live price/currency rendering and stock availability/disabling checks. Adding a main item adds the linked packaging to the cart using metadata `parent_line_item_id`. Quantity adjustments and item removal are synchronized. Implementation note: packaging products are resolved via hardcoded `PACKAGING_HANDLES` in `lib/medusa/products.ts` (`listPackagingProducts`) as a v1 simplification; the category/tag auto-discovery described in §2 is deferred until more add-on types are needed.
 
 Implementation files:
 

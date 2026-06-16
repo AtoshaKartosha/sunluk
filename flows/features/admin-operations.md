@@ -175,7 +175,7 @@ Expected implementation/configuration files when custom admin behavior is built:
 
 Current files that inform the flow:
 
-- `backend/apps/backend/src/api/admin/custom/route.ts` is a placeholder custom admin route returning status 200.
+- The placeholder custom admin route (`api/admin/custom/route.ts`) has been removed; no Sunluk-specific custom admin HTTP routes exist yet.
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` seeds initial admin-managed commerce data.
 - `backend/apps/backend/medusa-config.ts` configures Medusa backend environment and HTTP boundaries.
 
@@ -196,7 +196,7 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: flow document only. The repository contains default Medusa Admin support and placeholder custom admin route; no Sunluk-specific custom admin operations are implemented yet.
+Current status: partial. Default Medusa Admin is active, and a Sunluk-specific admin widget (`src/admin/widgets/product-checklist-widget.tsx`) plus admin RU translations (`src/admin/i18n`) are implemented. No custom admin HTTP routes exist (the placeholder route was removed).
 
 ## 13. Open Questions
 

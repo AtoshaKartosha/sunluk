@@ -239,7 +239,7 @@ Current status: Completed. The prefix routing middleware, i18n loaders, and mess
 
 Implementation files:
 
-- `storefront/src/middleware.ts`
+- `storefront/src/proxy.ts`
 - `storefront/src/i18n/routing.ts`
 - `storefront/src/i18n/request.ts`
 - `storefront/messages/ru.json`
