@@ -388,6 +388,12 @@
     "increase": "Increase quantity",
     "remove": "Remove"
   },
+  "badge": {
+    "in_stock": "Back in stock",
+    "sold_out": "Sold out",
+    "pre_order": "Pre-order",
+    "discount": "Discount"
+  },
   "metadata": {
     "title": "SUNLUK — Eyewear Accessories",
     "description": "Eyewear accessories that become a part of your style. SUNLUK — change yourself, express yourself."

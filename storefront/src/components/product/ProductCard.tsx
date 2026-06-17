@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { StoreProduct } from "./types";
+import { ProductBadge } from "./ProductBadge";
 import { PriceDisplay } from "./PriceDisplay";
 import type { Locale } from "@/i18n/routing";
 import { cheapestVariantPrice } from "@/lib/price";
@@ -23,6 +24,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
     >
       {/* Image */}
       <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-3 sm:mb-4 relative">
+        <ProductBadge badge={String(product.metadata?.badge ?? "")} />
         {src ? (
           <Image
             src={src}

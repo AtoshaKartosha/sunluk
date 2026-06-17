@@ -57,6 +57,7 @@ export interface ProductListItem {
   thumbnail: string | null;
   images: ProductImage[] | null;
   variants: ProductListVariant[] | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 /** Full product shape for the detail page. */
@@ -77,7 +78,7 @@ export interface ProductListResult {
 // ---- Field selectors ----
 
 const LIST_FIELDS = [
-  "id", "title", "handle", "thumbnail",
+  "id", "title", "handle", "thumbnail", "metadata",
   "*images",
   "*variants",
   "*variants.calculated_price",
@@ -85,7 +86,7 @@ const LIST_FIELDS = [
 ].join(",");
 
 const DETAIL_FIELDS = [
-  "id", "title", "handle", "thumbnail", "description", "subtitle",
+  "id", "title", "handle", "thumbnail", "description", "subtitle", "metadata",
   "*images",
   "*options",
   "*options.values",
