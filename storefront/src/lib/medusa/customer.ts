@@ -115,6 +115,48 @@ export function getClientMedusaClient(): Medusa {
 }
 
 // ---------------------------------------------------------------------------
+// Logged-in customer (with addresses)
+// ---------------------------------------------------------------------------
+
+export interface ClientCustomerAddress {
+  first_name?: string | null;
+  last_name?: string | null;
+  address_1?: string | null;
+  address_2?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  country_code?: string | null;
+  phone?: string | null;
+  is_default_shipping?: boolean;
+}
+
+export interface ClientCustomer {
+  id: string;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  addresses: ClientCustomerAddress[];
+}
+
+/**
+ * Retrieve the logged-in customer (with addresses), or null when no auth
+ * cookie is present or the request fails. Safe to call for guests.
+ */
+export async function getClientCustomer(): Promise<ClientCustomer | null> {
+  if (!getAuthCookie()) return null;
+  try {
+    const sdk = getClientMedusaClient();
+    const { customer } = (await sdk.store.customer.retrieve({
+      fields: "id,email,first_name,last_name,phone,*addresses",
+    })) as unknown as { customer: ClientCustomer | null };
+    return customer ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Auth action helpers
 // ---------------------------------------------------------------------------
 

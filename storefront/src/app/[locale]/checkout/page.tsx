@@ -18,6 +18,7 @@ import {
   clearCartId,
 } from "@/lib/medusa/cart";
 import { getRegionCountries } from "@/lib/medusa/regions";
+import { getClientCustomer } from "@/lib/medusa/customer";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,6 +56,42 @@ const EMPTY_ADDRESS: ContactShippingFormState = {
   postal_code: "",
   country_code: "dk",
   phone: "",
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const REQUIRED_FIELDS: (keyof ContactShippingFormState)[] = [
+  "email",
+  "first_name",
+  "last_name",
+  "address_1",
+  "city",
+  "postal_code",
+  "country_code",
+];
+
+const FIELD_IDS: Record<keyof ContactShippingFormState, string> = {
+  email: "checkout-email",
+  first_name: "checkout-first-name",
+  last_name: "checkout-last-name",
+  address_1: "checkout-address",
+  city: "checkout-city",
+  postal_code: "checkout-postal",
+  country_code: "checkout-country",
+  phone: "checkout-phone",
+};
+
+// Major-city suggestions per supported country (datalist hints; free text always allowed).
+// Keyed by ISO-2 (lowercase) of the store's region countries.
+const CITY_SUGGESTIONS: Record<string, string[]> = {
+  dk: ["København", "Aarhus", "Odense", "Aalborg", "Esbjerg"],
+  fr: ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Bordeaux"],
+  de: ["Berlin", "München", "Hamburg", "Köln", "Frankfurt am Main", "Stuttgart", "Düsseldorf"],
+  it: ["Roma", "Milano", "Napoli", "Torino", "Palermo", "Genova", "Bologna"],
+  es: ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Málaga"],
+  se: ["Stockholm", "Göteborg", "Malmö", "Uppsala", "Västerås"],
+  gb: ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Edinburgh"],
+  ru: ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Краснодар"],
 };
 
 // ---------------------------------------------------------------------------
@@ -206,6 +243,9 @@ export default function CheckoutPage() {
   const [contactForm, setContactForm] = useState<ContactShippingFormState>(EMPTY_ADDRESS);
   const [stepSubmitting, setStepSubmitting] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof ContactShippingFormState, string>>
+  >({});
 
   // ---- Shipping state ----
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -234,6 +274,7 @@ export default function CheckoutPage() {
   // ---- Refs ----
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shippingReqRef = useRef(0);
+  const ranOnceRef = useRef(false);
 
   // ---- Fetch shipping options when shipping step becomes active ----
   useEffect(() => {
@@ -260,10 +301,39 @@ export default function CheckoutPage() {
     };
   }, [currentStep, cart?.id, shippingOptions.length, t]);
 
+  const validateField = useCallback(
+    (field: keyof ContactShippingFormState, value: string): string | undefined => {
+      if (REQUIRED_FIELDS.includes(field) && !value.trim()) {
+        return tc("validation.required");
+      }
+      if (field === "email" && value.trim() && !EMAIL_RE.test(value.trim())) {
+        return tc("validation.email");
+      }
+      return undefined;
+    },
+    [tc],
+  );
+
   const handleContactSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!cart?.id) return;
+
+      const errors: Partial<Record<keyof ContactShippingFormState, string>> = {};
+      for (const field of REQUIRED_FIELDS) {
+        const msg = validateField(field, contactForm[field]);
+        if (msg) errors[field] = msg;
+      }
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        const firstInvalid = REQUIRED_FIELDS.find((f) => errors[f]);
+        if (firstInvalid) {
+          document.getElementById(FIELD_IDS[firstInvalid])?.focus();
+        }
+        return;
+      }
+      setFieldErrors({});
+
       setStepSubmitting(true);
       setStepError(null);
 
@@ -294,7 +364,7 @@ export default function CheckoutPage() {
         setStepSubmitting(false);
       }
     },
-    [cart, contactForm, setCart, t],
+    [cart, contactForm, setCart, t, validateField],
   );
 
   const handleShippingSubmit = useCallback(
@@ -371,9 +441,36 @@ export default function CheckoutPage() {
   const updateContactField = useCallback(
     (field: keyof ContactShippingFormState, value: string) => {
       setContactForm((prev) => ({ ...prev, [field]: value }));
+      setFieldErrors((prev) => {
+        if (!prev[field] || validateField(field, value)) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     },
-    [],
+    [validateField],
   );
+
+  const handleFieldBlur = useCallback(
+    (field: keyof ContactShippingFormState) => {
+      const msg = validateField(field, contactForm[field]);
+      setFieldErrors((prev) => {
+        if (msg === prev[field]) return prev;
+        const next = { ...prev };
+        if (msg) next[field] = msg;
+        else delete next[field];
+        return next;
+      });
+    },
+    [validateField, contactForm],
+  );
+
+  const fieldErrorEl = (field: keyof ContactShippingFormState) =>
+    fieldErrors[field] ? (
+      <p id={`${FIELD_IDS[field]}-error`} className="text-xs text-red-600 mt-1">
+        {fieldErrors[field]}
+      </p>
+    ) : null;
 
   // ---- Load the cart region's countries for the selector ----
   useEffect(() => {
@@ -404,6 +501,52 @@ export default function CheckoutPage() {
   useEffect(() => {
     headingRef.current?.focus();
   }, [currentStep]);
+
+  // ---- Prefill the contact form from the logged-in customer (once) ----
+  useEffect(() => {
+    if (ranOnceRef.current) return;
+    ranOnceRef.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const customer = await getClientCustomer();
+        if (cancelled || !customer) return;
+
+        const addr =
+          customer.addresses?.find((a) => a.is_default_shipping) ??
+          customer.addresses?.[0] ??
+          null;
+
+        const fill = (
+          current: string,
+          ...candidates: (string | null | undefined)[]
+        ): string => {
+          if (current.trim()) return current;
+          const found = candidates.find((c) => c && c.trim());
+          return found ?? current;
+        };
+
+        setContactForm((prev) => ({
+          ...prev,
+          email: fill(prev.email, customer.email),
+          first_name: fill(prev.first_name, addr?.first_name, customer.first_name),
+          last_name: fill(prev.last_name, addr?.last_name, customer.last_name),
+          address_1: fill(prev.address_1, addr?.address_1),
+          city: fill(prev.city, addr?.city),
+          postal_code: fill(prev.postal_code, addr?.postal_code),
+          country_code: fill(prev.country_code, addr?.country_code?.toLowerCase()),
+          phone: fill(prev.phone, addr?.phone, customer.phone),
+        }));
+      } catch {
+        /* guests / errors: leave the empty form unchanged */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ---- Render states ----
 
@@ -447,7 +590,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Email */}
-                <fieldset className="space-y-1.5">
+                <div className="space-y-1.5">
                   <label
                     htmlFor="checkout-email"
                     className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
@@ -459,16 +602,21 @@ export default function CheckoutPage() {
                     type="email"
                     required
                     autoComplete="email"
+                    enterKeyHint="next"
                     value={contactForm.email}
                     onChange={(e) => updateContactField("email", e.target.value)}
+                    onBlur={() => handleFieldBlur("email")}
+                    aria-invalid={!!fieldErrors.email || undefined}
+                    aria-describedby={fieldErrors.email ? "checkout-email-error" : undefined}
                     className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                     placeholder={tc("emailPlaceholder")}
                   />
-                </fieldset>
+                  {fieldErrorEl("email")}
+                </div>
 
                 {/* Name fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <fieldset className="space-y-1.5">
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="checkout-first-name"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
@@ -480,15 +628,20 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       autoComplete="given-name"
+                      enterKeyHint="next"
                       value={contactForm.first_name}
                       onChange={(e) =>
                         updateContactField("first_name", e.target.value)
                       }
+                      onBlur={() => handleFieldBlur("first_name")}
+                      aria-invalid={!!fieldErrors.first_name || undefined}
+                      aria-describedby={fieldErrors.first_name ? "checkout-first-name-error" : undefined}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                       placeholder={tc("firstNamePlaceholder")}
                     />
-                  </fieldset>
-                  <fieldset className="space-y-1.5">
+                    {fieldErrorEl("first_name")}
+                  </div>
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="checkout-last-name"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
@@ -500,18 +653,23 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       autoComplete="family-name"
+                      enterKeyHint="next"
                       value={contactForm.last_name}
                       onChange={(e) =>
                         updateContactField("last_name", e.target.value)
                       }
+                      onBlur={() => handleFieldBlur("last_name")}
+                      aria-invalid={!!fieldErrors.last_name || undefined}
+                      aria-describedby={fieldErrors.last_name ? "checkout-last-name-error" : undefined}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                       placeholder={tc("lastNamePlaceholder")}
                     />
-                  </fieldset>
+                    {fieldErrorEl("last_name")}
+                  </div>
                 </div>
 
                 {/* Address */}
-                <fieldset className="space-y-1.5">
+                <div className="space-y-1.5">
                   <label
                     htmlFor="checkout-address"
                     className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
@@ -523,59 +681,23 @@ export default function CheckoutPage() {
                     type="text"
                     required
                     autoComplete="street-address"
+                    enterKeyHint="next"
                     value={contactForm.address_1}
                     onChange={(e) =>
                       updateContactField("address_1", e.target.value)
                     }
+                    onBlur={() => handleFieldBlur("address_1")}
+                    aria-invalid={!!fieldErrors.address_1 || undefined}
+                    aria-describedby={fieldErrors.address_1 ? "checkout-address-error" : undefined}
                     className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                     placeholder={tc("addressPlaceholder")}
                   />
-                </fieldset>
-
-                {/* City / Postal Code / Country / Phone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <fieldset className="space-y-1.5">
-                    <label
-                      htmlFor="checkout-city"
-                      className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
-                    >
-                      {tc("city")} *
-                    </label>
-                    <input
-                      id="checkout-city"
-                      type="text"
-                      required
-                      autoComplete="address-level2"
-                      value={contactForm.city}
-                      onChange={(e) => updateContactField("city", e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder={tc("cityPlaceholder")}
-                    />
-                  </fieldset>
-                  <fieldset className="space-y-1.5">
-                    <label
-                      htmlFor="checkout-postal"
-                      className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
-                    >
-                      {tc("postalCode")} *
-                    </label>
-                    <input
-                      id="checkout-postal"
-                      type="text"
-                      required
-                      autoComplete="postal-code"
-                      value={contactForm.postal_code}
-                      onChange={(e) =>
-                        updateContactField("postal_code", e.target.value)
-                      }
-                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder={tc("postalCodePlaceholder")}
-                    />
-                  </fieldset>
+                  {fieldErrorEl("address_1")}
                 </div>
 
+                {/* Country / City */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <fieldset className="space-y-1.5">
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="checkout-country"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
@@ -590,6 +712,9 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         updateContactField("country_code", e.target.value)
                       }
+                      onBlur={() => handleFieldBlur("country_code")}
+                      aria-invalid={!!fieldErrors.country_code || undefined}
+                      aria-describedby={fieldErrors.country_code ? "checkout-country-error" : undefined}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] focus:outline-none focus:border-[#2f6f78] transition-colors"
                     >
                       {countries.length === 0 ? (
@@ -604,18 +729,79 @@ export default function CheckoutPage() {
                         ))
                       )}
                     </select>
-                  </fieldset>
-                  <fieldset className="space-y-1.5">
+                    {fieldErrorEl("country_code")}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="checkout-city"
+                      className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
+                    >
+                      {tc("city")} *
+                    </label>
+                    <input
+                      id="checkout-city"
+                      type="text"
+                      required
+                      list="checkout-city-options"
+                      autoComplete="address-level2"
+                      enterKeyHint="next"
+                      value={contactForm.city}
+                      onChange={(e) => updateContactField("city", e.target.value)}
+                      onBlur={() => handleFieldBlur("city")}
+                      aria-invalid={!!fieldErrors.city || undefined}
+                      aria-describedby={fieldErrors.city ? "checkout-city-error" : undefined}
+                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
+                      placeholder={tc("cityPlaceholder")}
+                    />
+                    <datalist id="checkout-city-options">
+                      {(CITY_SUGGESTIONS[contactForm.country_code] ?? []).map((c) => (
+                        <option key={c} value={c} />
+                      ))}
+                    </datalist>
+                    {fieldErrorEl("city")}
+                  </div>
+                </div>
+
+                {/* Postal Code / Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="checkout-postal"
+                      className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
+                    >
+                      {tc("postalCode")} *
+                    </label>
+                    <input
+                      id="checkout-postal"
+                      type="text"
+                      inputMode="numeric"
+                      required
+                      autoComplete="postal-code"
+                      enterKeyHint="next"
+                      value={contactForm.postal_code}
+                      onChange={(e) =>
+                        updateContactField("postal_code", e.target.value)
+                      }
+                      onBlur={() => handleFieldBlur("postal_code")}
+                      aria-invalid={!!fieldErrors.postal_code || undefined}
+                      aria-describedby={fieldErrors.postal_code ? "checkout-postal-error" : undefined}
+                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
+                      placeholder={tc("postalCodePlaceholder")}
+                    />
+                    {fieldErrorEl("postal_code")}
+                  </div>
+                  <div className="space-y-1.5">
                     <label
                       htmlFor="checkout-phone"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      {tc("phone")}
+                      {tc("phoneOptional")}
                     </label>
                     <input
                       id="checkout-phone"
                       type="tel"
                       autoComplete="tel"
+                      enterKeyHint="done"
                       value={contactForm.phone}
                       onChange={(e) =>
                         updateContactField("phone", e.target.value)
@@ -623,7 +809,7 @@ export default function CheckoutPage() {
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                       placeholder={tc("phonePlaceholder")}
                     />
-                  </fieldset>
+                  </div>
                 </div>
 
                 {stepError && (

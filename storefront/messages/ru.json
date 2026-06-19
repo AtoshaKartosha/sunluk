@@ -332,7 +332,12 @@
       "cityPlaceholder": "Москва",
       "postalCodePlaceholder": "123456",
       "countryCodePlaceholder": "RU",
-      "phonePlaceholder": "+7 (999) 123-45-67"
+      "phonePlaceholder": "+7 (999) 123-45-67",
+      "phoneOptional": "Телефон (необязательно)",
+      "validation": {
+        "required": "Обязательное поле",
+        "email": "Введите корректный email"
+      }
     },
     "shipping": {
       "heading": "СПОСОБ ДОСТАВКИ",

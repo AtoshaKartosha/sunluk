@@ -332,7 +332,12 @@
       "cityPlaceholder": "Munich",
       "postalCodePlaceholder": "80331",
       "countryCodePlaceholder": "DE",
-      "phonePlaceholder": "+49 170 1234567"
+      "phonePlaceholder": "+49 170 1234567",
+      "phoneOptional": "Phone (optional)",
+      "validation": {
+        "required": "Required field",
+        "email": "Enter a valid email address"
+      }
     },
     "shipping": {
       "heading": "SHIPPING METHOD",
