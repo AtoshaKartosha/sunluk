@@ -66,3 +66,28 @@ export async function resolveRegion(
     countryCode: code,
   };
 }
+
+/**
+ * List the ISO-2 country codes (lowercased) for the region with the given id.
+ * Returns an empty array when the region is missing or has no countries.
+ */
+export async function getRegionCountries(regionId: string): Promise<string[]> {
+  const sdk = getMedusaClient();
+
+  const { regions } = (await sdk.store.region.list({
+    fields: "id,name,currency_code,*countries",
+    limit: 250,
+  })) as unknown as {
+    regions: Array<{
+      id: string;
+      countries: Array<{ iso_2: string }> | null;
+    }>;
+  };
+
+  const match = regions.find((r) => r.id === regionId);
+  return (
+    match?.countries
+      ?.map((c) => c.iso_2?.toLowerCase())
+      .filter((c): c is string => Boolean(c)) ?? []
+  );
+}

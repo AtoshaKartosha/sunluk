@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
   completeCart,
   clearCartId,
 } from "@/lib/medusa/cart";
+import { getRegionCountries } from "@/lib/medusa/regions";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,8 +90,8 @@ function LoadingState({
       <SiteHeader />
       <main className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-[#2c211b]/60 tracking-wide">
+          <div aria-hidden="true" className="w-8 h-8 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
+          <p role="status" aria-live="polite" className="text-sm text-[#2c211b]/60 tracking-wide">
             {t("loading")}
           </p>
         </div>
@@ -217,7 +218,22 @@ export default function CheckoutPage() {
   const selectedOrCartShippingId =
     selectedShippingId ?? cart?.shipping_methods?.[0]?.shipping_option_id ?? null;
 
+  // ---- Country list (sourced from the cart's region) ----
+  const [countries, setCountries] = useState<string[]>([]);
+  const regionNames = useMemo(() => {
+    try {
+      return new Intl.DisplayNames([locale], { type: "region" });
+    } catch {
+      return null;
+    }
+  }, [locale]);
 
+  // ---- Mobile order-summary disclosure ----
+  const [summaryOpen, setSummaryOpen] = useState(false);
+
+  // ---- Refs ----
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const shippingReqRef = useRef(0);
 
   // ---- Fetch shipping options when shipping step becomes active ----
   useEffect(() => {
@@ -269,6 +285,8 @@ export default function CheckoutPage() {
         });
         setCart(updatedCart as unknown as StoreCart);
 
+        setShippingOptions([]);
+        setSelectedShippingId(null);
         setCurrentStep("shipping");
       } catch {
         setStepError(t("errors.contactSaveFailed"));
@@ -297,6 +315,26 @@ export default function CheckoutPage() {
       }
     },
     [cart, selectedOrCartShippingId, setCart, t],
+  );
+
+  // ---- Persist a shipping selection immediately so totals refresh ----
+  const handleSelectShipping = useCallback(
+    async (optionId: string) => {
+      if (!cart?.id) return;
+      setSelectedShippingId(optionId);
+      setStepError(null);
+      const reqId = ++shippingReqRef.current;
+      try {
+        const updatedCart = await addShippingMethod(cart.id, optionId);
+        if (reqId !== shippingReqRef.current) return; // a newer selection won
+        setCart(updatedCart as unknown as StoreCart);
+      } catch {
+        if (reqId === shippingReqRef.current) {
+          setStepError(t("errors.shippingSelectFailed"));
+        }
+      }
+    },
+    [cart, setCart, t],
   );
 
   const handlePaymentSubmit = useCallback(
@@ -337,6 +375,36 @@ export default function CheckoutPage() {
     [],
   );
 
+  // ---- Load the cart region's countries for the selector ----
+  useEffect(() => {
+    const regionId = cart?.region_id;
+    if (!regionId || countries.length > 0) return;
+
+    let cancelled = false;
+    getRegionCountries(regionId)
+      .then((list) => {
+        if (cancelled) return;
+        setCountries(list);
+        setContactForm((prev) =>
+          list.length > 0 && !list.includes(prev.country_code)
+            ? { ...prev, country_code: list[0] }
+            : prev,
+        );
+      })
+      .catch(() => {
+        /* selector keeps showing the loading placeholder */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart?.region_id, countries.length]);
+
+  // ---- Move focus to the active step heading on step change ----
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [currentStep]);
+
   // ---- Render states ----
 
   if (loading) return <LoadingState t={t} locale={locale} />;
@@ -363,14 +431,14 @@ export default function CheckoutPage() {
           {/* ================================================================ */}
           {/* Left Column — Checkout Steps */}
           {/* ================================================================ */}
-          <div>
+          <div className="order-2 lg:order-1">
             <StepIndicator currentStep={currentStep} tsteps={tsteps} />
 
             {/* ---- Step 1: Contact & Address ---- */}
             {currentStep === "contact" && (
               <form onSubmit={handleContactSubmit} className="space-y-8">
                 <div className="space-y-1">
-                  <h2 className="font-serif text-xl tracking-wide">
+                  <h2 ref={headingRef} tabIndex={-1} className="font-serif text-xl tracking-wide focus:outline-none">
                     {tc("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
@@ -390,6 +458,7 @@ export default function CheckoutPage() {
                     id="checkout-email"
                     type="email"
                     required
+                    autoComplete="email"
                     value={contactForm.email}
                     onChange={(e) => updateContactField("email", e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
@@ -398,7 +467,7 @@ export default function CheckoutPage() {
                 </fieldset>
 
                 {/* Name fields */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <fieldset className="space-y-1.5">
                     <label
                       htmlFor="checkout-first-name"
@@ -410,6 +479,7 @@ export default function CheckoutPage() {
                       id="checkout-first-name"
                       type="text"
                       required
+                      autoComplete="given-name"
                       value={contactForm.first_name}
                       onChange={(e) =>
                         updateContactField("first_name", e.target.value)
@@ -429,6 +499,7 @@ export default function CheckoutPage() {
                       id="checkout-last-name"
                       type="text"
                       required
+                      autoComplete="family-name"
                       value={contactForm.last_name}
                       onChange={(e) =>
                         updateContactField("last_name", e.target.value)
@@ -451,6 +522,7 @@ export default function CheckoutPage() {
                     id="checkout-address"
                     type="text"
                     required
+                    autoComplete="street-address"
                     value={contactForm.address_1}
                     onChange={(e) =>
                       updateContactField("address_1", e.target.value)
@@ -461,7 +533,7 @@ export default function CheckoutPage() {
                 </fieldset>
 
                 {/* City / Postal Code / Country / Phone */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <fieldset className="space-y-1.5">
                     <label
                       htmlFor="checkout-city"
@@ -473,6 +545,7 @@ export default function CheckoutPage() {
                       id="checkout-city"
                       type="text"
                       required
+                      autoComplete="address-level2"
                       value={contactForm.city}
                       onChange={(e) => updateContactField("city", e.target.value)}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
@@ -490,6 +563,7 @@ export default function CheckoutPage() {
                       id="checkout-postal"
                       type="text"
                       required
+                      autoComplete="postal-code"
                       value={contactForm.postal_code}
                       onChange={(e) =>
                         updateContactField("postal_code", e.target.value)
@@ -500,25 +574,36 @@ export default function CheckoutPage() {
                   </fieldset>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <fieldset className="space-y-1.5">
                     <label
                       htmlFor="checkout-country"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      {tc("countryCode")} *
+                      {tc("country")} *
                     </label>
-                    <input
+                    <select
                       id="checkout-country"
-                      type="text"
                       required
+                      autoComplete="country"
                       value={contactForm.country_code}
                       onChange={(e) =>
                         updateContactField("country_code", e.target.value)
                       }
-                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
-                      placeholder={tc("countryCodePlaceholder")}
-                    />
+                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] focus:outline-none focus:border-[#2f6f78] transition-colors"
+                    >
+                      {countries.length === 0 ? (
+                        <option value={contactForm.country_code} disabled>
+                          {tc("countryLoading")}
+                        </option>
+                      ) : (
+                        countries.map((code) => (
+                          <option key={code} value={code}>
+                            {regionNames?.of(code.toUpperCase()) ?? code.toUpperCase()}
+                          </option>
+                        ))
+                      )}
+                    </select>
                   </fieldset>
                   <fieldset className="space-y-1.5">
                     <label
@@ -530,6 +615,7 @@ export default function CheckoutPage() {
                     <input
                       id="checkout-phone"
                       type="tel"
+                      autoComplete="tel"
                       value={contactForm.phone}
                       onChange={(e) =>
                         updateContactField("phone", e.target.value)
@@ -541,7 +627,12 @@ export default function CheckoutPage() {
                 </div>
 
                 {stepError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <div
+                    id="checkout-contact-error"
+                    role="alert"
+                    aria-live="assertive"
+                    className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs"
+                  >
                     {stepError}
                   </div>
                 )}
@@ -549,6 +640,7 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={stepSubmitting}
+                  aria-describedby="checkout-contact-error"
                   className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {stepSubmitting ? ta("saving") : ta("continue")}
@@ -560,7 +652,7 @@ export default function CheckoutPage() {
             {currentStep === "shipping" && (
               <form onSubmit={handleShippingSubmit} className="space-y-8">
                 <div className="space-y-1">
-                  <h2 className="font-serif text-xl tracking-wide">
+                  <h2 ref={headingRef} tabIndex={-1} className="font-serif text-xl tracking-wide focus:outline-none">
                     {ts("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
@@ -570,8 +662,8 @@ export default function CheckoutPage() {
 
                 {shippingLoading ? (
                   <div className="flex items-center gap-3 py-8">
-                    <div className="w-5 h-5 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-[#2c211b]/50">
+                    <div aria-hidden="true" className="w-5 h-5 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
+                    <span role="status" aria-live="polite" className="text-sm text-[#2c211b]/50">
                       {ts("loading")}
                     </span>
                   </div>
@@ -595,7 +687,7 @@ export default function CheckoutPage() {
                           name="shipping_option"
                           value={option.id}
                           checked={selectedOrCartShippingId === option.id}
-                          onChange={() => setSelectedShippingId(option.id)}
+                          onChange={() => handleSelectShipping(option.id)}
                           className="accent-[#2f6f78]"
                         />
                         <div className="flex-1">
@@ -615,7 +707,12 @@ export default function CheckoutPage() {
                 )}
 
                 {stepError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <div
+                    id="checkout-shipping-error"
+                    role="alert"
+                    aria-live="assertive"
+                    className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs"
+                  >
                     {stepError}
                   </div>
                 )}
@@ -631,6 +728,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={stepSubmitting || !selectedOrCartShippingId}
+                    aria-describedby="checkout-shipping-error"
                     className="inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {stepSubmitting
@@ -645,7 +743,7 @@ export default function CheckoutPage() {
             {currentStep === "payment" && (
               <form onSubmit={handlePaymentSubmit} className="space-y-8">
                 <div className="space-y-1">
-                  <h2 className="font-serif text-xl tracking-wide">
+                  <h2 ref={headingRef} tabIndex={-1} className="font-serif text-xl tracking-wide focus:outline-none">
                     {tp("heading")}
                   </h2>
                   <p className="text-sm text-[#2c211b]/50">
@@ -671,6 +769,8 @@ export default function CheckoutPage() {
                     </div>
                     <div className="w-8 h-8 flex items-center justify-center rounded border border-[#2c211b]/15">
                       <svg
+                        aria-hidden="true"
+                        focusable="false"
                         className="w-5 h-5 text-[#2c211b]/40"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -687,8 +787,32 @@ export default function CheckoutPage() {
                   </label>
                 </div>
 
+                <p className="flex items-center gap-1.5 text-xs text-[#2c211b]/50">
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    className="w-3.5 h-3.5 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 0h10.5a2.25 2.25 0 012.25 2.25v6.75a2.25 2.25 0 01-2.25 2.25H6.75a2.25 2.25 0 01-2.25-2.25v-6.75a2.25 2.25 0 012.25-2.25z"
+                    />
+                  </svg>
+                  {tp("secureNote")}
+                </p>
+
                 {completionError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <div
+                    id="checkout-payment-error"
+                    role="alert"
+                    aria-live="assertive"
+                    className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs"
+                  >
                     {completionError}
                   </div>
                 )}
@@ -705,15 +829,18 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={completing}
+                    aria-describedby="checkout-payment-error"
                     className="inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {completing ? (
                       <>
-                        <span className="w-4 h-4 border-2 border-[#f4ebe6] border-t-transparent rounded-full animate-spin mr-2" />
-                        {ta("processing")}
+                        <span aria-hidden="true" className="w-4 h-4 border-2 border-[#f4ebe6] border-t-transparent rounded-full animate-spin motion-reduce:animate-none mr-2" />
+                        <span role="status" aria-live="polite">{ta("processing")}</span>
                       </>
                     ) : (
-                      ta("placeOrder")
+                      ta("placeOrderWithTotal", {
+                        total: formatPrice(cart.total, cart.currency_code ?? "dkk"),
+                      })
                     )}
                   </button>
                 </div>
@@ -724,8 +851,39 @@ export default function CheckoutPage() {
           {/* ================================================================ */}
           {/* Right Column — Order Summary */}
           {/* ================================================================ */}
-          <div className="lg:sticky lg:top-10 self-start">
+          <div className="order-1 lg:order-2 lg:sticky lg:top-10 self-start">
             <div className="bg-white border border-[#2c211b]/8 p-6 sm:p-8">
+              <button
+                type="button"
+                onClick={() => setSummaryOpen((open) => !open)}
+                aria-expanded={summaryOpen}
+                aria-controls="order-summary-content"
+                className="flex w-full items-center justify-between lg:hidden mb-4"
+              >
+                <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-[#2f6f78]">
+                  {summaryOpen ? tsm("hideSummary") : tsm("showSummary")}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-sm font-bold">
+                    {formatPrice(cart.total, cart.currency_code ?? "dkk")}
+                  </span>
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    className={`w-4 h-4 text-[#2c211b]/50 transition-transform ${summaryOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </span>
+              </button>
+              <div
+                id="order-summary-content"
+                className={`${summaryOpen ? "block" : "hidden"} lg:block`}
+              >
               <h3 className="font-serif text-lg tracking-wide mb-6">
                 {tsm("yourOrder")}
               </h3>
@@ -812,7 +970,7 @@ export default function CheckoutPage() {
                           cart.shipping_total,
                           cart.currency_code ?? "dkk",
                         )
-                      : "—"}
+                      : tsm("shippingPending")}
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -836,6 +994,7 @@ export default function CheckoutPage() {
                   </dd>
                 </div>
               </dl>
+              </div>
             </div>
           </div>
         </div>

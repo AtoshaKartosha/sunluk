@@ -322,6 +322,8 @@
       "city": "City",
       "postalCode": "Postal Code",
       "countryCode": "Country Code",
+      "country": "Country",
+      "countryLoading": "Loading countries…",
       "phone": "Phone",
       "emailPlaceholder": "your@email.com",
       "firstNamePlaceholder": "John",
@@ -342,7 +344,8 @@
       "heading": "PAYMENT METHOD",
       "desc": "Confirm your payment method to complete the order.",
       "methodLabel": "Credit Card / Standard Payment",
-      "methodDesc": "Secure payment via the payment system"
+      "methodDesc": "Secure payment via the payment system",
+      "secureNote": "Secure checkout — your data is protected."
     },
     "actions": {
       "saving": "SAVING…",
@@ -350,14 +353,18 @@
       "back": "← BACK",
       "continueToPayment": "CONTINUE TO PAYMENT",
       "processing": "PROCESSING…",
-      "placeOrder": "PLACE ORDER"
+      "placeOrder": "PLACE ORDER",
+      "placeOrderWithTotal": "PLACE ORDER — {total}"
     },
     "summary": {
       "yourOrder": "YOUR ORDER",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
+      "shippingPending": "Calculated at delivery step",
       "tax": "Tax",
-      "total": "Total"
+      "total": "Total",
+      "showSummary": "Show order details",
+      "hideSummary": "Hide order details"
     },
     "errors": {
       "shippingOptionsFailed": "Failed to load shipping options.",
@@ -370,7 +377,14 @@
       "title": "THANK YOU FOR YOUR ORDER!",
       "orderNumber": "ORDER NUMBER",
       "confirmation": "Order confirmation and delivery details have been sent to your email.",
-      "backToCatalog": "BACK TO CATALOG"
+      "backToCatalog": "BACK TO CATALOG",
+      "nextTitle": "WHAT'S NEXT",
+      "nextEmail": "We've sent a confirmation to your email. Check your spam folder if you don't see it.",
+      "nextProcessing": "We'll process your order and let you know once it ships.",
+      "nextSupport": "Questions about your order? Contact us and mention your order number.",
+      "contactCta": "CONTACT US",
+      "missingTitle": "ORDER REFERENCE UNAVAILABLE",
+      "missingDesc": "We couldn't determine your order reference. If you just paid, check your email — we've sent a confirmation. If in doubt, contact us."
     }
   },
   "cart": {
