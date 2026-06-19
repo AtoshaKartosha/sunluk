@@ -709,9 +709,19 @@ export default function CheckoutPage() {
                       required
                       autoComplete="country"
                       value={contactForm.country_code}
-                      onChange={(e) =>
-                        updateContactField("country_code", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        // Reset city when the country changes so it always matches
+                        // the selected country (and its suggestion list).
+                        setContactForm((prev) => ({ ...prev, country_code: code, city: "" }));
+                        setFieldErrors((prev) => {
+                          if (!prev.country_code && !prev.city) return prev;
+                          const next = { ...prev };
+                          delete next.country_code;
+                          delete next.city;
+                          return next;
+                        });
+                      }}
                       onBlur={() => handleFieldBlur("country_code")}
                       aria-invalid={!!fieldErrors.country_code || undefined}
                       aria-describedby={fieldErrors.country_code ? "checkout-country-error" : undefined}
