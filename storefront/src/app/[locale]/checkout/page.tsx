@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import type { StoreCart } from "@/components/cart/types";
 import SiteHeader from "@/components/landing/SiteHeader";
@@ -218,6 +219,140 @@ function StepIndicator({
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// Styled "type or pick" city field: a text input plus a custom suggestion
+// dropdown that matches the country <select> look (the native <datalist> is
+// dark, icon-laden and unstyleable). Free text is always allowed.
+function CityCombobox({
+  id,
+  value,
+  suggestions,
+  placeholder,
+  describedBy,
+  invalid,
+  onChange,
+  onBlur,
+}: {
+  id: string;
+  value: string;
+  suggestions: string[];
+  placeholder?: string;
+  describedBy?: string;
+  invalid?: boolean;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(-1);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    return q ? suggestions.filter((s) => s.toLowerCase().includes(q)) : suggestions;
+  }, [value, suggestions]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const choose = (city: string) => {
+    onChange(city);
+    setOpen(false);
+    setHighlight(-1);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!open) {
+        setOpen(true);
+        return;
+      }
+      setHighlight((h) => Math.min(h + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === "Enter") {
+      if (open && highlight >= 0 && filtered[highlight]) {
+        e.preventDefault();
+        choose(filtered[highlight]);
+      }
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      setHighlight(-1);
+    }
+  };
+
+  const listId = `${id}-listbox`;
+
+  return (
+    <div ref={rootRef} className="relative">
+      <input
+        id={id}
+        type="text"
+        required
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={open && highlight >= 0 ? `${id}-opt-${highlight}` : undefined}
+        autoComplete="address-level2"
+        enterKeyHint="next"
+        value={value}
+        placeholder={placeholder}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+          setHighlight(-1);
+        }}
+        onFocus={() => setOpen(true)}
+        onClick={() => setOpen(true)}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        className="w-full px-4 py-3 pr-10 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
+      />
+      <ChevronDown
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2c211b]/50"
+      />
+      {open && filtered.length > 0 && (
+        <ul
+          id={listId}
+          role="listbox"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-auto border border-[#2c211b]/15 bg-white shadow-lg"
+        >
+          {filtered.map((city, i) => (
+            <li
+              key={city}
+              id={`${id}-opt-${i}`}
+              role="option"
+              aria-selected={i === highlight}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                choose(city);
+              }}
+              onMouseEnter={() => setHighlight(i)}
+              className={`cursor-pointer px-4 py-2.5 text-sm text-[#2c211b] ${
+                i === highlight ? "bg-[#2f6f78]/10" : "hover:bg-[#2f6f78]/5"
+              }`}
+            >
+              {city}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -748,26 +883,16 @@ export default function CheckoutPage() {
                     >
                       {tc("city")} *
                     </label>
-                    <input
+                    <CityCombobox
                       id="checkout-city"
-                      type="text"
-                      required
-                      list="checkout-city-options"
-                      autoComplete="address-level2"
-                      enterKeyHint="next"
                       value={contactForm.city}
-                      onChange={(e) => updateContactField("city", e.target.value)}
-                      onBlur={() => handleFieldBlur("city")}
-                      aria-invalid={!!fieldErrors.city || undefined}
-                      aria-describedby={fieldErrors.city ? "checkout-city-error" : undefined}
-                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
+                      suggestions={CITY_SUGGESTIONS[contactForm.country_code] ?? []}
                       placeholder={tc("cityPlaceholder")}
+                      invalid={!!fieldErrors.city}
+                      describedBy={fieldErrors.city ? "checkout-city-error" : undefined}
+                      onChange={(v) => updateContactField("city", v)}
+                      onBlur={() => handleFieldBlur("city")}
                     />
-                    <datalist id="checkout-city-options">
-                      {(CITY_SUGGESTIONS[contactForm.country_code] ?? []).map((c) => (
-                        <option key={c} value={c} />
-                      ))}
-                    </datalist>
                     {fieldErrorEl("city")}
                   </div>
                 </div>
