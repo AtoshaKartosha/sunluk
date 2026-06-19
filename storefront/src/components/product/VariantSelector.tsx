@@ -9,7 +9,11 @@ import type {
 import type { VariantSelectorLabels } from "./types";
 import { PriceDisplay } from "./PriceDisplay";
 import { useCart } from "@/components/cart/CartContext";
-import { defaultVariantOptions, projectAvailability } from "@/lib/price";
+import {
+  defaultVariantOptions,
+  projectAvailability,
+  resolveVariantByOptions,
+} from "@/lib/price";
 
 export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
@@ -32,28 +36,6 @@ export interface VariantSelectorProps {
     /** Derived stock/delivery info. */
     stockInfo?: StockInfo | null;
   }) => void;
-}
-
-/**
- * Finds the variant whose option values exactly match the selected map.
- */
-function resolveVariant(
-  variants: ProductVariant[],
-  selected: Record<string, string>,
-): ProductVariant | null {
-  if (variants.length === 1 && Object.keys(selected).length === 0) {
-    const onlyVariant = variants[0];
-    return onlyVariant.options == null || onlyVariant.options.length === 0
-      ? onlyVariant
-      : null;
-  }
-
-  return (
-    variants.find((v) => {
-      if (!v.options || v.options.length === 0) return false;
-      return v.options.every((o) => selected[o.option_id] === o.value);
-    }) ?? null
-  );
 }
 
 /**
@@ -135,7 +117,7 @@ export function VariantSelector({
   const { addItem } = useCart();
 
   const resolved = useMemo(
-    () => resolveVariant(safeVariants, selected),
+    () => resolveVariantByOptions(safeVariants, selected),
     [safeVariants, selected],
   );
 
@@ -152,7 +134,7 @@ export function VariantSelector({
   // Notify parent on changes.
   const stableCallback = useCallback(
     (s: typeof selected, q: number) => {
-      const v = resolveVariant(safeVariants, s);
+      const v = resolveVariantByOptions(safeVariants, s);
       const si = deriveStockInfo(v, labels);
       onSelectionChange?.({
         variantId: v?.id ?? null,
