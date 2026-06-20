@@ -956,12 +956,6 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="flex items-center gap-4">
-                  <Link
-                    href={`/${locale}/products`}
-                    className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/50 hover:text-[#2c211b] transition-colors"
-                  >
-                    {ta("cancel")}
-                  </Link>
                   <button
                     type="submit"
                     disabled={stepSubmitting}
@@ -970,6 +964,12 @@ export default function CheckoutPage() {
                   >
                     {stepSubmitting ? ta("saving") : ta("continue")}
                   </button>
+                  <Link
+                    href={`/${locale}/products`}
+                    className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/50 hover:text-[#2c211b] transition-colors"
+                  >
+                    {ta("cancel")}
+                  </Link>
                 </div>
               </form>
             )}
