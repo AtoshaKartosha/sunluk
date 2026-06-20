@@ -1236,26 +1236,26 @@ export default function CheckoutPage() {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {mainItem.title}
-                          </p>
-                          {mainItem.variant?.title &&
-                            mainItem.variant.title !== mainItem.title && (
-                              <p className="text-xs text-[#2c211b]/40 mt-0.5 truncate">
-                                {mainItem.variant.title}
-                              </p>
-                            )}
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs text-[#2c211b]/50">
-                              × {mainItem.quantity}
-                            </span>
-                            <span className="text-sm font-semibold">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="text-sm font-medium truncate">
+                              {mainItem.title}
+                              {mainItem.quantity > 1 && (
+                                <span className="text-xs text-[#2c211b]/50 ml-1">× {mainItem.quantity}</span>
+                              )}
+                            </p>
+                            <span className="text-sm font-semibold shrink-0">
                               {formatPrice(
                                 mainItem.total,
                                 cart.currency_code ?? "dkk",
                               )}
                             </span>
                           </div>
+                          {mainItem.variant?.title &&
+                            mainItem.variant.title !== mainItem.title && (
+                              <p className="text-xs text-[#2c211b]/40 mt-0.5 truncate">
+                                {mainItem.variant.title}
+                              </p>
+                            )}
                           {linkedPackaging && (
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
                               <span className="text-xs text-[#2c211b]/50 italic truncate">
