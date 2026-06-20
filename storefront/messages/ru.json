@@ -359,13 +359,15 @@
       "continueToPayment": "ПРОДОЛЖИТЬ К ОПЛАТЕ",
       "processing": "ОФОРМЛЕНИЕ…",
       "placeOrder": "ОФОРМИТЬ ЗАКАЗ",
-      "placeOrderWithTotal": "ОФОРМИТЬ ЗАКАЗ — {total}"
+      "placeOrderWithTotal": "ОФОРМИТЬ ЗАКАЗ — {total}",
+      "cancel": "ОТМЕНА"
     },
     "summary": {
       "yourOrder": "ВАШ ЗАКАЗ",
       "subtotal": "Подытог",
       "shipping": "Доставка",
       "shippingPending": "Рассчитывается при выборе доставки",
+      "shippingFree": "Бесплатно",
       "tax": "Налог",
       "total": "Итого",
       "showSummary": "Показать детали заказа",

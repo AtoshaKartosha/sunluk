@@ -696,10 +696,7 @@ export default function CheckoutPage() {
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
         {/* Header */}
         <div className="mb-12">
-          <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
-            {t("pageLabel")}
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide mt-2">
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide">
             {t("pageTitle")}
           </h1>
           <div className="w-16 h-0.5 bg-[#2f6f78] mt-4" />
@@ -958,14 +955,22 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={stepSubmitting}
-                  aria-describedby="checkout-contact-error"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {stepSubmitting ? ta("saving") : ta("continue")}
-                </button>
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={`/${locale}/products`}
+                    className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/50 hover:text-[#2c211b] transition-colors"
+                  >
+                    {ta("cancel")}
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={stepSubmitting}
+                    aria-describedby="checkout-contact-error"
+                    className="inline-flex items-center justify-center px-10 py-3.5 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {stepSubmitting ? ta("saving") : ta("continue")}
+                  </button>
+                </div>
               </form>
             )}
 
@@ -1291,7 +1296,9 @@ export default function CheckoutPage() {
                           cart.shipping_total,
                           cart.currency_code ?? "dkk",
                         )
-                      : tsm("shippingPending")}
+                      : (cart.subtotal ?? 0) >= 50
+                        ? tsm("shippingFree")
+                        : tsm("shippingPending")}
                   </dd>
                 </div>
                 <div className="flex justify-between">
