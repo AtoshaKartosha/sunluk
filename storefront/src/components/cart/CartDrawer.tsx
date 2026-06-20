@@ -28,11 +28,11 @@ function formatPrice(amount: number | null | undefined, currency: string): strin
   }
 }
 
-function lineItemOptionLabel(item: StoreCartLineItem): string | null {
+function lineItemOptionLabel(item: StoreCartLineItem, materialNames?: Record<string, string>): string | null {
   const options = item.variant?.options;
   if (!options || options.length === 0) return null;
   return options
-    .map((o) => o.value)
+    .map((o) => (materialNames?.[o.value] ?? materialNames?.[o.value?.toLowerCase?.()] ?? o.value))
     .filter(Boolean)
     .join(" / ");
 }
@@ -250,7 +250,8 @@ function CartLineItem({
   const t = useTranslations("cart");
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
-  const optionLabel = lineItemOptionLabel(item);
+  const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
+  const optionLabel = lineItemOptionLabel(item, materialNames);
 
   const decrement = () => {
     if (item.quantity <= 1) return;
