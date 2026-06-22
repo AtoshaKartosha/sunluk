@@ -33,6 +33,7 @@ Thumbs.db
 
 # Agent files and lock files
 .agents/
-.omp/
+/flows/
+/.omp/
 skills-lock.json
 
