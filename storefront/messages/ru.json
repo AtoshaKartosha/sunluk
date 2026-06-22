@@ -122,6 +122,7 @@
     "unavailable": "Недоступно",
     "priceUponRequest": "Цена по запросу",
     "outOfStock": "Нет в наличии",
+    "preOrder": "Предзаказ",
     "invalidQuantity": "Укажите количество",
     "addToCart": "В корзину",
     "quantity": "Количество",

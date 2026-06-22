@@ -14,10 +14,13 @@ import {
   projectAvailability,
   resolveVariantByOptions,
 } from "@/lib/price";
+import { getBadgeCta } from "@/lib/badge-behavior";
 
 export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
+  /** Marketing badge from product.metadata.badge. Controls CTA behavior. */
+  badge?: string | null;
   /** When true, hides the option-picking UI (options are managed externally). */
   hideOptionButtons?: boolean;
   /** Localized labels for all UI copy. */
@@ -100,6 +103,7 @@ function deriveStockInfo(
 export function VariantSelector({
   options,
   variants,
+  badge,
   hideOptionButtons = false,
   labels,
   selectedPackagingVariantId = null,
@@ -180,14 +184,16 @@ export function VariantSelector({
     },
     [selected, stableCallback],
   );
-
   const availability = resolved ? projectAvailability(resolved) : null;
-  const cartReady = valid && (availability?.available ?? false);
+  const baseAvailable = availability?.available ?? false;
+  const badgeCta = getBadgeCta(badge, baseAvailable);
+  const cartReady = valid && badgeCta.enabled;
 
   const buttonCopy = (() => {
     if (!allOptionsSelected) return labels.selectAllOptions;
     if (!resolved) return labels.unavailable;
-    if (!availability?.available) return labels.outOfStock;
+    if (badgeCta.state === "disabled") return labels.outOfStock;
+    if (badgeCta.state === "pre_order") return labels.preOrder;
     if (!quantityValid) return labels.invalidQuantity;
     return labels.addToCart;
   })();

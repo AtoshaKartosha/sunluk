@@ -122,6 +122,7 @@
     "unavailable": "Unavailable",
     "priceUponRequest": "Price upon request",
     "outOfStock": "Out of stock",
+    "preOrder": "Pre-order",
     "invalidQuantity": "Enter quantity",
     "addToCart": "Add to cart",
     "quantity": "Quantity",

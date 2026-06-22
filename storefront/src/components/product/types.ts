@@ -76,6 +76,7 @@ export interface VariantSelectorLabels {
   selectAllOptions: string
   unavailable: string
   outOfStock: string
+  preOrder: string
   invalidQuantity: string
   addToCart: string
   quantity: string

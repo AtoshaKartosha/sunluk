@@ -29,7 +29,7 @@ export function ProductBadge({ badge }: ProductBadgeProps) {
   if (!isKnownBadge(badge)) return null;
   return (
     <span
-      className={`absolute top-0 left-0 z-10 rounded-none px-2 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest ${BADGE_STYLES[badge]}`}
+      className={`absolute top-2 right-2 z-10 rounded-sm px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-sm ${BADGE_STYLES[badge]}`}
     >
       {t(badge)}
     </span>

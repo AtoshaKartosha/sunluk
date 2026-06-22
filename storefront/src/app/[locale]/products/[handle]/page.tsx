@@ -307,6 +307,7 @@ export default async function ProductDetailPage({ params }: Props) {
       selectAllOptions: pt("selectAllOptions"),
       unavailable: pt("unavailable"),
       outOfStock: pt("outOfStock"),
+      preOrder: pt("preOrder"),
       invalidQuantity: pt("invalidQuantity"),
       addToCart: pt("addToCart"),
       quantity: pt("quantity"),

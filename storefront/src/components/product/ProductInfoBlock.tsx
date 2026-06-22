@@ -73,6 +73,7 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     selectAllOptions: "Выберите все параметры",
     unavailable: "Недоступно",
     outOfStock: "Нет в наличии",
+    preOrder: "Предзаказ",
     invalidQuantity: "Укажите количество",
     addToCart: "В корзину",
     quantity: "Количество",
@@ -219,6 +220,7 @@ export function ProductInfoBlock({
           selectAllOptions: "Select all options",
           unavailable: "Unavailable",
           outOfStock: "Out of stock",
+          preOrder: "Pre-order",
           invalidQuantity: "Enter quantity",
           addToCart: "Add to cart",
           quantity: "Quantity",
@@ -512,6 +514,7 @@ export function ProductInfoBlock({
           <VariantSelector
             options={product.options}
             variants={product.variants}
+            badge={product.metadata?.badge as string | undefined}
             hideOptionButtons={product.options?.length === 1 && product.options[0].title.toLowerCase() === "material"}
             labels={labels.variantSelector}
             selectedPackagingVariantId={selectedPackagingVariantId}
