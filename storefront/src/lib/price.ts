@@ -4,6 +4,7 @@
 export interface PriceView {
   calculated_amount: number;
   currency_code: string;
+  original_amount?: number | null;
 }
 
 /** Minimal variant shape needed for variant resolution and projection.

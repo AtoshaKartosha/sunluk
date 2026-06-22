@@ -22,6 +22,8 @@ export interface VariantOptionValue {
 export interface CalculatedPrice {
   calculated_amount: number
   currency_code: string
+  /** Original amount before Price List discount. Equals calculated_amount when no discount. */
+  original_amount?: number | null
 }
 
 export interface ProductVariant {

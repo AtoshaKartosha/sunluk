@@ -579,10 +579,7 @@ export function ProductInfoBlock({
           <div className="flex flex-col min-w-0">
             {headlinePrice && (
               <PriceDisplay
-                price={{
-                  calculated_amount: headlinePrice.calculated_amount,
-                  currency_code: headlinePrice.currency_code,
-                }}
+                price={headlinePrice}
                 className="text-sm font-semibold font-serif text-[#2c211b]"
               />
             )}

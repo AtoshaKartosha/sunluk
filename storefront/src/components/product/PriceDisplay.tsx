@@ -51,12 +51,30 @@ export function PriceDisplay({
     locale,
   );
 
+  const hasDiscount =
+    price.original_amount != null &&
+    price.original_amount > price.calculated_amount;
+
+  const originalFormatted = hasDiscount
+    ? formatPriceValue(price.original_amount!, price.currency_code ?? "dkk", locale)
+    : null;
+
   return (
     <span
       className={`text-lg font-semibold tracking-wide text-[#2c211b] ${className}`}
       aria-label={`Price: ${formatted}`}
     >
+      {hasDiscount && (
+        <span className="line-through text-[#2c211b]/40 mr-2 text-sm font-normal">
+          {originalFormatted}
+        </span>
+      )}
       {formatted}
+      {hasDiscount && (
+        <span className="ml-2 text-xs font-bold text-[#b85c3a]">
+          −{Math.round((1 - price.calculated_amount / price.original_amount!) * 100)}%
+        </span>
+      )}
     </span>
   );
 }
