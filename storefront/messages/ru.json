@@ -366,8 +366,9 @@
     "summary": {
       "yourOrder": "ВАШ ЗАКАЗ",
       "subtotal": "Подытог",
+      "discount": "Скидка",
       "shipping": "Доставка",
-      "shippingPending": "Рассчитывается при выборе доставки",
+      "shippingPending": "На следующем шаге",
       "shippingFree": "Бесплатно",
       "tax": "Налог",
       "total": "Итого",

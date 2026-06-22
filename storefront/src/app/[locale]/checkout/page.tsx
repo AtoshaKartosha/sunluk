@@ -112,6 +112,7 @@ function formatPrice(amount: number | null | undefined, currency: string | null 
   }
 }
 
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -689,6 +690,8 @@ export default function CheckoutPage() {
   if (!cart || !cart.items || cart.items.length === 0) return <EmptyCartState t={t} locale={locale} />;
 
   const hasItems = cart.items && cart.items.length > 0;
+  const displaySubtotal = cart.subtotal;
+  const displayDiscount = cart.discount_total;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
@@ -1221,6 +1224,10 @@ export default function CheckoutPage() {
                     const linkedPackaging = cart.items?.find(
                       (item) => item.metadata?.parent_line_item_id === mainItem.id
                     );
+                    const calcPrice = mainItem.metadata?.calculated_price;
+                    const hasDiscount =
+                      calcPrice?.original_amount != null &&
+                      calcPrice.original_amount > mainItem.unit_price;
                     return (
                       <li key={mainItem.id} className="flex gap-4">
                         {mainItem.thumbnail && (
@@ -1243,10 +1250,25 @@ export default function CheckoutPage() {
                                 <span className="text-xs text-[#2c211b]/50 ml-1">× {mainItem.quantity}</span>
                               )}
                             </p>
-                            <span className="text-sm font-semibold shrink-0">
-                              {formatPrice(
-                                mainItem.total,
-                                cart.currency_code ?? "dkk",
+                            <span className="text-sm font-semibold shrink-0 flex items-baseline">
+                              {hasDiscount && (
+                                <span className="line-through text-[#2c211b]/40 mr-1.5 text-xs font-normal">
+                                  {formatPrice(
+                                    calcPrice.original_amount! * mainItem.quantity,
+                                    cart.currency_code ?? "dkk",
+                                  )}
+                                </span>
+                              )}
+                              <span>
+                                {formatPrice(
+                                  mainItem.total,
+                                  cart.currency_code ?? "dkk",
+                                )}
+                              </span>
+                              {hasDiscount && (
+                                <span className="ml-1.5 text-[10px] font-bold text-[#b85c3a]">
+                                  −{Math.round((1 - mainItem.unit_price / calcPrice.original_amount!) * 100)}%
+                                </span>
                               )}
                             </span>
                           </div>
@@ -1283,11 +1305,19 @@ export default function CheckoutPage() {
                   <dt className="text-[#2c211b]/60">{tsm("subtotal")}</dt>
                   <dd className="font-medium">
                     {formatPrice(
-                      cart.subtotal,
+                      displaySubtotal,
                       cart.currency_code ?? "dkk",
                     )}
                   </dd>
                 </div>
+                {displayDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#2c211b]/60">{tsm("discount")}</dt>
+                    <dd className="font-medium text-[#b85c3a]">
+                      −{formatPrice(displayDiscount, cart.currency_code ?? "dkk")}
+                    </dd>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <dt className="text-[#2c211b]/60">{tsm("shipping")}</dt>
                   <dd className="font-medium">
@@ -1296,7 +1326,7 @@ export default function CheckoutPage() {
                           cart.shipping_total,
                           cart.currency_code ?? "dkk",
                         )
-                      : (cart.subtotal ?? 0) >= 50
+                      : displaySubtotal >= 50
                         ? tsm("shippingFree")
                         : tsm("shippingPending")}
                   </dd>

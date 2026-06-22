@@ -32,7 +32,15 @@ export interface StoreCartLineItem {
   original_total?: number;
   tax_total?: number;
   discount_total?: number;
-  metadata?: Record<string, unknown> | null;
+  metadata?: {
+    parent_line_item_id?: string;
+    calculated_price?: {
+      calculated_amount: number;
+      original_amount?: number | null;
+      currency_code: string;
+    } | null;
+    [key: string]: unknown;
+  } | null;
 }
 
 export interface StoreCartAddress {

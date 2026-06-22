@@ -28,6 +28,7 @@ function formatPrice(amount: number | null | undefined, currency: string): strin
   }
 }
 
+
 function lineItemOptionLabel(item: StoreCartLineItem, materialNames?: Record<string, string>): string | null {
   const options = item.variant?.options;
   if (!options || options.length === 0) return null;
@@ -250,6 +251,10 @@ function CartLineItem({
   const t = useTranslations("cart");
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
+  const calcPrice = item.metadata?.calculated_price;
+  const hasDiscount =
+    calcPrice?.original_amount != null &&
+    calcPrice.original_amount > item.unit_price;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
 
@@ -332,10 +337,25 @@ function CartLineItem({
 
           <div className="flex items-center gap-3">
             {/* Unit price */}
-            <span className="text-sm font-medium tabular-nums text-[#2c211b]">
-              {unitPrice != null ? formatPrice(unitPrice, currency) : "—"}
+            <span className="text-sm font-medium tabular-nums text-[#2c211b] flex items-baseline">
+              {unitPrice != null ? (
+                <>
+                  {hasDiscount && (
+                    <span className="line-through text-[#2c211b]/40 mr-1.5 text-xs font-normal">
+                      {formatPrice(calcPrice.original_amount!, currency)}
+                    </span>
+                  )}
+                  <span>{formatPrice(unitPrice, currency)}</span>
+                  {hasDiscount && (
+                    <span className="ml-1.5 text-[10px] font-bold text-[#b85c3a]">
+                      −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
+                    </span>
+                  )}
+                </>
+              ) : (
+                "—"
+              )}
             </span>
-
             {/* Remove */}
             <button
               onClick={() => onRemove(item.id)}
@@ -404,10 +424,10 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
               )}
             >
               {row.value != null
-                ? formatPrice(
+                ? `${row.positive === false ? "−" : ""}${formatPrice(
                     row.positive === false ? Math.abs(row.value) : row.value,
                     currency,
-                  )
+                  )}`
                 : "—"}
             </span>
           </div>

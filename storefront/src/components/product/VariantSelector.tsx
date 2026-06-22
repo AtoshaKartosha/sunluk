@@ -202,7 +202,15 @@ export function VariantSelector({
     if (!resolved?.id || !cartReady || addingInProgress) return;
     setAddingInProgress(true);
     try {
-      const updatedCart = await addItem(resolved.id, quantity);
+      const updatedCart = await addItem(resolved.id, quantity, {
+        calculated_price: resolved.calculated_price
+          ? {
+              calculated_amount: resolved.calculated_price.calculated_amount,
+              original_amount: resolved.calculated_price.original_amount,
+              currency_code: resolved.calculated_price.currency_code,
+            }
+          : null,
+      });
       if (selectedPackagingVariantId && updatedCart) {
         // Find the main line item we just added/updated.
         const mainLineItem = updatedCart.items?.find(

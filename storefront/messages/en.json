@@ -366,6 +366,7 @@
     "summary": {
       "yourOrder": "YOUR ORDER",
       "subtotal": "Subtotal",
+      "discount": "Discount",
       "shipping": "Shipping",
       "shippingPending": "Calculated at delivery step",
       "shippingFree": "Free",
