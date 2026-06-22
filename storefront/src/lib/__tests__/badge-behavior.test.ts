@@ -17,13 +17,13 @@ describe("getBadgeCta", () => {
   })
 
   describe("pre_order badge", () => {
-    it("enables CTA even when variant is out of stock", () => {
+    it("shows pre_order label but disables CTA when out of stock (misconfig)", () => {
       const result = getBadgeCta("pre_order", false)
-      expect(result.enabled).toBe(true)
+      expect(result.enabled).toBe(false)
       expect(result.state).toBe("pre_order")
     })
 
-    it("enables CTA when variant is in stock", () => {
+    it("shows pre_order label and enables CTA when available (backorder)", () => {
       const result = getBadgeCta("pre_order", true)
       expect(result.enabled).toBe(true)
       expect(result.state).toBe("pre_order")

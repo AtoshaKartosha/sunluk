@@ -24,7 +24,7 @@ export interface BadgeCtaResult {
  *
  * Rules:
  * - `sold_out`  → button disabled, message "Out of stock" (i18n key: outOfStock)
- * - `pre_order` → button enabled even when OOS, message "Pre-order" (i18n key: preOrder)
+ * - `pre_order` → label "Pre-order" always shown; enabled respects isAvailable
  * - `discount`  → no behavior change (badge is cosmetic, price comes from Price List)
  * - `in_stock`  → no behavior change
  * - absent/unknown → no behavior change
@@ -39,9 +39,9 @@ export function getBadgeCta(
 
     case "pre_order":
       return {
-        enabled: true,
+        enabled: isAvailable,
         state: "pre_order",
-        messageOverride: null, // i18n handled by caller via labels.preOrder
+        messageOverride: null,
       }
 
     case "discount":
