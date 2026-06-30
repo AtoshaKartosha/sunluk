@@ -15,7 +15,7 @@ export function FeaturesSection() {
   }));
 
   return (
-    <section id="about" className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
+    <section id="about" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Left 2x2 grid */}

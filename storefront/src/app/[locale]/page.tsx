@@ -6,6 +6,7 @@ import type { StoreProduct } from "@/components/product";
 export const dynamic = "force-dynamic";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { CollectionSection } from "@/components/landing/CollectionSection";
+import { ContactsSection } from "@/components/landing/ContactsSection";
 import { EditorialSection } from "@/components/landing/EditorialSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { HeroSection } from "@/components/landing/HeroSection";
@@ -49,6 +50,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <CollectionSection locale={loc} products={products} />
       <FeaturesSection />
       <AboutSection />
+      <ContactsSection />
       <NewsletterSection />
       <SiteFooter
         footerGroups={getFooterGroups(loc)}

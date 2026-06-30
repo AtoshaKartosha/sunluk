@@ -72,6 +72,11 @@
       "cta": "ORDER NOW",
       "imageAria": "SUNLUK exclusive packaging boxes and accessories"
     },
+    "contacts": {
+      "heading": "Get in touch",
+      "description": "We're always reachable — pick a messenger or drop us an email.",
+      "sendLabel": "SEND US A MESSAGE"
+    },
     "newsletter": {
       "label": "EXCLUSIVE OFFERS",
       "heading": "BE THE FIRST",

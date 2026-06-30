@@ -16,7 +16,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
   const t = useTranslations("home");
 
   return (
-    <section id="collection" className="pt-8 sm:pt-32 pb-10 sm:pb-16 bg-[#f4ebe6]">
+    <section id="collection" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
         <motion.div
           initial={{ opacity: 0 }}
