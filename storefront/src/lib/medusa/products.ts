@@ -1,5 +1,6 @@
 import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
+import { getPackagingName } from "./packaging-names";
 
 // ---- Types ----
 
@@ -113,22 +114,6 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
 // ponytail: Packaging category handle is the source of truth for packaging discovery.
 const PACKAGING_CATEGORY_HANDLE = "packaging";
 
-// ponytail: English display names for the seeded packaging handles. The EN
-// PDP overrides Medusa's product.list `title` with these because this Medusa
-// config does not apply the translation join on the list endpoint, so the
-// default-locale (RU) base `title` leaks through instead of the EN
-// translation. The cart's *items.product join localizes correctly, so the
-// cart and PDP would otherwise disagree. Update this map (or remove the
-// override once Medusa list-localization surfaces the EN translation) when
-// the seeded names change or new packaging is added.
-const EN_PACKAGING_NAMES: Record<string, string> = {
-  "velvet-pouch": "Branded Pouch",
-  "gift-box": "Gift Box",
-  "silk-pouch": "Silk Pouch",
-  "wooden-case": "Wooden Case",
-  "cotton-pouch-turquoise": "Branded Pouch (Turquoise)",
-  "cotton-pouch-brown": "Branded Pouch (Brown)",
-};
 
 function isPackagingProduct(p: { categories?: ProductCategory[] | null }): boolean {
   return p.categories?.some((c) => c.handle === PACKAGING_CATEGORY_HANDLE) ?? false;
@@ -272,12 +257,9 @@ export async function listPackagingProducts(
   };
 
   const packaging = data.products.filter(isPackagingProduct);
-  const localized = medusaLocale === "en-US"
-    ? packaging.map((p) =>
-        EN_PACKAGING_NAMES[p.handle]
-          ? { ...p, title: EN_PACKAGING_NAMES[p.handle]! }
-          : p,
-      )
-    : packaging;
+  const localized = packaging.map((p) => ({
+    ...p,
+    title: getPackagingName(p, medusaLocale ?? "ru-RU"),
+  }));
   return localized.map(normalizeProductOptions);
 }

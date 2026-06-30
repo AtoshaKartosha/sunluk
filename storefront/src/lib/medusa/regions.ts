@@ -30,8 +30,11 @@ export async function resolveRegion(
   countryCode?: string,
   medusaLocale?: string,
 ): Promise<ResolvedRegion> {
-  const code =
-    countryCode ?? process.env.NEXT_PUBLIC_DEFAULT_REGION ?? "dk";
+  // ponytail: RU locale forces RUB currency via the "ru" country. Other
+  // locales fall back to the env default (e.g. "dk"/"de").
+  const defaultCountry =
+    medusaLocale === "ru-RU" ? "ru" : (process.env.NEXT_PUBLIC_DEFAULT_REGION ?? "dk");
+  const code = countryCode ?? defaultCountry;
 
   const sdk = medusaLocale
     ? getMedusaClientWithLocale(medusaLocale)

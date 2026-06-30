@@ -10,6 +10,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
 import type { StoreCart, StoreCartLineItem } from "@/components/cart/types";
+import { getPackagingName } from "@/lib/medusa/packaging-names";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -249,6 +250,7 @@ function CartLineItem({
 }: CartLineItemProps) {
   const pt = useTranslations("product");
   const t = useTranslations("cart");
+  const locale = useLocale();
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
   const calcPrice = item.metadata?.calculated_price;
@@ -257,8 +259,13 @@ function CartLineItem({
     calcPrice.original_amount > item.unit_price;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
-  // Use the current product title from the *items.product join (CART_FIELDS) — line_item.title is snapshotted at creation and goes stale if the product is renamed in Medusa.
-  const linkedName = linkedItem?.product?.title ?? linkedItem?.title;
+  // Use the current product title from the *items.product join, with an explicit
+  // EN override (packaging has no EN translations in the seed, so the base title
+  // leaks for EN). The override also makes the cart independent of the join's
+  // locale and of a stale cart after a locale switch — see packaging-names.ts.
+  const linkedName = linkedItem?.product
+    ? getPackagingName(linkedItem.product, locale)
+    : linkedItem?.title;
   const decrement = () => {
     if (item.quantity <= 1) return;
     onUpdate(item.id, item.quantity - 1);

@@ -20,6 +20,7 @@ import {
 } from "@/lib/medusa/cart";
 import { getRegionCountries } from "@/lib/medusa/regions";
 import { getClientCustomer } from "@/lib/medusa/customer";
+import { getPackagingName } from "@/lib/medusa/packaging-names";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1281,7 +1282,9 @@ export default function CheckoutPage() {
                           {linkedPackaging && (
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
                               <span className="text-xs text-[#2c211b]/50 italic truncate">
-                                + {linkedPackaging.product?.title ?? linkedPackaging.title}
+                                + {linkedPackaging.product
+                                  ? getPackagingName(linkedPackaging.product, locale)
+                                  : linkedPackaging.title}
                               </span>
                               <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
                                 {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}
