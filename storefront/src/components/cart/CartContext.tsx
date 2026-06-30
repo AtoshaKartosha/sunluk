@@ -60,22 +60,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const regionRef = useRef<RegionResult | null>(null);
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   const locale = useLocale() as Locale;
   const medusaLocale = toMedusaLocale(locale);
 
   // ---- Initialise on mount: restore cart from storage ----
   useEffect(() => {
+    const myId = ++requestIdRef.current;
     mountedRef.current = true;
     if (!getStoredCartId()) return;
 
     (async () => {
       try {
         const restored = await getCart(medusaLocale);
-        if (mountedRef.current) {
+        if (mountedRef.current && requestIdRef.current === myId) {
           setCart(restored as unknown as StoreCart | null);
         }
       } finally {
-        if (mountedRef.current) {
+        if (mountedRef.current && requestIdRef.current === myId) {
           setLoading(false);
         }
       }
@@ -84,13 +86,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [medusaLocale]);
 
   // ---- Resolve region once (lazily, on first mutation) ----
   const ensureRegion = useCallback(async (): Promise<RegionResult> => {
     if (regionRef.current) return regionRef.current;
 
-    const resolved = await resolveRegion();
+    const resolved = await resolveRegion(undefined, medusaLocale);
 
     if ("type" in resolved) {
       throw new Error(
@@ -101,7 +103,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     regionRef.current = resolved;
     return resolved;
-  }, []);
+  }, [medusaLocale]);
 
   // ---- Stale-cart recovery ----
   //

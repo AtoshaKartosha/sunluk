@@ -1228,6 +1228,7 @@ export default function CheckoutPage() {
                     const calcPrice = mainItem.metadata?.calculated_price;
                     const hasDiscount =
                       calcPrice?.original_amount != null &&
+                      calcPrice.currency_code === cart.currency_code &&
                       calcPrice.original_amount > mainItem.unit_price;
                     return (
                       <li key={mainItem.id} className="flex gap-4">
@@ -1246,7 +1247,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
                             <p className="text-sm font-medium truncate">
-                              {mainItem.title}
+                              {mainItem.product?.title ?? mainItem.title}
                               {mainItem.quantity > 1 && (
                                 <span className="text-xs text-[#2c211b]/50 ml-1">× {mainItem.quantity}</span>
                               )}
@@ -1282,9 +1283,11 @@ export default function CheckoutPage() {
                           {linkedPackaging && (
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
                               <span className="text-xs text-[#2c211b]/50 italic truncate">
-                                + {linkedPackaging.product
-                                  ? getPackagingName(linkedPackaging.product, locale)
-                                  : linkedPackaging.title}
+                                + {getPackagingName(
+                                    linkedPackaging.product,
+                                    locale,
+                                    linkedPackaging.title,
+                                  )}
                               </span>
                               <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
                                 {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}

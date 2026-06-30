@@ -1,12 +1,23 @@
 // ponytail: localized display names for the seeded packaging handles.
-// Medusa's cart product join and product.list endpoint do not reliably
-// apply translations for the Packaging category (no EN/RU translations
-// are seeded for packaging; the seed sets the base title directly, and
-// the default locale varies per environment), so product.title leaks
-// the wrong language. getPackagingName picks the name by handle + locale
-// from these explicit maps so both the PDP and the cart show the
-// correct name regardless of what Medusa returns. Add new handles here
-// when seeding new packaging.
+//
+// Medusa's `*items.product` expand in the cart endpoint does NOT apply the
+// `x-medusa-locale` header to the product's `title` — it returns the base
+// (default-locale) title. So `linkedItem.product.title` leaks the wrong
+// language for packaging, even when a ru-RU translation is configured in
+// Medusa admin.
+//
+// The translation IS applied during line-item creation: Medusa sets
+// `line_item.title` from the product at the moment the item is added,
+// localized by the request's `x-medusa-locale`. So the line-item snapshot
+// (`line_item.title`) is the source of truth for the translated name in
+// the cart, as long as the item was added on the locale you want to read.
+//
+// Resolution order:
+//   1. Explicit handle map (EN/RU) for known seeded handles — always
+//      returns the correct localized name regardless of Medusa state.
+//   2. The caller's snapshot (e.g. `line_item.title`) — the Medusa
+//      translation captured at add time.
+//   3. The product join's `title` — the base title, last resort.
 export const EN_PACKAGING_NAMES: Record<string, string> = {
   "velvet-pouch": "Branded Pouch",
   "gift-box": "Gift Box",
@@ -26,10 +37,11 @@ export const RU_PACKAGING_NAMES: Record<string, string> = {
 };
 
 export function getPackagingName(
-  product: { handle?: string | null; title?: string | null },
+  product: { handle?: string | null; title?: string | null } | null | undefined,
   locale: string,
+  snapshot?: string | null,
 ): string {
-  if (product.handle) {
+  if (product?.handle) {
     if (locale.startsWith("en") && product.handle in EN_PACKAGING_NAMES) {
       return EN_PACKAGING_NAMES[product.handle]!;
     }
@@ -37,5 +49,5 @@ export function getPackagingName(
       return RU_PACKAGING_NAMES[product.handle]!;
     }
   }
-  return product.title ?? "";
+  return snapshot || product?.title || "";
 }

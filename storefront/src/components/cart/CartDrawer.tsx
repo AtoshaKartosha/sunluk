@@ -256,16 +256,18 @@ function CartLineItem({
   const calcPrice = item.metadata?.calculated_price;
   const hasDiscount =
     calcPrice?.original_amount != null &&
+    calcPrice.currency_code === currency &&
     calcPrice.original_amount > item.unit_price;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
-  // Use the current product title from the *items.product join, with an explicit
-  // EN override (packaging has no EN translations in the seed, so the base title
-  // leaks for EN). The override also makes the cart independent of the join's
-  // locale and of a stale cart after a locale switch — see packaging-names.ts.
-  const linkedName = linkedItem?.product
-    ? getPackagingName(linkedItem.product, locale)
-    : linkedItem?.title;
+  // Use the line-item snapshot (set with the locale at add time, so it
+  // carries the Medusa translation) as the source of truth, with the
+  // explicit handle map as the primary override. The product join's
+  // title is the last-resort fallback because Medusa's cart expand
+  // doesn't apply x-medusa-locale to it.
+  const linkedName = linkedItem
+    ? getPackagingName(linkedItem.product, locale, linkedItem.title)
+    : "";
   const decrement = () => {
     if (item.quantity <= 1) return;
     onUpdate(item.id, item.quantity - 1);
@@ -297,7 +299,7 @@ function CartLineItem({
       <div className="flex flex-1 flex-col justify-between">
         <div>
           <h3 className="text-sm font-medium leading-snug text-[#2c211b]">
-            {item.title}
+            {item.product?.title ?? item.title}
           </h3>
           {item.subtitle && (
             <p className="mt-0.5 text-xs text-[#2c211b]/50">{item.subtitle}</p>
