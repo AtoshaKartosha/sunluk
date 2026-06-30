@@ -741,6 +741,70 @@ export default async function initial_data_seed({
             },
           ],
         },
+        {
+          title: "Фирменный мешочек (Бирюзового цвета)",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек бирюзового цвета SUNLUK",
+          handle: "cotton-pouch-turquoise",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "COTTON-POUCH-TURQUOISE",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                { amount: 3, currency_code: "eur" },
+                { amount: 3, currency_code: "usd" },
+                { amount: 300, currency_code: "rub" },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [{ id: defaultSalesChannel.id }],
+        },
+        {
+          title: "Фирменный мешочек (Коричневого цвета)",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек коричневого цвета SUNLUK",
+          handle: "cotton-pouch-brown",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "COTTON-POUCH-BROWN",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                { amount: 3, currency_code: "eur" },
+                { amount: 3, currency_code: "usd" },
+                { amount: 300, currency_code: "rub" },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [{ id: defaultSalesChannel.id }],
+        },
       ],
     },
   });
@@ -892,6 +956,42 @@ export default async function initial_data_seed({
           translations: {
             title: "Wooden Case",
             description: "Wooden jewelry case",
+          },
+        },
+        {
+          reference_id: productResults[8].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек (Бирюзового цвета)",
+            description: "Фирменный хлопковый мешочек бирюзового цвета SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[8].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Branded Pouch (Turquoise)",
+            description: "Branded turquoise cotton pouch SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[9].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек (Коричневого цвета)",
+            description: "Фирменный хлопковый мешочек коричневого цвета SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[9].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Branded Pouch (Brown)",
+            description: "Branded brown cotton pouch SUNLUK",
           },
         },
       ],

@@ -10,6 +10,8 @@ import React, {
   useState,
 } from "react";
 import { resolveRegion, type RegionResult } from "@/lib/medusa/regions";
+import { useLocale } from "next-intl";
+import { toMedusaLocale, type Locale } from "@/i18n/routing";
 import {
   addLineItem,
   clearCartId,
@@ -58,6 +60,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const regionRef = useRef<RegionResult | null>(null);
   const mountedRef = useRef(true);
+  const locale = useLocale() as Locale;
+  const medusaLocale = toMedusaLocale(locale);
 
   // ---- Initialise on mount: restore cart from storage ----
   useEffect(() => {
@@ -66,7 +70,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const restored = await getCart();
+        const restored = await getCart(medusaLocale);
         if (mountedRef.current) {
           setCart(restored as unknown as StoreCart | null);
         }
@@ -119,7 +123,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (!isCartNotFound(err)) throw err;
         clearCartId();
         const region = await ensureRegion();
-        const fresh = (await createCart(region)) as unknown as StoreCart;
+        const fresh = (await createCart(region, medusaLocale)) as unknown as StoreCart;
         setCart(fresh);
         if (retry) return await run(fresh.id);
         return fresh as unknown as T;
@@ -153,7 +157,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         // Create a new cart if one doesn't exist.
         if (!currentId) {
-          const fresh = (await createCart(region)) as unknown as StoreCart;
+          const fresh = (await createCart(region, medusaLocale)) as unknown as StoreCart;
           currentId = fresh.id;
           setCart(fresh);
         }
@@ -162,7 +166,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const updated = await runWithRecovery(
           currentId,
           async (id) =>
-            (await addLineItem(id, variantId, quantity, metadata)) as unknown as StoreCart,
+            (await addLineItem(id, variantId, quantity, metadata, medusaLocale)) as unknown as StoreCart,
           true,
         );
         setCart(updated);
@@ -190,13 +194,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           currentId,
           async (id): Promise<StoreCart> => {
             if (quantity <= 0) {
-              let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
+              let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
               if (linkedItem) {
-                next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+                next = (await removeLineItem(id, linkedItem.id, medusaLocale)) as unknown as StoreCart;
               }
               return next;
             }
-            let next = (await updateLineItem(id, lineItemId, quantity)) as unknown as StoreCart;
+            let next = (await updateLineItem(id, lineItemId, quantity, medusaLocale)) as unknown as StoreCart;
             if (linkedItem) {
               next = (await updateLineItem(id, linkedItem.id, quantity)) as unknown as StoreCart;
             }
@@ -228,9 +232,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const updated = await runWithRecovery(
           currentId,
           async (id): Promise<StoreCart> => {
-            let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
+            let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
             if (linkedItem) {
-              next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+              next = (await removeLineItem(id, linkedItem.id, medusaLocale)) as unknown as StoreCart;
             }
             return next;
           },

@@ -1,4 +1,4 @@
-import { getMedusaClient } from "../medusa";
+import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { RegionResult } from "./regions";
 
 const CART_ID_KEY = "sunluk_cart_id";
@@ -73,12 +73,12 @@ export function isCartNotFound(err: unknown): boolean {
  * no valid cart exists (no stored id, 404, or completed cart); clears the
  * stale id in those cases.
  */
-export async function getCart() {
+export async function getCart(medusaLocale?: string) {
   const cartId = getStoredCartId();
   if (!cartId) return null;
 
   try {
-    const sdk = getMedusaClient();
+    const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
     const { cart } = await sdk.store.cart.retrieve(cartId, {
       fields: CART_FIELDS,
     });
@@ -98,8 +98,8 @@ export async function getCart() {
  * Create a new cart for the given region, including its currency code, and
  * persist the id locally. Single creation path for the whole storefront.
  */
-export async function createCart(region: RegionResult) {
-  const sdk = getMedusaClient();
+export async function createCart(region: RegionResult, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.create(
     { region_id: region.regionId, currency_code: region.currencyCode },
     { fields: CART_FIELDS },
@@ -117,8 +117,9 @@ export async function addLineItem(
   variantId: string,
   quantity: number,
   metadata?: Record<string, unknown>,
+  medusaLocale?: string,
 ) {
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.createLineItem(
     cartId,
     { variant_id: variantId, quantity, metadata },
@@ -134,8 +135,9 @@ export async function updateLineItem(
   cartId: string,
   lineItemId: string,
   quantity: number,
+  medusaLocale?: string,
 ) {
-  const sdk = getMedusaClient();
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.updateLineItem(
     cartId,
     lineItemId,
@@ -150,8 +152,8 @@ export async function updateLineItem(
  * guarantee a fully-populated projection for the UI regardless of what the
  * delete endpoint returns.
  */
-export async function removeLineItem(cartId: string, lineItemId: string) {
-  const sdk = getMedusaClient();
+export async function removeLineItem(cartId: string, lineItemId: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   await sdk.store.cart.deleteLineItem(cartId, lineItemId, {
     fields: CART_FIELDS,
   });
@@ -168,8 +170,8 @@ export async function removeLineItem(cartId: string, lineItemId: string) {
 /**
  * Update cart details — email, shipping_address, billing_address, etc.
  */
-export async function updateCart(cartId: string, data: Record<string, unknown>) {
-  const sdk = getMedusaClient();
+export async function updateCart(cartId: string, data: Record<string, unknown>, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.update(cartId, data, {
     fields: CART_FIELDS,
   });
@@ -179,8 +181,8 @@ export async function updateCart(cartId: string, data: Record<string, unknown>) 
 /**
  * Fetch available shipping options for a cart.
  */
-export async function getShippingOptions(cartId: string) {
-  const sdk = getMedusaClient();
+export async function getShippingOptions(cartId: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { shipping_options } = await sdk.store.fulfillment.listCartOptions({
     cart_id: cartId,
   });
@@ -190,8 +192,8 @@ export async function getShippingOptions(cartId: string) {
 /**
  * Add a shipping method to the cart.
  */
-export async function addShippingMethod(cartId: string, optionId: string) {
-  const sdk = getMedusaClient();
+export async function addShippingMethod(cartId: string, optionId: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.addShippingMethod(
     cartId,
     { option_id: optionId },
@@ -205,8 +207,8 @@ export async function addShippingMethod(cartId: string, optionId: string) {
  * Uses `sdk.store.payment.initiatePaymentSession` which auto-creates a
  * payment collection if one does not yet exist on the cart.
  */
-export async function createPaymentSessions(cartId: string) {
-  const sdk = getMedusaClient();
+export async function createPaymentSessions(cartId: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   const { cart } = await sdk.store.cart.retrieve(cartId, {
     fields: CART_FIELDS,
   });
@@ -220,7 +222,7 @@ export async function createPaymentSessions(cartId: string) {
  * `{ type: "order", order }` on success or
  * `{ type: "cart", error, cart }` on failure.
  */
-export async function completeCart(cartId: string) {
-  const sdk = getMedusaClient();
+export async function completeCart(cartId: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
   return sdk.store.cart.complete(cartId);
 }

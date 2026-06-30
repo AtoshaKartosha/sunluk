@@ -257,7 +257,11 @@ function CartLineItem({
     calcPrice.original_amount > item.unit_price;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
-
+  // ponytail: translate packaging title from product_handle — line-item title is set at create time and won't auto-rewrite on locale switch
+  const linkedHandle = linkedItem ? (linkedItem as { product_handle?: string }).product_handle : undefined;
+  const linkedName = linkedHandle && pt.has(`packaging.names.${linkedHandle}`)
+    ? pt(`packaging.names.${linkedHandle}`)
+    : linkedItem?.title;
   const decrement = () => {
     if (item.quantity <= 1) return;
     onUpdate(item.id, item.quantity - 1);
@@ -300,7 +304,7 @@ function CartLineItem({
           {linkedItem && (
             <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
               <span className="font-medium text-[#2f6f78]">
-                + {linkedItem.title}
+                + {linkedName}
               </span>
               <span className="text-[#2c211b]/40">
                 ({linkedItem.unit_price === 0 || !linkedItem.unit_price
