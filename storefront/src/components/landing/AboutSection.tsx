@@ -40,13 +40,14 @@ export function AboutSection() {
           <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-lg">
             {t("about.description")}
           </p>
-          <motion.button 
+          <motion.a
+            href="#collection"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="inline-flex items-center justify-center px-10 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg mt-4 rounded-none cursor-pointer"
           >
             {t("about.cta")}
-          </motion.button>
+          </motion.a>
         </motion.div>
       </div>
     </section>
