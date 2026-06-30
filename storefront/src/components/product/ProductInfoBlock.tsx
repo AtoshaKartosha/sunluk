@@ -14,18 +14,13 @@ export interface ProductInfoBlockLabels {
   handmade: string;
   delivery: string;
   giftWrap: string;
-  materialsHeading: string;
-  materialsText: string;
-  materialsItem1: string;
-  materialsItem2: string;
-  materialsItem3: string;
-  materialsCare: string;
   shippingHeading: string;
   shippingText: string;
   shippingItem1: string;
   shippingItem2: string;
   shippingItem3: string;
-  shippingItem4: string;
+  returnsHeading: string;
+  returnsText: string;
   materialNames: Record<string, string>;
   /** Labels forwarded to VariantSelector for button text, stock, qty, etc. */
   variantSelector: import("./types").VariantSelectorLabels;
@@ -51,18 +46,13 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   handmade: "Ручная работа",
   delivery: "Доставка в DE и РФ",
   giftWrap: "Упаковка в подарок",
-  materialsHeading: "МАТЕРИАЛЫ И УХОД",
-  materialsText: "Каждое изделие SUNLUK создается вручную нашими мастерами из премиальных сертифицированных материалов:",
-  materialsItem1: "Износостойкий и гипоаллергенный шнур/цепочка.",
-  materialsItem2: "Итальянская премиум фурнитура и фурнитурные карабины.",
-  materialsItem3: "Регулируемые силиконовые петли для дужек очков любого размера.",
-  materialsCare: "Рекомендация: Избегайте прямого контакта с парфюмерией, лаком для волос и водой. Протирайте мягкой салфеткой без химии.",
-  shippingHeading: "ДОСТАВКА И ВОЗВРАТ",
-  shippingText: "Мы отправляем заказы по всему миру из складов в Мюнхене (Германия) и Москве (Россия):",
-  shippingItem1: "Отправка в течение 24 часов после оплаты.",
-  shippingItem2: "Бесплатная стандартная доставка при сумме заказа от 5 000 руб или 50 EUR.",
-  shippingItem3: "Возможность экспресс-доставки курьером до двери за 2-4 рабочих дня.",
-  shippingItem4: "Простой возврат или обмен в течение 14 дней с момента получения.",
+  shippingHeading: "ДОСТАВКА",
+  shippingText: "Мы гарантируем быструю доставку нашего аксессуара для очков – где бы вы ни жили.",
+  shippingItem1: "✔️ Заказ, оформленный до 16:00, отправляется сегодня",
+  shippingItem2: "✔️ Доставка от 2 до 14 дней в зависимости от города доставки",
+  shippingItem3: "✔️ Доставка при покупке от 5000 Руб (60 Евро) по всему миру бесплатная",
+  returnsHeading: "ВОЗВРАТ",
+  returnsText: "Для вашего спокойствия мы предлагаем 30-дневную политику возврата. Если вы не удовлетворены своей покупкой, верните её в течение 30 дней для полного возврата средств или замены.",
   materialNames: {
     turquoise: "Бирюза",
     leather: "Кожа",
@@ -203,18 +193,13 @@ export function ProductInfoBlock({
         handmade: "Handmade",
         delivery: "Delivery to DE & Worldwide",
         giftWrap: "Gift wrapping available",
-        materialsHeading: "MATERIALS & CARE",
-        materialsText: "Each SUNLUK piece is handcrafted by our artisans using premium certified materials:",
-        materialsItem1: "Durable and hypoallergenic cord/chain.",
-        materialsItem2: "Premium Italian hardware and clasps.",
-        materialsItem3: "Adjustable silicone loops for any eyewear temple size.",
-        materialsCare: "Care: Avoid direct contact with perfume, hairspray, and water. Wipe gently with a soft, chemical-free cloth.",
-        shippingHeading: "SHIPPING & RETURNS",
-        shippingText: "We ship worldwide from our warehouses in Munich (Germany) and Moscow (Russia):",
-        shippingItem1: "Orders shipped within 24 hours of payment.",
-        shippingItem2: "Free standard shipping on orders over 5,000 RUB or 50 EUR.",
-        shippingItem3: "Express courier delivery to your door in 2–4 business days.",
-        shippingItem4: "Easy returns or exchanges within 14 days of receipt.",
+        shippingHeading: "SHIPPING",
+        shippingText: "We guarantee fast delivery of our eyewear accessory — wherever you live.",
+        shippingItem1: "✔️ Orders placed before 4:00 PM ship the same day",
+        shippingItem2: "✔️ Delivery takes 2 to 14 days depending on the destination city",
+        shippingItem3: "✔️ Free worldwide delivery on orders over 5,000 RUB (60 EUR)",
+        returnsHeading: "RETURNS",
+        returnsText: "For your peace of mind, we offer a 30-day return policy. If you are not satisfied with your purchase, return it within 30 days for a full refund or replacement.",
         materialNames: {
           turquoise: "Turquoise",
           leather: "Leather",
@@ -583,26 +568,18 @@ export function ProductInfoBlock({
               )}
             </dl>
           </AccordionItem>
-          <AccordionItem title={labels.materialsHeading}>
-            <p>{labels.materialsText}</p>
-            <ul className="list-disc pl-4 space-y-1 mt-2">
-              <li>{labels.materialsItem1}</li>
-              <li>{labels.materialsItem2}</li>
-              <li>{labels.materialsItem3}</li>
-            </ul>
-            <p className="mt-2 text-[#2c211b]/50 italic">
-              {labels.materialsCare}
-            </p>
-          </AccordionItem>
 
           <AccordionItem title={labels.shippingHeading}>
             <p>{labels.shippingText}</p>
-            <ul className="list-disc pl-4 space-y-1 mt-2">
+            <ul className="space-y-1 mt-2">
               <li>{labels.shippingItem1}</li>
               <li>{labels.shippingItem2}</li>
               <li>{labels.shippingItem3}</li>
-              <li>{labels.shippingItem4}</li>
             </ul>
+          </AccordionItem>
+
+          <AccordionItem title={labels.returnsHeading}>
+            <p>{labels.returnsText}</p>
           </AccordionItem>
         </div>
       </div>
