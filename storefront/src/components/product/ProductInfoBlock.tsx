@@ -39,6 +39,7 @@ export interface ProductInfoBlockLabels {
   packagingNone?: string;
   packagingFree?: string;
   packagingOutOfStock?: string;
+  packagingComingSoon?: string;
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
@@ -108,6 +109,7 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   packagingNone: "Без упаковки",
   packagingFree: "Бесплатно",
   packagingOutOfStock: "Нет в наличии",
+  packagingComingSoon: "Скоро в наличии",
 };
 
 interface ProductInfoBlockProps {
@@ -177,6 +179,39 @@ function AccordionItem({
 /*  ProductInfoBlock main component                                    */
 /* ------------------------------------------------------------------ */
 
+// ponytail: hardcoded packaging options until Medusa seeds cotton-pouch-turquoise / cotton-pouch-brown
+const HARDCODED_PACKAGING: Array<{ handle: string; titleRu: string; titleEn: string; image: string }> = [
+  {
+    handle: "cotton-pouch-turquoise",
+    titleRu: "Фирменный мешочек (Бирюзового цвета)",
+    titleEn: "Branded Pouch (Turquoise)",
+    image: "/images/velvet-pouch.png",
+  },
+  {
+    handle: "cotton-pouch-brown",
+    titleRu: "Фирменный мешочек (Коричневого цвета)",
+    titleEn: "Branded Pouch (Brown)",
+    image: "/images/velvet-pouch.png",
+  },
+];
+
+const getHardcodedPackaging = (locale: string): StoreProduct[] => {
+  const currency = locale === "ru" ? "rub" : locale === "en" ? "usd" : "eur";
+  const amount = locale === "ru" ? 300 : 3;
+  return HARDCODED_PACKAGING.map((p) => ({
+    id: `hardcoded-${p.handle}`,
+    handle: p.handle,
+    title: locale === "en" ? p.titleEn : p.titleRu,
+    thumbnail: p.image,
+    images: [{ url: p.image }],
+    variants: [
+      {
+        calculated_price: { calculated_amount: amount, currency_code: currency },
+      },
+    ],
+  })) as unknown as StoreProduct[];
+};
+
 export function ProductInfoBlock({
   product,
   price,
@@ -220,8 +255,8 @@ export function ProductInfoBlock({
           selectAllOptions: "Select all options",
           unavailable: "Unavailable",
           outOfStock: "Out of stock",
-          preOrder: "Pre-order",
           invalidQuantity: "Enter quantity",
+          preOrder: "Pre-order",
           addToCart: "Add to cart",
           quantity: "Quantity",
           decreaseQuantity: "Decrease quantity",
@@ -255,32 +290,35 @@ export function ProductInfoBlock({
         packagingNone: "No packaging",
         packagingFree: "Free",
         packagingOutOfStock: "Out of stock",
+        packagingComingSoon: "Coming soon",
       };
     }
     return DEFAULT_LABELS;
   }, [propLabels, locale]);
+
+  // ponytail: merge backend packaging with hardcoded cotton-pouch-turquoise / cotton-pouch-brown until Medusa seeds them
+  const allPackaging = useMemo(() => {
+    const backendProducts = packagingProducts ?? [];
+    const hardcoded = getHardcodedPackaging(locale).filter(
+      (p) => !backendProducts.some((bp) => bp.handle === p.handle),
+    );
+    return [...backendProducts, ...hardcoded];
+  }, [packagingProducts, locale]);
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
   const [selectionValid, setSelectionValid] = useState(false);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
-  const [selectedPackaging, setSelectedPackaging] = useState<string>(() => {
-    // Find first available packaging option
-    const firstAvailable = packagingProducts?.find((p) => {
-      const variant = p.variants?.[0];
-      if (!variant) return false;
-      return projectAvailability(variant).available;
-    });
-    return firstAvailable?.handle || "";
-  });
+  // ponytail: default to the free branded pouch (velvet-pouch) — gift-box is disabled, colored pouches are paid
+  const [selectedPackaging, setSelectedPackaging] = useState<string>("velvet-pouch");
 
 
 
   const selectedPackagingVariantId = useMemo(() => {
-    const pkgProduct = packagingProducts?.find((p) => p.handle === selectedPackaging);
+    const pkgProduct = allPackaging.find((p) => p.handle === selectedPackaging);
     return pkgProduct?.variants?.[0]?.id ?? null;
-  }, [selectedPackaging, packagingProducts]);
+  }, [selectedPackaging, allPackaging]);
 
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
 
@@ -438,30 +476,36 @@ export function ProductInfoBlock({
         )}
 
         {/* Packaging Options */}
-        {packagingProducts && packagingProducts.length > 0 && (
+        {allPackaging.length > 0 && (
           <div className="flex flex-col gap-3 border-t border-[#2c211b]/10 pt-5">
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {labels.packagingHeading}
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {packagingProducts.map((p) => {
+              {allPackaging.map((p) => {
+                const isHardcoded = p.id.startsWith("hardcoded-");
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
-                
+
                 // ponytail: shared availability projection (single source of truth)
-                const isInStock = projectAvailability(variant).available;
-                
+                const isInStock = isHardcoded ? true : projectAvailability(variant).available;
+                // ponytail: gift-box is temporarily unavailable (not produced yet) — show as disabled with 'coming soon' label
+                const isComingSoon = p.handle === "gift-box";
+                const isSelectable = isInStock && !isComingSoon;
+
                 const amount = variant.calculated_price?.calculated_amount;
                 const currency = variant.calculated_price?.currency_code;
                 const isFree = !amount;
                 const priceText = (isFree || !amount || !currency)
                   ? labels.packagingFree
                   : `+ ${formatPriceValue(amount, currency, locale)}`;
-                
-                const displayText = isInStock 
-                  ? priceText 
-                  : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
+
+                const displayText = isComingSoon
+                  ? labels.packagingComingSoon || (locale === "en" ? "Coming soon" : "Скоро в наличии")
+                  : isInStock
+                    ? priceText
+                    : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
 
                 // Fallback to our local generated images if no thumbnail is set on Medusa product
                 const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;
@@ -470,11 +514,11 @@ export function ProductInfoBlock({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => isInStock && setSelectedPackaging(p.handle)}
-                    disabled={!isInStock}
+                    onClick={() => isSelectable && setSelectedPackaging(p.handle)}
+                    disabled={!isSelectable}
                     className={[
                       "relative flex items-center gap-3 w-full p-2.5 text-left border transition-all duration-300 select-none text-[#2c211b]",
-                      isInStock ? "cursor-pointer" : "cursor-not-allowed opacity-50",
+                      isSelectable ? "cursor-pointer" : "cursor-not-allowed opacity-50",
                       isSelected
                         ? "border-[#2f6f78] bg-[#2f6f78]/5 ring-1 ring-[#2f6f78]"
                         : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",

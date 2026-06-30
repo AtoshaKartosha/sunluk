@@ -150,7 +150,8 @@
       "heading": "PACKAGING",
       "none": "No packaging",
       "free": "Free",
-      "outOfStock": "Out of stock"
+      "outOfStock": "Out of stock",
+      "comingSoon": "Coming soon"
     }
   },
   "header": {

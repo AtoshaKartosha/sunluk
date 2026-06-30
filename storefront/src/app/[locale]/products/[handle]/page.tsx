@@ -342,6 +342,7 @@ export default async function ProductDetailPage({ params }: Props) {
     packagingNone: pt("packaging.none"),
     packagingFree: pt("packaging.free"),
     packagingOutOfStock: pt("packaging.outOfStock"),
+    packagingComingSoon: pt("packaging.comingSoon"),
   };
 
   // ---- Render ----

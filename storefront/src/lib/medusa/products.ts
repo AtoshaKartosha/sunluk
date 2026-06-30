@@ -122,7 +122,11 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
 }
 
 
-const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case"];
+// ponytail: cotton-pouch-turquoise / cotton-pouch-brown don't exist in the backend yet — they'll appear once the Medusa products are seeded
+// ALL_PACKAGING_HANDLES = every packaging handle in the catalog — used to filter packaging out of the main product list
+const ALL_PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case", "cotton-pouch-turquoise", "cotton-pouch-brown"];
+// PACKAGING_HANDLES = subset shown in the PDP packaging selector
+const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "cotton-pouch-turquoise", "cotton-pouch-brown"];
 
 /**
  * List published products for a resolved region.
@@ -150,7 +154,7 @@ export async function listProducts(
   };
 
   const filteredProducts = data.products.filter(
-    (p) => !PACKAGING_HANDLES.includes(p.handle)
+    (p) => !ALL_PACKAGING_HANDLES.includes(p.handle)
   );
 
   return { products: filteredProducts, count: filteredProducts.length };
@@ -217,7 +221,7 @@ export async function listRelatedProducts(
     .filter(
       (p) =>
         p.handle !== excludeHandle &&
-        !PACKAGING_HANDLES.includes(p.handle)
+        !ALL_PACKAGING_HANDLES.includes(p.handle)
     )
     .slice(0, limit);
 }
