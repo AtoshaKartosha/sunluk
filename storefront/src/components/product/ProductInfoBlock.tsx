@@ -497,9 +497,12 @@ export function ProductInfoBlock({
                         <Package className="w-8 h-8 text-[#2c211b]/20" aria-hidden="true" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 pr-6">
-                      <span className="text-[11px] uppercase tracking-wider font-semibold block truncate">
-                        {p.title} <span className="text-[#2c211b]/60 font-serif normal-case font-normal block sm:inline">({displayText})</span>
+                    <div className="flex-1 min-w-0 pr-6 flex flex-col gap-0.5">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold line-clamp-2">
+                        {p.title}
+                      </span>
+                      <span className="text-[#2c211b]/60 font-serif normal-case font-normal text-[11px] truncate">
+                        {displayText}
                       </span>
                     </div>
                     {/* Selected indicator */}
