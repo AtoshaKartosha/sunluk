@@ -1,5 +1,6 @@
 import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
+import type Medusa from "@medusajs/js-sdk";
 
 // ---- Types ----
 
@@ -57,6 +58,7 @@ export interface ProductListItem {
   thumbnail: string | null;
   images: ProductImage[] | null;
   variants: ProductListVariant[] | null;
+  categories?: ProductCategory[] | null;
   metadata?: Record<string, unknown> | null;
 }
 
@@ -80,6 +82,7 @@ export interface ProductListResult {
 const LIST_FIELDS = [
   "id", "title", "handle", "thumbnail", "metadata",
   "*images",
+  "*categories",
   "*variants",
   "*variants.calculated_price",
   "+variants.inventory_quantity",
@@ -107,6 +110,34 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
     );
   }
 }
+
+// ponytail: Packaging category is the source of truth for packaging discovery.
+// Resolved once and cached for the process lifetime — the category handle is
+// stable; if admin moves/renames it, this cache is invalidated by a process restart.
+const PACKAGING_CATEGORY_HANDLE = "packaging";
+let packagingCategoryIdPromise: Promise<string | null> | null = null;
+
+function resolvePackagingCategoryId(sdk: Medusa): Promise<string | null> {
+  if (packagingCategoryIdPromise) return packagingCategoryIdPromise;
+  packagingCategoryIdPromise = (async () => {
+    try {
+      const { product_categories } = (await sdk.store.category.list({
+        handle: PACKAGING_CATEGORY_HANDLE,
+        fields: "id,handle",
+        limit: 1,
+      })) as unknown as { product_categories: { id: string; handle: string }[] };
+      return product_categories[0]?.id ?? null;
+    } catch {
+      return null;
+    }
+  })();
+  return packagingCategoryIdPromise;
+}
+
+function isPackagingProduct(p: { categories?: ProductCategory[] | null }): boolean {
+  return p.categories?.some((c) => c.handle === PACKAGING_CATEGORY_HANDLE) ?? false;
+}
+
 function normalizeProductOptions<T extends ProductDetail>(product: T): T {
   if (!product.options) return product;
 
@@ -121,12 +152,6 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
   };
 }
 
-
-// ponytail: cotton-pouch-turquoise / cotton-pouch-brown don't exist in the backend yet — they'll appear once the Medusa products are seeded
-// ALL_PACKAGING_HANDLES = every packaging handle in the catalog — used to filter packaging out of the main product list
-const ALL_PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case", "cotton-pouch-turquoise", "cotton-pouch-brown"];
-// PACKAGING_HANDLES = subset shown in the PDP packaging selector
-const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "cotton-pouch-turquoise", "cotton-pouch-brown"];
 
 /**
  * List published products for a resolved region.
@@ -153,9 +178,7 @@ export async function listProducts(
     count: number;
   };
 
-  const filteredProducts = data.products.filter(
-    (p) => !ALL_PACKAGING_HANDLES.includes(p.handle)
-  );
+  const filteredProducts = data.products.filter((p) => !isPackagingProduct(p));
 
   return { products: filteredProducts, count: filteredProducts.length };
 }
@@ -218,11 +241,7 @@ export async function listRelatedProducts(
   };
 
   return data.products
-    .filter(
-      (p) =>
-        p.handle !== excludeHandle &&
-        !ALL_PACKAGING_HANDLES.includes(p.handle)
-    )
+    .filter((p) => p.handle !== excludeHandle && !isPackagingProduct(p))
     .slice(0, limit);
 }
 
@@ -239,12 +258,14 @@ export async function listPackagingProducts(
     ? getMedusaClientWithLocale(medusaLocale)
     : getMedusaClient();
 
-  // In Medusa v2, you can pass string | string[] to handle
+  const categoryId = await resolvePackagingCategoryId(sdk);
+  if (!categoryId) return [];
+
   const data = (await sdk.store.product.list({
-    handle: PACKAGING_HANDLES,
+    category_id: categoryId,
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
-    limit: 4,
+    limit: 100,
   })) as unknown as {
     products: ProductDetail[];
   };

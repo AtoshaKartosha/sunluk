@@ -151,15 +151,7 @@
       "none": "No packaging",
       "free": "Free",
       "outOfStock": "Out of stock",
-      "comingSoon": "Coming soon",
-      "names": {
-        "velvet-pouch": "Branded Pouch",
-        "gift-box": "Premium Gift Box",
-        "silk-pouch": "Silk Pouch",
-        "wooden-case": "Wooden Case",
-        "cotton-pouch-turquoise": "Branded Pouch (Turquoise)",
-        "cotton-pouch-brown": "Branded Pouch (Brown)"
-      }
+      "comingSoon": "Coming soon"
     }
   },
   "header": {

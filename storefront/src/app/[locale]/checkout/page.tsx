@@ -1281,7 +1281,7 @@ export default function CheckoutPage() {
                           {linkedPackaging && (
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
                               <span className="text-xs text-[#2c211b]/50 italic truncate">
-                                + {linkedPackaging.title}
+                                + {linkedPackaging.product?.title ?? linkedPackaging.title}
                               </span>
                               <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
                                 {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}

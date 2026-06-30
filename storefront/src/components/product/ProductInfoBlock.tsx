@@ -179,38 +179,6 @@ function AccordionItem({
 /*  ProductInfoBlock main component                                    */
 /* ------------------------------------------------------------------ */
 
-// ponytail: hardcoded packaging options until Medusa seeds cotton-pouch-turquoise / cotton-pouch-brown
-const HARDCODED_PACKAGING: Array<{ handle: string; titleRu: string; titleEn: string; image: string }> = [
-  {
-    handle: "cotton-pouch-turquoise",
-    titleRu: "Фирменный мешочек (Бирюзового цвета)",
-    titleEn: "Branded Pouch (Turquoise)",
-    image: "/images/velvet-pouch.png",
-  },
-  {
-    handle: "cotton-pouch-brown",
-    titleRu: "Фирменный мешочек (Коричневого цвета)",
-    titleEn: "Branded Pouch (Brown)",
-    image: "/images/velvet-pouch.png",
-  },
-];
-
-const getHardcodedPackaging = (locale: string): StoreProduct[] => {
-  const currency = locale === "ru" ? "rub" : locale === "en" ? "usd" : "eur";
-  const amount = locale === "ru" ? 300 : 3;
-  return HARDCODED_PACKAGING.map((p) => ({
-    id: `hardcoded-${p.handle}`,
-    handle: p.handle,
-    title: locale === "en" ? p.titleEn : p.titleRu,
-    thumbnail: p.image,
-    images: [{ url: p.image }],
-    variants: [
-      {
-        calculated_price: { calculated_amount: amount, currency_code: currency },
-      },
-    ],
-  })) as unknown as StoreProduct[];
-};
 
 export function ProductInfoBlock({
   product,
@@ -296,14 +264,6 @@ export function ProductInfoBlock({
     return DEFAULT_LABELS;
   }, [propLabels, locale]);
 
-  // ponytail: merge backend packaging with hardcoded cotton-pouch-turquoise / cotton-pouch-brown until Medusa seeds them
-  const allPackaging = useMemo(() => {
-    const backendProducts = packagingProducts ?? [];
-    const hardcoded = getHardcodedPackaging(locale).filter(
-      (p) => !backendProducts.some((bp) => bp.handle === p.handle),
-    );
-    return [...backendProducts, ...hardcoded];
-  }, [packagingProducts, locale]);
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
@@ -316,9 +276,9 @@ export function ProductInfoBlock({
 
 
   const selectedPackagingVariantId = useMemo(() => {
-    const pkgProduct = allPackaging.find((p) => p.handle === selectedPackaging);
+    const pkgProduct = packagingProducts?.find((p) => p.handle === selectedPackaging);
     return pkgProduct?.variants?.[0]?.id ?? null;
-  }, [selectedPackaging, allPackaging]);
+  }, [selectedPackaging, packagingProducts]);
 
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
 
@@ -476,20 +436,19 @@ export function ProductInfoBlock({
         )}
 
         {/* Packaging Options */}
-        {allPackaging.length > 0 && (
+        {packagingProducts.length > 0 && (
           <div className="flex flex-col gap-3 border-t border-[#2c211b]/10 pt-5">
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {labels.packagingHeading}
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {allPackaging.map((p) => {
-                const isHardcoded = p.id.startsWith("hardcoded-");
+              {packagingProducts.map((p) => {
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
 
                 // ponytail: shared availability projection (single source of truth)
-                const isInStock = isHardcoded ? true : projectAvailability(variant).available;
+                const isInStock = projectAvailability(variant).available;
                 // ponytail: gift-box is temporarily unavailable (not produced yet) — show as disabled with 'coming soon' label
                 const isComingSoon = p.handle === "gift-box";
                 const isSelectable = isInStock && !isComingSoon;
@@ -529,8 +488,8 @@ export function ProductInfoBlock({
                         src={imageUrl}
                         alt={p.title}
                         fill
-                        className="object-cover transition-transform duration-300 hover:scale-105"
                         sizes="80px"
+                        className="object-cover transition-transform duration-300 hover:scale-105"
                       />
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
