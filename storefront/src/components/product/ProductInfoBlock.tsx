@@ -6,6 +6,7 @@ import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductF
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
+import { Package } from "lucide-react";
 import { ProductFacts } from "./ProductFacts";
 import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
@@ -466,8 +467,7 @@ export function ProductInfoBlock({
                     ? priceText
                     : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
 
-                // Fallback to our local generated images if no thumbnail is set on Medusa product
-                const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;
+                const imageUrl = p.thumbnail ?? p.images?.[0]?.url ?? null;
 
                 return (
                   <button
@@ -483,14 +483,19 @@ export function ProductInfoBlock({
                         : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",
                     ].join(" ")}
                   >
-                    <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden">
-                      <Image
-                        src={imageUrl}
-                        alt={p.title}
-                        fill
-                        sizes="80px"
-                        className="object-cover transition-transform duration-300 hover:scale-105"
-                      />
+                    <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden flex items-center justify-center">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={p.title}
+                          fill
+                          sizes="80px"
+                          unoptimized
+                          className="object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      ) : (
+                        <Package className="w-8 h-8 text-[#2c211b]/20" aria-hidden="true" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
                       <span className="text-[11px] uppercase tracking-wider font-semibold block truncate">

@@ -1,6 +1,5 @@
 import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
-import type Medusa from "@medusajs/js-sdk";
 
 // ---- Types ----
 
@@ -111,28 +110,25 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
   }
 }
 
-// ponytail: Packaging category is the source of truth for packaging discovery.
-// Resolved once and cached for the process lifetime — the category handle is
-// stable; if admin moves/renames it, this cache is invalidated by a process restart.
+// ponytail: Packaging category handle is the source of truth for packaging discovery.
 const PACKAGING_CATEGORY_HANDLE = "packaging";
-let packagingCategoryIdPromise: Promise<string | null> | null = null;
 
-function resolvePackagingCategoryId(sdk: Medusa): Promise<string | null> {
-  if (packagingCategoryIdPromise) return packagingCategoryIdPromise;
-  packagingCategoryIdPromise = (async () => {
-    try {
-      const { product_categories } = (await sdk.store.category.list({
-        handle: PACKAGING_CATEGORY_HANDLE,
-        fields: "id,handle",
-        limit: 1,
-      })) as unknown as { product_categories: { id: string; handle: string }[] };
-      return product_categories[0]?.id ?? null;
-    } catch {
-      return null;
-    }
-  })();
-  return packagingCategoryIdPromise;
-}
+// ponytail: English display names for the seeded packaging handles. The EN
+// PDP overrides Medusa's product.list `title` with these because this Medusa
+// config does not apply the translation join on the list endpoint, so the
+// default-locale (RU) base `title` leaks through instead of the EN
+// translation. The cart's *items.product join localizes correctly, so the
+// cart and PDP would otherwise disagree. Update this map (or remove the
+// override once Medusa list-localization surfaces the EN translation) when
+// the seeded names change or new packaging is added.
+const EN_PACKAGING_NAMES: Record<string, string> = {
+  "velvet-pouch": "Branded Pouch",
+  "gift-box": "Gift Box",
+  "silk-pouch": "Silk Pouch",
+  "wooden-case": "Wooden Case",
+  "cotton-pouch-turquoise": "Branded Pouch (Turquoise)",
+  "cotton-pouch-brown": "Branded Pouch (Brown)",
+};
 
 function isPackagingProduct(p: { categories?: ProductCategory[] | null }): boolean {
   return p.categories?.some((c) => c.handle === PACKAGING_CATEGORY_HANDLE) ?? false;
@@ -170,6 +166,7 @@ export async function listProducts(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: LIST_FIELDS,
     limit: 100,
@@ -201,6 +198,7 @@ export async function getProduct(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     handle,
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
@@ -232,6 +230,7 @@ export async function listRelatedProducts(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: LIST_FIELDS,
     limit: limit + 6, // fetch extra in case excluded products appear
@@ -258,11 +257,13 @@ export async function listPackagingProducts(
     ? getMedusaClientWithLocale(medusaLocale)
     : getMedusaClient();
 
-  const categoryId = await resolvePackagingCategoryId(sdk);
-  if (!categoryId) return [];
-
+  // ponytail: filter client-side by the Packaging category handle. A server-side
+  // `category_id` on product.list breaks the translation join in Medusa Store
+  // API, so the base (default-locale) `title` leaks through instead of the
+  // localized one — the cart's product join (no category filter) localizes
+  // correctly, which is why the cart shows the right names but the PDP didn't.
   const data = (await sdk.store.product.list({
-    category_id: categoryId,
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
     limit: 100,
@@ -270,5 +271,13 @@ export async function listPackagingProducts(
     products: ProductDetail[];
   };
 
-  return data.products.map(normalizeProductOptions);
+  const packaging = data.products.filter(isPackagingProduct);
+  const localized = medusaLocale === "en-US"
+    ? packaging.map((p) =>
+        EN_PACKAGING_NAMES[p.handle]
+          ? { ...p, title: EN_PACKAGING_NAMES[p.handle]! }
+          : p,
+      )
+    : packaging;
+  return localized.map(normalizeProductOptions);
 }
