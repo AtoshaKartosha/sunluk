@@ -61,7 +61,7 @@ export const PRODUCTS: ProductData[] = [
   },
 ];
 
-export type FeatureIcon = "S" | "gem" | "leaf" | "shield";
+export type FeatureIcon = "S" | "gem" | "leaf" | "shield" | "modules";
 
 export interface FeatureData {
   icon: FeatureIcon;
@@ -76,9 +76,9 @@ export const FEATURES: FeatureData[] = [
     description: "Фирменная деталь SUNLUK",
   },
   {
-    icon: "gem",
-    title: "Премиальные материалы",
-    description: "Отборные материалы, которые служат долго.",
+    icon: "modules",
+    title: "Модульность",
+    description: "Сменные модули под любой образ.",
   },
   {
     icon: "leaf",
@@ -86,9 +86,9 @@ export const FEATURES: FeatureData[] = [
     description: "Комфортные на весь день.",
   },
   {
-    icon: "shield",
-    title: "Надёжные",
-    description: "Прочное крепление для ваших очков.",
+    icon: "gem",
+    title: "Премиальные материалы",
+    description: "Отборные материалы, которые служат долго.",
   },
 ];
 
@@ -151,20 +151,19 @@ export function getNavLinks(locale: Locale): NavLinkData[] {
   switch (locale) {
     case "en":
       return [
-        { href: "/en/products", label: "CATALOG" },
         { href: "#collection", label: "COLLECTION" },
-        { href: "#about", label: "ABOUT" },
+        { href: "#about", label: "DETAILS" },
         { href: "#contacts", label: "CONTACTS" },
       ];
     default:
       return [
-        { href: "/ru/products", label: "КАТАЛОГ" },
         { href: "#collection", label: "КОЛЛЕКЦИЯ" },
-        { href: "#about", label: "О НАС" },
+        { href: "#about", label: "ДЕТАЛИ" },
         { href: "#contacts", label: "КОНТАКТЫ" },
       ];
   }
 }
+
 
 export function getFooterGroups(locale: Locale): FooterGroupData[] {
   if (locale === "en") {

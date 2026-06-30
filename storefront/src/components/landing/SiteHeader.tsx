@@ -10,13 +10,6 @@ import { NavLink } from "@/components/landing/NavLink";
 import { useCart } from "@/components/cart/CartContext";
 import { LocaleSwitcher } from "@/components/product";
 
-const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
 const ShoppingBagIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
@@ -70,9 +63,15 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-3 sm:gap-6">
-          <Link href={`/${locale}/cabinet`} className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors duration-200" aria-label={t("profile")}>
-            <UserIcon className="w-5 h-5" />
-          </Link>
+          {/* ponytail: swap # for real Telegram / Max handles when known */}
+          <a href="https://t.me/" target="_blank" rel="noreferrer noopener" aria-label={t("telegram")} className="p-1.5 opacity-70 hover:opacity-100 transition-opacity duration-200">
+            <img src="/images/telegram.svg" alt="" className="w-6 h-6" />
+          </a>
+          {locale === "ru" && (
+            <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" aria-label={t("max")} className="p-1.5 opacity-70 hover:opacity-100 transition-opacity duration-200">
+              <img src="/images/max.svg" alt="" className="w-5 h-5" />
+            </a>
+          )}
           <button
             onClick={openCart}
             className="text-[#2c211b] hover:text-[#2f6f78] p-1.5 flex items-center gap-1.5 transition-colors duration-200"

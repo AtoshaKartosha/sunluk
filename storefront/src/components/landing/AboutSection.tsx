@@ -6,7 +6,7 @@ export function AboutSection() {
   const t = useTranslations("home");
 
   return (
-    <section id="about" className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-[#f4ebe6] overflow-hidden">
+    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-[#f4ebe6] overflow-hidden">
       {/* Left packaging/beach image */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}

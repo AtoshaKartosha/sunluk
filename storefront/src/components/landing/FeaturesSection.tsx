@@ -2,7 +2,7 @@
 import { FEATURES, FEATURE_BORDER_CLASSES } from "@/lib/landing-data";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { GemIcon, LeafIcon, ShieldIcon } from "./icons";
+import { GemIcon, LeafIcon, ModulesIcon, ShieldIcon } from "./icons";
 
 export function FeaturesSection() {
   const t = useTranslations("home");
@@ -15,7 +15,7 @@ export function FeaturesSection() {
   }));
 
   return (
-    <section className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
+    <section id="about" className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Left 2x2 grid */}
@@ -50,6 +50,8 @@ export function FeaturesSection() {
                     <GemIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   ) : feature.icon === "leaf" ? (
                     <LeafIcon className="w-7 h-7 sm:w-12 sm:h-12" />
+                  ) : feature.icon === "modules" ? (
+                    <ModulesIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   ) : (
                     <ShieldIcon className="w-7 h-7 sm:w-12 sm:h-12" />
                   )}
