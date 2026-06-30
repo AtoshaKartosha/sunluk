@@ -144,6 +144,9 @@
     "breadcrumbCatalog": "CATALOG",
     "relatedHeading": "YOU MAY ALSO LIKE",
     "factsHeading": "SPECIFICATIONS",
+    "factName": "Name",
+    "factMaterial": "Material",
+    "factLength": "Length",
     "socialHeading": "WHAT OUR CUSTOMERS SAY",
     "socialPlaceholder": "Reviews coming soon. Be the first!",
     "packaging": {

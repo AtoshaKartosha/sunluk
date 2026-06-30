@@ -144,6 +144,9 @@
     "breadcrumbCatalog": "КАТАЛОГ",
     "relatedHeading": "ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ",
     "factsHeading": "ХАРАКТЕРИСТИКИ",
+    "factName": "Название",
+    "factMaterial": "Материал",
+    "factLength": "Длина",
     "socialHeading": "ПОКУПАТЕЛИ ГОВОРЯТ",
     "socialPlaceholder": "Отзывы скоро появятся. Станьте первым!",
     "packaging": {

@@ -2,12 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocale } from "next-intl";
-import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
+import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo } from "./types";
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
 import { Package } from "lucide-react";
-import { ProductFacts } from "./ProductFacts";
 import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
   brand: string;
@@ -36,6 +35,9 @@ export interface ProductInfoBlockLabels {
   socialProof: import("./types").SocialProofLabels;
   /** Product facts heading. */
   factsHeading: string;
+  factName: string;
+  factMaterial: string;
+  factLength: string;
   packagingHeading?: string;
   packagingNone?: string;
   packagingFree?: string;
@@ -106,6 +108,9 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     placeholder: "Отзывы скоро появятся. Станьте первым!",
   },
   factsHeading: "ХАРАКТЕРИСТИКИ",
+  factName: "Название",
+  factMaterial: "Материал",
+  factLength: "Длина",
   packagingHeading: "УПАКОВКА",
   packagingNone: "Без упаковки",
   packagingFree: "Бесплатно",
@@ -255,6 +260,9 @@ export function ProductInfoBlock({
           placeholder: "Reviews coming soon. Be the first!",
         },
         factsHeading: "SPECIFICATIONS",
+        factName: "Name",
+        factMaterial: "Material",
+        factLength: "Length",
         packagingHeading: "PACKAGING",
         packagingNone: "No packaging",
         packagingFree: "Free",
@@ -330,22 +338,28 @@ export function ProductInfoBlock({
   const headlinePrice: CalculatedPrice | null =
     resolvedVariant?.calculated_price ?? price;
 
-  // Derive structured facts from product data.
-  const facts: ProductFact[] = [];
-  if (resolvedVariant?.sku) {
-    facts.push({ label: "SKU", value: resolvedVariant.sku });
-  }
-  if (resolvedVariant?.title) {
-    facts.push({ label: "Variant", value: resolvedVariant.title });
-  }
-  // Add material facts from selected options.
-  for (const [optId, val] of Object.entries(selectedOptions)) {
-    const opt = product.options?.find((o) => o.id === optId);
-    if (opt) {
-      const displayVal = labels.materialNames[val] || val;
-      facts.push({ label: opt.title, value: displayVal });
-    }
-  }
+  // ponytail: derive the three characteristics (Name, Material, Length).
+  // Match options by base title (EN+RU) since Medusa does not translate
+  // product option titles — only the product title/description.
+  const materialOption = product.options?.find((o) => {
+    const t = o.title.toLowerCase();
+    return t === "material" || t === "материал";
+  });
+  const lengthOption = product.options?.find((o) => {
+    const t = o.title.toLowerCase();
+    return t === "length" || t === "длина";
+  });
+
+  const materialValue = materialOption
+    ? selectedOptions[materialOption.id]
+    : undefined;
+  const lengthValue = lengthOption
+    ? selectedOptions[lengthOption.id]
+    : undefined;
+
+  const materialDisplay = materialValue
+    ? (labels.materialNames[materialValue] ?? materialValue)
+    : null;
 
   return (
     <>
@@ -547,14 +561,28 @@ export function ProductInfoBlock({
           </div>
         )}
 
-        {/* Structured Product Facts */}
-        <ProductFacts facts={facts} labels={{ heading: labels.factsHeading }} />
-
-        {/* Social Proof Placeholder */}
-
-
         {/* Collapsible Sections */}
         <div className="border-t border-[#2c211b]/10">
+          <AccordionItem title={labels.factsHeading}>
+            <dl className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factName}</dt>
+                <dd className="text-[#2c211b] font-medium">{product.title}</dd>
+              </div>
+              {materialDisplay && (
+                <div className="flex justify-between text-xs">
+                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factMaterial}</dt>
+                  <dd className="text-[#2c211b] font-medium">{materialDisplay}</dd>
+                </div>
+              )}
+              {lengthValue && (
+                <div className="flex justify-between text-xs">
+                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factLength}</dt>
+                  <dd className="text-[#2c211b] font-medium">{lengthValue}</dd>
+                </div>
+              )}
+            </dl>
+          </AccordionItem>
           <AccordionItem title={labels.materialsHeading}>
             <p>{labels.materialsText}</p>
             <ul className="list-disc pl-4 space-y-1 mt-2">
