@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InstagramIcon, SendIcon, YoutubeIcon } from "./icons";
+import { InstagramIcon, SendIcon } from "./icons";
 import { getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
 import { useLocale, useTranslations } from "next-intl";
@@ -44,8 +44,8 @@ export function SiteFooter({
               <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Telegram">
                 <SendIcon className="w-5 h-5" />
               </a>
-              <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="YouTube">
-                <YoutubeIcon className="w-5 h-5" />
+              <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Max">
+                <img src="/images/max.svg" alt="" className="w-5 h-5" />
               </a>
             </div>
           </div>

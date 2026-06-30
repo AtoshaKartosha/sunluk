@@ -21,9 +21,8 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          className="max-w-xl mx-auto text-center mb-6 sm:mb-10"
           transition={{ duration: 0.8 }}
-          className="max-w-xl mx-auto mb-8 sm:mb-20"
         >
           <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78] block mb-3">
             {t("collectionLabel")}
@@ -46,7 +45,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
               },
             },
           }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-10 sm:mb-16"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-2.5"
         >
           {products && products.length > 0 ? (
             products.map((product) => (

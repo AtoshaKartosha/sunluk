@@ -117,7 +117,6 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "СЕРВИС КЛИЕНТОВ",
     links: [
-      { label: "Наша история", href: "#" },
       { label: "Доставка и возврат", href: "#" },
       { label: "Условия и положения", href: "#" },
       { label: "Политика конфиденциальности", href: "#" },
@@ -127,7 +126,6 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
     title: "МАГАЗИН",
     links: [
       { label: "Все товары", href: "#" },
-      { label: "Подарочные карты", href: "#" },
     ],
   },
   {
@@ -171,7 +169,6 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
       {
         title: "CUSTOMER SERVICE",
         links: [
-          { label: "Our Story", href: "#" },
           { label: "Shipping & Returns", href: "#" },
           { label: "Terms & Conditions", href: "#" },
           { label: "Privacy Policy", href: "#" },
@@ -181,7 +178,6 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
         title: "SHOP",
         links: [
           { label: "All Products", href: "#" },
-          { label: "Gift Cards", href: "#" },
         ],
       },
       {
