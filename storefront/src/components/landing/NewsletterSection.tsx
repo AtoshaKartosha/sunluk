@@ -42,7 +42,7 @@ export default function NewsletterSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#2f6f78]/95 via-[#2f6f78]/80 to-[#5a3828]/90 mix-blend-multiply" />
       </div>
       <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 py-8 sm:py-12 z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Column: Text Content */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
