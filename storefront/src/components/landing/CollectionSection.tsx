@@ -93,7 +93,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
           viewport={{ once: true }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="px-4 sm:px-0"
+          className="px-4 sm:px-0 mt-6 sm:mt-8"
         >
           <Link
             href={`/${locale}/products`}
