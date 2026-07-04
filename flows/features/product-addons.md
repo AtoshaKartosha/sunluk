@@ -115,6 +115,7 @@ Storefront projection:
 - **Cart cleanup failure**: If deleting the main item succeeds but deleting the linked packaging item fails, the storefront must handle the error gracefully and retry the deletion, or force a cart refresh.
 - **Quantity mismatch**: If the customer changes the quantity of the main item in the cart drawer, the storefront must dispatch a quantity update for the linked packaging item to keep the quantities in sync.
 - **Different currencies**: The paid packaging product must have pricing matching the cart's currency (EUR/USD/RUB). If a currency is not defined on the packaging product, it should fallback safely or hide the option.
+ - **Metadata merge sensitivity (Medusa v2)**: Medusa compares the entire metadata object (`deepEqualObj(existingItem.metadata, newItem.metadata)`) when deciding whether to consolidate line items. Because the storefront includes both `calculated_price` (price snapshot at add time) and `packaging_variant_id` in the metadata, a mid-session price update or discount change will result in duplicate line items rather than merging, even if the variant and selected packaging options are identical.
 
 ## 8. Performance Constraints
 
