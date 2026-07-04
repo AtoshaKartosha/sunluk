@@ -70,9 +70,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const myId = ++requestIdRef.current;
     mountedRef.current = true;
     const isCurrent = () => mountedRef.current && requestIdRef.current === myId;
-    setTimeout(() => {
-      if (isCurrent()) setLoading(true);
-    }, 0);
 
     if (!getStoredCartId()) {
       if (isCurrent()) {
