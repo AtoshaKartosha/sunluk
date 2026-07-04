@@ -176,14 +176,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [ensureRegion],
   );
-
-  // ---- Derived ----
-
   const itemCount = useMemo(
-    () =>
-      cart?.items
-        ?.filter((item) => !item.metadata?.parent_line_item_id)
-        .reduce((sum, item) => sum + item.quantity, 0) ?? 0,
+    () => {
+      const items = cart?.items ?? [];
+      return items
+        .filter((item) => {
+          const parentId = item.metadata?.parent_line_item_id;
+          if (!parentId) return true;
+          return !items.some((i) => i.id === parentId);
+        })
+        .reduce((sum, item) => sum + item.quantity, 0);
+    },
     [cart],
   );
 
@@ -223,7 +226,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [cart, ensureRegion, runWithRecovery],
   );
-
   const updateItem = useCallback(
     async (lineItemId: string, quantity: number) => {
       const currentId = cart?.id;
@@ -231,23 +233,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const linkedItem = cart?.items?.find(
+        const linkedItems = cart?.items?.filter(
           (item) => item.metadata?.parent_line_item_id === lineItemId,
-        );
+        ) ?? [];
 
         const updated = await runWithRecovery(
           currentId,
           async (id): Promise<StoreCart> => {
             if (quantity <= 0) {
               let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
-              if (linkedItem) {
-                next = (await removeLineItem(id, linkedItem.id, medusaLocale)) as unknown as StoreCart;
+              for (const linked of linkedItems) {
+                next = (await removeLineItem(id, linked.id, medusaLocale)) as unknown as StoreCart;
               }
               return next;
             }
             let next = (await updateLineItem(id, lineItemId, quantity, medusaLocale)) as unknown as StoreCart;
-            if (linkedItem) {
-              next = (await updateLineItem(id, linkedItem.id, quantity)) as unknown as StoreCart;
+            for (const linked of linkedItems) {
+              next = (await updateLineItem(id, linked.id, quantity)) as unknown as StoreCart;
             }
             return next;
           },
@@ -260,9 +262,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setMutating(false);
       }
     },
-    [cart, runWithRecovery],
+    [cart, runWithRecovery, medusaLocale],
   );
-
   const removeItem = useCallback(
     async (lineItemId: string) => {
       const currentId = cart?.id;
@@ -270,16 +271,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const linkedItem = cart?.items?.find(
+        const linkedItems = cart?.items?.filter(
           (item) => item.metadata?.parent_line_item_id === lineItemId,
-        );
+        ) ?? [];
 
         const updated = await runWithRecovery(
           currentId,
           async (id): Promise<StoreCart> => {
             let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
-            if (linkedItem) {
-              next = (await removeLineItem(id, linkedItem.id, medusaLocale)) as unknown as StoreCart;
+            for (const linked of linkedItems) {
+              next = (await removeLineItem(id, linked.id, medusaLocale)) as unknown as StoreCart;
             }
             return next;
           },
@@ -292,7 +293,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setMutating(false);
       }
     },
-    [cart, runWithRecovery],
+    [cart, runWithRecovery, medusaLocale],
   );
 
   // ---- Drawer controls ----

@@ -118,7 +118,11 @@ export default function CartDrawer() {
   );
 
   const items = cart?.items ?? [];
-  const mainItems = items.filter((item) => !item.metadata?.parent_line_item_id);
+  const mainItems = items.filter((item) => {
+    const parentId = item.metadata?.parent_line_item_id;
+    if (!parentId) return true;
+    return !items.some((i) => i.id === parentId);
+  });
 
   return (
     <AnimatePresence>
@@ -174,14 +178,14 @@ export default function CartDrawer() {
               ) : (
                 <ul className="divide-y divide-[#2c211b]/5">
                   {mainItems.map((item) => {
-                    const linkedItem = items.find(
+                    const linkedItems = items.filter(
                       (i) => i.metadata?.parent_line_item_id === item.id
                     );
                     return (
                       <CartLineItem
                         key={item.id}
                         item={item}
-                        linkedItem={linkedItem}
+                        linkedItems={linkedItems}
                         currency={currency}
                         disabled={mutating}
                         onUpdate={handleUpdate}
@@ -235,7 +239,7 @@ function EmptyState() {
 
 interface CartLineItemProps {
   item: StoreCartLineItem;
-  linkedItem?: StoreCartLineItem | null;
+  linkedItems?: StoreCartLineItem[];
   currency: string;
   disabled: boolean;
   onUpdate: (lineItemId: string, quantity: number) => void;
@@ -244,7 +248,7 @@ interface CartLineItemProps {
 
 function CartLineItem({
   item,
-  linkedItem = null,
+  linkedItems = [],
   currency,
   disabled,
   onUpdate,
@@ -260,7 +264,8 @@ function CartLineItem({
     calcPrice?.original_amount != null &&
     calcPrice.currency_code === currency &&
     calcPrice.original_amount > item.unit_price;
-  const rowTotal = ((unitPrice ?? 0) + (linkedItem?.unit_price ?? 0)) * item.quantity;
+  const packagingTotal = linkedItems.reduce((sum, li) => sum + (li.unit_price ?? 0), 0);
+  const rowTotal = ((unitPrice ?? 0) + packagingTotal) * item.quantity;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
   // Use the line-item snapshot (set with the locale at add time, so it
@@ -268,9 +273,6 @@ function CartLineItem({
   // explicit handle map as the primary override. The product join's
   // title is the last-resort fallback because Medusa's cart expand
   // doesn't apply x-medusa-locale to it.
-  const linkedName = linkedItem
-    ? getPackagingName(linkedItem.product, locale, linkedItem.title)
-    : "";
   const decrement = () => {
     if (item.quantity <= 1) return;
     onUpdate(item.id, item.quantity - 1);
@@ -327,18 +329,21 @@ function CartLineItem({
               )}
             </div>
           )}
-          {linkedItem && (
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
-              <span className="font-medium text-[#2f6f78]">
-                + {linkedName}
-              </span>
-              <span className="text-[#2c211b]/40">
-                ({linkedItem.unit_price === 0 || !linkedItem.unit_price
-                  ? pt("packaging.free").toLowerCase()
-                  : `+ ${formatPrice(linkedItem.unit_price * item.quantity, currency, locale)}`})
-              </span>
-            </div>
-          )}
+          {linkedItems.map((linkedItem) => {
+            const linkedName = getPackagingName(linkedItem.product, locale, linkedItem.title);
+            return (
+              <div key={linkedItem.id} className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
+                <span className="font-medium text-[#2f6f78]">
+                  + {linkedName}
+                </span>
+                <span className="text-[#2c211b]/40">
+                  ({linkedItem.unit_price === 0 || !linkedItem.unit_price
+                    ? pt("packaging.free").toLowerCase()
+                    : `+ ${formatPrice(linkedItem.unit_price * item.quantity, currency, locale)}`})
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-2 flex items-center justify-between">
