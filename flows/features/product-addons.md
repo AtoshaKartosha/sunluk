@@ -11,6 +11,7 @@ Success criteria:
 - The packaging line item is linked to the parent jewelry line item via metadata.
 - In the Cart Drawer, packaging items are rendered nested under their parent jewelry items rather than as separate root items.
 - Removing the parent jewelry item from the cart automatically deletes the linked packaging item.
+- Customers can add multiple quantities of the same jewelry item with different packaging configurations (e.g., one with a free pouch, one with a paid box) and they will be kept as separate line items in the cart (preventing line-item merging).
 
 ## 2. Scope
 
@@ -46,7 +47,7 @@ flowchart TD
   ShowOptions --> Toggle[Customer selects packaging option card]
   Toggle --> ClickAdd[Click Add to Cart]
   
-  ClickAdd --> AddMain[1. Add jewelry variant to cart]
+  ClickAdd --> AddMain[1. Add jewelry variant to cart with metadata: packaging_variant_id]
   AddMain --> AddSuccess{Success?}
   AddSuccess -->|no| ShowError[Show Add to Cart error]
   AddSuccess -->|yes| CheckAddon{Is packaging variant resolved?}
@@ -157,7 +158,7 @@ Implementation files:
 ## 13. Open Questions
 
 - Should we support different packaging options per individual items of the same product (e.g. buying 2 of the same chain, one in a box and one in a pouch)? 
-  *Decision*: For simplicity, packaging is selected per line item. If a user wants different packaging, they can add them as separate line items (deferred for v1, standard line item consolidation applies).
+  *Decision*: Yes. To support this, we pass the selected `packaging_variant_id` in the main product's metadata. Medusa compares the entire metadata object before merging, so different packaging variants will prevent line item merging and preserve them as separate line items.
 
 ## 14. Review Checklist
 
