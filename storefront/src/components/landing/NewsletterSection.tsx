@@ -30,7 +30,7 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="relative py-10 sm:py-16 overflow-hidden text-white bg-slate-900">
+    <section className="relative py-2.5 overflow-hidden text-white bg-slate-900">
       {/* Teal Sea background image with dark overlay */}
       <div className="absolute inset-0">
         <div

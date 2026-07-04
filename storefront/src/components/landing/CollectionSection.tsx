@@ -16,7 +16,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
   const t = useTranslations("home");
 
   return (
-    <section id="collection" className="py-10 sm:py-16 bg-[#f4ebe6]">
+    <section id="collection" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
         <motion.div
           initial={{ opacity: 0 }}
@@ -45,7 +45,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
               },
             },
           }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-6 sm:mb-10"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-2.5"
         >
           {products && products.length > 0 ? (
             products.map((product) => (
