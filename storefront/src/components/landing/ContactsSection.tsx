@@ -14,7 +14,7 @@ export function ContactsSection() {
   const t = useTranslations("home");
 
   return (
-    <section id="contacts" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
+    <section id="contacts" className="pt-6 sm:pt-8 pb-2.5 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
