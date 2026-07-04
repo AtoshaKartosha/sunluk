@@ -20,20 +20,26 @@
 //   3. The product join's `title` — the base title, last resort.
 export const EN_PACKAGING_NAMES: Record<string, string> = {
   "velvet-pouch": "Branded Pouch",
+  "brand-pouch": "Branded Pouch",
   "gift-box": "Gift Box",
   "silk-pouch": "Silk Pouch",
   "wooden-case": "Wooden Case",
   "cotton-pouch-turquoise": "Branded Pouch (Turquoise)",
+  "turquoise-pouch": "Branded Pouch (Turquoise)",
   "cotton-pouch-brown": "Branded Pouch (Brown)",
+  "brown-pouch": "Branded Pouch (Brown)",
 };
 
 export const RU_PACKAGING_NAMES: Record<string, string> = {
   "velvet-pouch": "Фирменный мешочек",
+  "brand-pouch": "Фирменный мешочек",
   "gift-box": "Подарочная коробка",
   "silk-pouch": "Шелковый мешочек",
   "wooden-case": "Деревянный футляр",
   "cotton-pouch-turquoise": "Фирменный мешочек (Бирюзового цвета)",
+  "turquoise-pouch": "Фирменный мешочек (Бирюзового цвета)",
   "cotton-pouch-brown": "Фирменный мешочек (Коричневого цвета)",
+  "brown-pouch": "Фирменный мешочек (Коричневого цвета)",
 };
 
 export function getPackagingName(
