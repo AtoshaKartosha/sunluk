@@ -69,7 +69,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
           </a>
           {locale === "ru" && (
             <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" aria-label={t("max")} className="p-1.5 opacity-70 hover:opacity-100 transition-opacity duration-200">
-              <img src="/images/max.svg" alt="" className="w-5 h-5 opacity-50" />
+              <img src="/images/max.svg" alt="" className="w-5 h-5" />
             </a>
           )}
           <button

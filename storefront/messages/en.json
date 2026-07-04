@@ -422,5 +422,24 @@
   "metadata": {
     "title": "SUNLUK — Eyewear Accessories",
     "description": "Eyewear accessories that become a part of your style. SUNLUK — change yourself, express yourself."
+  },
+  "info": {
+    "pageTitle": "Information",
+    "shipping": {
+      "title": "Shipping",
+      "content": "We carefully pack and ship your orders worldwide. All shipments are fully insured for their total value.\n\nStandard shipping is handled by reliable courier services and takes 3 to 7 business days depending on your location. Shipping costs are calculated automatically at checkout.\n\nOnce your order is shipped, you will receive a tracking number via email or in your customer dashboard to monitor your delivery status."
+    },
+    "returns": {
+      "title": "Returns",
+      "content": "You can return items in their original condition within 14 days of delivery. Items must be unused, in their original packaging, and with all tags attached.\n\nTo initiate a return, please contact our support team or use the return request form in your customer account. Return shipping costs for non-defective items are the responsibility of the customer.\n\nRefunds are processed back to the original payment method within 10 business days after we receive and inspect the returned items at our warehouse."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "content": "We value your privacy and are committed to protecting your personal data. This policy explains what information we collect and how we use it.\n\nWe only collect the information necessary to process your orders and improve your shopping experience, such as your name, email address, phone number, and delivery address.\n\nYour personal data is securely stored and will never be shared with third parties, except for trusted service providers involved in processing your order (e.g., shipping couriers)."
+    },
+    "terms": {
+      "title": "Terms & Conditions",
+      "content": "Welcome to Sunluk. By accessing our website and placing orders, you agree to comply with and be bound by these terms and conditions.\n\nAll prices on our website are shown in the respective currency. We reserve the right to update prices and product availability at any time without prior notice.\n\nCustomers are responsible for providing accurate contact and shipping information when placing an order. A sales agreement is established once the order is confirmed by us."
+    }
   }
 }

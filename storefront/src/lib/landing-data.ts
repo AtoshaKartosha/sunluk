@@ -117,9 +117,9 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "СЕРВИС КЛИЕНТОВ",
     links: [
-      { label: "Доставка и возврат", href: "#" },
-      { label: "Условия и положения", href: "#" },
-      { label: "Политика конфиденциальности", href: "#" },
+      { label: "Доставка и возврат", href: "/ru/info#shipping" },
+      { label: "Условия и положения", href: "/ru/info#terms" },
+      { label: "Политика конфиденциальности", href: "/ru/info#privacy" },
     ],
   },
   {
@@ -169,9 +169,9 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
       {
         title: "CUSTOMER SERVICE",
         links: [
-          { label: "Shipping & Returns", href: "#" },
-          { label: "Terms & Conditions", href: "#" },
-          { label: "Privacy Policy", href: "#" },
+          { label: "Shipping & Returns", href: "/en/info#shipping" },
+          { label: "Terms & Conditions", href: "/en/info#terms" },
+          { label: "Privacy Policy", href: "/en/info#privacy" },
         ],
       },
       {
