@@ -145,19 +145,20 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
 
 
 
-export function getNavLinks(locale: Locale): NavLinkData[] {
+export function getNavLinks(locale: Locale, isLanding = false): NavLinkData[] {
+  const prefix = isLanding ? "" : `/${locale}`;
   switch (locale) {
     case "en":
       return [
-        { href: "#collection", label: "COLLECTION" },
-        { href: "#about", label: "DETAILS" },
-        { href: "#contacts", label: "CONTACTS" },
+        { href: `${prefix}#collection`, label: "COLLECTION" },
+        { href: `${prefix}#about`, label: "DETAILS" },
+        { href: `${prefix}#contacts`, label: "CONTACTS" },
       ];
     default:
       return [
-        { href: "#collection", label: "КОЛЛЕКЦИЯ" },
-        { href: "#about", label: "ДЕТАЛИ" },
-        { href: "#contacts", label: "КОНТАКТЫ" },
+        { href: `${prefix}#collection`, label: "КОЛЛЕКЦИЯ" },
+        { href: `${prefix}#about`, label: "ДЕТАЛИ" },
+        { href: `${prefix}#contacts`, label: "КОНТАКТЫ" },
       ];
   }
 }
