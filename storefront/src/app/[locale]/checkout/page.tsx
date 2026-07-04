@@ -100,10 +100,12 @@ const CITY_SUGGESTIONS: Record<string, string[]> = {
 // Formatting helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number | null | undefined, currency: string | null | undefined): string {
+// ponytail: duplicated from PriceDisplay.tsx to avoid complex import chain
+function formatPrice(amount: number | null | undefined, currency: string | null | undefined, locale?: string): string {
   if (amount == null || !currency) return "—";
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    const bcp47 = locale === "en" ? "en-US" : "ru-RU";
+    return new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: currency.toUpperCase(),
       minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -1029,6 +1031,7 @@ export default function CheckoutPage() {
                           {formatPrice(
                             option.amount ?? option.calculated_amount,
                             option.currency_code,
+                            locale,
                           )}
                         </span>
                       </label>
@@ -1169,7 +1172,7 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       ta("placeOrderWithTotal", {
-                        total: formatPrice(cart.total, cart.currency_code ?? "dkk"),
+                        total: formatPrice(cart.total, cart.currency_code ?? "dkk", locale),
                       })
                     )}
                   </button>
@@ -1195,7 +1198,7 @@ export default function CheckoutPage() {
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="text-sm font-bold">
-                    {formatPrice(cart.total, cart.currency_code ?? "dkk")}
+                    {formatPrice(cart.total, cart.currency_code ?? "dkk", locale)}
                   </span>
                   <svg
                     aria-hidden="true"
@@ -1258,6 +1261,7 @@ export default function CheckoutPage() {
                                   {formatPrice(
                                     calcPrice.original_amount! * mainItem.quantity,
                                     cart.currency_code ?? "dkk",
+                                    locale,
                                   )}
                                 </span>
                               )}
@@ -1265,6 +1269,7 @@ export default function CheckoutPage() {
                                 {formatPrice(
                                   mainItem.total,
                                   cart.currency_code ?? "dkk",
+                                  locale,
                                 )}
                               </span>
                               {hasDiscount && (
@@ -1290,7 +1295,7 @@ export default function CheckoutPage() {
                                   )}
                               </span>
                               <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
-                                {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}
+                                {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk", locale)}
                               </span>
                             </div>
                           )}
@@ -1313,6 +1318,7 @@ export default function CheckoutPage() {
                     {formatPrice(
                       displaySubtotal,
                       cart.currency_code ?? "dkk",
+                      locale,
                     )}
                   </dd>
                 </div>
@@ -1320,7 +1326,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <dt className="text-[#2c211b]/60">{tsm("discount")}</dt>
                     <dd className="font-medium text-[#b85c3a]">
-                      −{formatPrice(displayDiscount, cart.currency_code ?? "dkk")}
+                      −{formatPrice(displayDiscount, cart.currency_code ?? "dkk", locale)}
                     </dd>
                   </div>
                 )}
@@ -1331,6 +1337,7 @@ export default function CheckoutPage() {
                       ? formatPrice(
                           cart.shipping_total,
                           cart.currency_code ?? "dkk",
+                          locale,
                         )
                       : displaySubtotal >= 50
                         ? tsm("shippingFree")
@@ -1344,6 +1351,7 @@ export default function CheckoutPage() {
                       ? formatPrice(
                           cart.tax_total,
                           cart.currency_code ?? "dkk",
+                          locale,
                         )
                       : "—"}
                   </dd>
@@ -1354,6 +1362,7 @@ export default function CheckoutPage() {
                     {formatPrice(
                       cart.total,
                       cart.currency_code ?? "dkk",
+                      locale,
                     )}
                   </dd>
                 </div>

@@ -16,10 +16,12 @@ import { getPackagingName } from "@/lib/medusa/packaging-names";
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number | null | undefined, currency: string): string {
+// ponytail: duplicated from PriceDisplay.tsx to avoid complex import chain
+function formatPrice(amount: number | null | undefined, currency: string, locale?: string): string {
   if (amount == null) return "—";
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    const bcp47 = locale === "en" ? "en-US" : "ru-RU";
+    return new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: currency.toUpperCase(),
       minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -315,7 +317,7 @@ function CartLineItem({
               <span className="text-[#2c211b]/40">
                 ({linkedItem.unit_price === 0 || !linkedItem.unit_price
                   ? pt("packaging.free").toLowerCase()
-                  : `+ ${formatPrice(linkedItem.unit_price, currency)}`})
+                  : `+ ${formatPrice(linkedItem.unit_price, currency, locale)}`})
               </span>
             </div>
           )}
@@ -352,10 +354,10 @@ function CartLineItem({
                 <>
                   {hasDiscount && (
                     <span className="line-through text-[#2c211b]/40 mr-1.5 text-xs font-normal">
-                      {formatPrice(calcPrice.original_amount!, currency)}
+                      {formatPrice(calcPrice.original_amount!, currency, locale)}
                     </span>
                   )}
-                  <span>{formatPrice(unitPrice, currency)}</span>
+                  <span>{formatPrice(unitPrice, currency, locale)}</span>
                   {hasDiscount && (
                     <span className="ml-1.5 text-[10px] font-bold text-[#b85c3a]">
                       −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
@@ -437,6 +439,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
                 ? `${row.positive === false ? "−" : ""}${formatPrice(
                     row.positive === false ? Math.abs(row.value) : row.value,
                     currency,
+                    locale,
                   )}`
                 : "—"}
             </span>
@@ -445,7 +448,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
         <div className="flex justify-between border-t border-[#2c211b]/10 pt-2 text-base font-semibold">
           <span className="text-[#2c211b]">{t("total")}</span>
           <span className="tabular-nums text-[#2c211b]">
-            {total != null ? formatPrice(total, currency) : "—"}
+            {total != null ? formatPrice(total, currency, locale) : "—"}
           </span>
         </div>
       </div>

@@ -20,6 +20,7 @@ import {
   getStoredCartId,
   isCartNotFound,
   removeLineItem,
+  updateCart,
   updateLineItem,
 } from "@/lib/medusa/cart";
 import type { StoreCart } from "./types";
@@ -55,7 +56,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
-  const [loading, setLoading] = useState(() => !!getStoredCartId());
+  const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const regionRef = useRef<RegionResult | null>(null);
@@ -68,16 +69,59 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const myId = ++requestIdRef.current;
     mountedRef.current = true;
-    if (!getStoredCartId()) return;
+    const isCurrent = () => mountedRef.current && requestIdRef.current === myId;
+    setLoading(true);
+
+    if (!getStoredCartId()) {
+      if (isCurrent()) {
+        setCart(null);
+        setLoading(false);
+      }
+      return;
+    }
 
     (async () => {
       try {
         const restored = await getCart(medusaLocale);
-        if (mountedRef.current && requestIdRef.current === myId) {
-          setCart(restored as unknown as StoreCart | null);
+        if (isCurrent()) {
+          if (restored && medusaLocale) {
+            const targetRegion = await resolveRegion(undefined, medusaLocale);
+            if (
+              !("type" in targetRegion) &&
+              restored.region_id !== targetRegion.regionId
+            ) {
+              try {
+                const synced = await updateCart(
+                  restored.id,
+                  { region_id: targetRegion.regionId },
+                  medusaLocale,
+                );
+                if (isCurrent()) {
+                  setCart(synced as unknown as StoreCart | null);
+                }
+              } catch (error) {
+                // ponytail: fallback to un-synced cart on update failure
+                if (isCurrent()) {
+                  setCart(restored as unknown as StoreCart | null);
+                }
+              }
+            } else {
+              if (isCurrent()) {
+                setCart(restored as unknown as StoreCart | null);
+              }
+            }
+          } else {
+            if (isCurrent()) {
+              setCart(restored as unknown as StoreCart | null);
+            }
+          }
+        }
+      } catch (err) {
+        if (isCurrent()) {
+          setCart(null);
         }
       } finally {
-        if (mountedRef.current && requestIdRef.current === myId) {
+        if (isCurrent()) {
           setLoading(false);
         }
       }
