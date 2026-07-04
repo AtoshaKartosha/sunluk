@@ -67,7 +67,7 @@ export default function NewsletterSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="w-full max-w-md mx-auto lg:mr-0 flex flex-col gap-4"
+            className="w-full flex flex-col gap-4"
           >
             {subscribed ? (
               <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-none border border-white/20 animate-fade-in flex flex-col items-center lg:items-start text-center lg:text-left gap-3">
