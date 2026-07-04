@@ -7,8 +7,8 @@ export function EditorialSection() {
   const t = useTranslations("home");
 
   return (
-    <section className="relative pt-2.5 pb-2.5 px-4 sm:px-10 lg:px-16 z-20 bg-[#f4ebe6]">
-      <div className="max-w-[1600px] mx-auto">
+    <section className="relative pt-2.5 pb-2.5 z-20 bg-[#f4ebe6]">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
           {/* 3 Models Container with 5px padding and 5px gap */}
           <motion.div 
