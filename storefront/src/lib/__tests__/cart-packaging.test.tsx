@@ -259,4 +259,112 @@ describe("CartDrawer Packaging Row Display", () => {
     const rowTotalText = screen.getByText(/19\s*000\s*(₽|руб)/i);
     expect(rowTotalText).toBeInTheDocument();
   });
+
+  it("renders multiple packaging items under a single parent, and rowTotal correctly sums all of them", () => {
+    activeCart = {
+      id: "cart_123",
+      currency_code: "rub",
+      items: [
+        {
+          id: "item_main_123",
+          title: "Main Product",
+          thumbnail: "thumb.jpg",
+          unit_price: 9000,
+          quantity: 2,
+          metadata: {
+            packaging_variant_id: "pkg_box_123",
+            calculated_price: {
+              calculated_amount: 9000,
+              original_amount: 9000,
+              currency_code: "rub",
+            },
+          },
+          product: {
+            title: "Main Product",
+          },
+        },
+        {
+          id: "item_pkg_1",
+          title: "Premium Gift Box",
+          unit_price: 500,
+          quantity: 2,
+          metadata: {
+            parent_line_item_id: "item_main_123",
+          },
+          product: {
+            title: "Premium Gift Box",
+            handle: "gift-box",
+          },
+        },
+        {
+          id: "item_pkg_2",
+          title: "Cotton Pouch (Turquoise)",
+          unit_price: 200,
+          quantity: 2,
+          metadata: {
+            parent_line_item_id: "item_main_123",
+          },
+          product: {
+            title: "Cotton Pouch (Turquoise)",
+            handle: "cotton-pouch-turquoise",
+          },
+        },
+      ] as unknown as StoreCartLineItem[],
+    } as unknown as StoreCart;
+
+    render(<CartDrawer />);
+
+    // Row total: (9000 + 500 + 200) * 2 = 19400
+    // Product-only total: 9000 * 2 = 18000
+    // Packaging 1: 500 * 2 = 1000
+    // Packaging 2: 200 * 2 = 400
+
+    const mainTotalText = screen.getByText(/18\s*000\s*(₽|руб)/i);
+    expect(mainTotalText).toBeInTheDocument();
+
+    const pkg1TotalText = screen.getByText(/\+\s*1\s*000\s*(₽|руб)/i);
+    expect(pkg1TotalText).toBeInTheDocument();
+
+    const pkg2TotalText = screen.getByText(/\+\s*400\s*(₽|руб)/i);
+    expect(pkg2TotalText).toBeInTheDocument();
+
+    const rowTotalText = screen.getByText(/19\s*400\s*(₽|руб)/i);
+    expect(rowTotalText).toBeInTheDocument();
+  });
+
+  it("surfaces orphaned packaging items as main items in the Cart Drawer", () => {
+    activeCart = {
+      id: "cart_123",
+      currency_code: "rub",
+      items: [
+        {
+          id: "item_pkg_orphan",
+          title: "Premium Gift Box",
+          unit_price: 500,
+          quantity: 2,
+          metadata: {
+            parent_line_item_id: "item_nonexistent",
+          },
+          product: {
+            title: "Premium Gift Box",
+            handle: "gift-box",
+          },
+        },
+      ] as unknown as StoreCartLineItem[],
+    } as unknown as StoreCart;
+
+    render(<CartDrawer />);
+
+    // Orphaned item should be rendered as a main line item!
+    // Since unit price is 500 and quantity is 2:
+    // It should render:
+    // - Title: "Premium Gift Box"
+    // - Under title (product-only total): 500 * 2 = 1000
+    // - On the right (combined total): 500 * 2 = 1000
+    const titleText = screen.getByText("Premium Gift Box");
+    expect(titleText).toBeInTheDocument();
+
+    const productTotalTexts = screen.getAllByText(/1\s*000\s*(₽|руб)/i);
+    expect(productTotalTexts.length).toBe(2);
+  });
 });
