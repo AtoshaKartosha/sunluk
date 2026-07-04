@@ -264,8 +264,8 @@ export function ProductInfoBlock({
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
   const [selectionValid, setSelectionValid] = useState(false);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
-  // ponytail: default to the free branded pouch (velvet-pouch) — gift-box is disabled, colored pouches are paid
-  const [selectedPackaging, setSelectedPackaging] = useState<string>("velvet-pouch");
+  // ponytail: default to the free branded pouch (brand-pouch) — gift-box is disabled, colored pouches are paid
+  const [selectedPackaging, setSelectedPackaging] = useState<string>("brand-pouch");
 
 
 

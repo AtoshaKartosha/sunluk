@@ -260,6 +260,7 @@ function CartLineItem({
     calcPrice?.original_amount != null &&
     calcPrice.currency_code === currency &&
     calcPrice.original_amount > item.unit_price;
+  const rowTotal = ((unitPrice ?? 0) + (linkedItem?.unit_price ?? 0)) * item.quantity;
   const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
   const optionLabel = lineItemOptionLabel(item, materialNames);
   // Use the line-item snapshot (set with the locale at add time, so it
@@ -309,6 +310,23 @@ function CartLineItem({
           {optionLabel && (
             <p className="mt-0.5 text-xs text-[#2c211b]/40">{optionLabel}</p>
           )}
+          {unitPrice != null && (
+            <div className="mt-1 flex items-baseline gap-1.5 text-xs text-[#2c211b]/70">
+              {hasDiscount && (
+                <span className="line-through text-[#2c211b]/40">
+                  {formatPrice(calcPrice.original_amount! * item.quantity, currency, locale)}
+                </span>
+              )}
+              <span className="font-medium">
+                {formatPrice(unitPrice * item.quantity, currency, locale)}
+              </span>
+              {hasDiscount && (
+                <span className="text-[10px] font-bold text-[#b85c3a]">
+                  −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
+                </span>
+              )}
+            </div>
+          )}
           {linkedItem && (
             <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
               <span className="font-medium text-[#2f6f78]">
@@ -317,7 +335,7 @@ function CartLineItem({
               <span className="text-[#2c211b]/40">
                 ({linkedItem.unit_price === 0 || !linkedItem.unit_price
                   ? pt("packaging.free").toLowerCase()
-                  : `+ ${formatPrice(linkedItem.unit_price, currency, locale)}`})
+                  : `+ ${formatPrice(linkedItem.unit_price * item.quantity, currency, locale)}`})
               </span>
             </div>
           )}
@@ -348,25 +366,9 @@ function CartLineItem({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Unit price */}
-            <span className="text-sm font-medium tabular-nums text-[#2c211b] flex items-baseline">
-              {unitPrice != null ? (
-                <>
-                  {hasDiscount && (
-                    <span className="line-through text-[#2c211b]/40 mr-1.5 text-xs font-normal">
-                      {formatPrice(calcPrice.original_amount!, currency, locale)}
-                    </span>
-                  )}
-                  <span>{formatPrice(unitPrice, currency, locale)}</span>
-                  {hasDiscount && (
-                    <span className="ml-1.5 text-[10px] font-bold text-[#b85c3a]">
-                      −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
-                    </span>
-                  )}
-                </>
-              ) : (
-                "—"
-              )}
+            {/* Combined row total */}
+            <span className="text-sm font-semibold tabular-nums text-[#2c211b]">
+              {unitPrice != null ? formatPrice(rowTotal, currency, locale) : "—"}
             </span>
             {/* Remove */}
             <button
