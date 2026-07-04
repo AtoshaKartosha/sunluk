@@ -23,7 +23,7 @@ export function AboutSection() {
         />
       </motion.div>
       {/* Right text and button */}
-      <div className="bg-[#f4ebe6] py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 border-l border-[#2c211b]/5">
+      <div className="bg-[#f4ebe6] py-10 sm:py-16 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
         <motion.div 
           initial={{ opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}

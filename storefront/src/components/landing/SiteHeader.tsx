@@ -80,7 +80,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
             <div className="relative">
               <ShoppingBagIcon className="w-5 h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#2f6f78] text-white text-[9px] font-bold w-4.5 h-4.5 rounded-none flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 bg-[#2f6f78] text-white text-[9px] font-bold w-[18px] h-[18px] rounded-none flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
@@ -102,7 +102,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
       {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-[#f4ebe6] border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in">
+        <div className="md:hidden absolute top-full left-0 w-full bg-[#f4ebe6] border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto">
           {links.map((link) => (
             <NavLink
               key={link.href}

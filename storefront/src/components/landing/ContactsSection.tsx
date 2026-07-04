@@ -14,14 +14,14 @@ export function ContactsSection() {
   const t = useTranslations("home");
 
   return (
-    <section id="contacts" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
+    <section id="contacts" className="py-10 sm:py-16 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="max-w-xl mx-auto text-center mb-2.5"
+          className="max-w-xl mx-auto text-center mb-10 sm:mb-14"
         >
           <h2 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-[#2c211b] mb-4">
             {t("contacts.heading")}
@@ -55,7 +55,7 @@ export function ContactsSection() {
         </div>
 
         {/* Send message CTA row */}
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 pt-2.5">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 pt-10 sm:pt-14">
           <a
             href="mailto:Sunluk@gmail.com"
             className="text-[10px] sm:text-xs font-medium tracking-[0.3em] uppercase text-[#2f6f78] hover:text-[#2c211b] transition-colors duration-200"

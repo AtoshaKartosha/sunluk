@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { PathnameHistoryTracker } from "@/components/navigation/pathname-history";
 import type { ReactNode } from "react";
+import type { Viewport } from "next";
 import { Montserrat, Geist_Mono } from "next/font/google";
 import "../globals.css";
 
@@ -48,6 +49,12 @@ export async function generateMetadata({
     description: t("description"),
   };
 }
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 
 export default async function LocaleLayout({

@@ -127,6 +127,7 @@
   }
   html {
     @apply font-sans motion-safe:scroll-smooth;
+    scroll-padding-top: 5rem;
   }
 }
 

@@ -17,7 +17,7 @@ export function HeroSection() {
   return (
     <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-[#f4ebe6] overflow-hidden">
       {/* Hero Contents */}
-      <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-2.5">
+      <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-10 sm:pb-16">
         {/* Background Image / Split Layout - constrained to hero top-half/side */}
         <motion.div
           initial={playIntroAnimation ? { opacity: 0, scale: 1.08 } : false}

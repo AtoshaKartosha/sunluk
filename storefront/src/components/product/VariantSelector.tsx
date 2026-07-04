@@ -335,7 +335,7 @@ export function VariantSelector({
                 const v = parseInt(e.target.value, 10);
                 if (!isNaN(v)) handleQuantityChange(v);
               }}
-              className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-16 h-9 text-center text-[16px] border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <button
               type="button"

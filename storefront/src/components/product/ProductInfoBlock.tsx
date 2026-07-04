@@ -587,7 +587,7 @@ export function ProductInfoBlock({
       {/* ---------- Sticky Mobile CTA Bar ---------- */}
       <div
         className={[
-          "fixed bottom-0 left-0 right-0 z-40 bg-[#f4ebe6]/95 backdrop-blur-md border-t border-[#2c211b]/10 px-4 py-3 lg:hidden transition-transform duration-300",
+          "fixed bottom-0 left-0 right-0 z-40 bg-[#f4ebe6]/95 backdrop-blur-md border-t border-[#2c211b]/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden transition-transform duration-300",
           mobileBarVisible ? "translate-y-0" : "translate-y-full",
         ].join(" ")}
       >

@@ -421,7 +421,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
   }
 
   return (
-    <div className="border-t border-[#2c211b]/10 px-5 py-4">
+    <div className="border-t border-[#2c211b]/10 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       {/* Totals */}
       <div className="space-y-1.5 text-sm">
         {rows.map((row) => (
