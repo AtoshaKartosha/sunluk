@@ -48,9 +48,9 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
         {/* Logo */}
         <Link href={`/${locale}`} className="flex items-center group">
           <img
-            src="/images/sunluk_logo.svg"
+            src={locale === "ru" ? "/images/sunluk_logo_cyrillic.svg" : "/images/sunluk_logo.svg"}
             alt="Sunluk"
-            className="h-8 sm:h-10 w-auto transition-opacity duration-300 group-hover:opacity-80"
+            className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-10"
           />
         </Link>
 

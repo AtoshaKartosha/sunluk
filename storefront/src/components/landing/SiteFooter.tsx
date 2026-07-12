@@ -32,9 +32,9 @@ export function SiteFooter({
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <Link href={locale ? `/${locale}` : "/"} className="flex items-center group">
               <img
-                src="/images/sunluk_logo.svg"
+                src={activeLocale === "ru" ? "/images/sunluk_logo_cyrillic.svg" : "/images/sunluk_logo.svg"}
                 alt="Sunluk"
-                className="h-8 sm:h-10 w-auto transition-opacity duration-300 group-hover:opacity-80"
+                className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-10"
               />
             </Link>
             <div className="flex items-center gap-4 mt-2">

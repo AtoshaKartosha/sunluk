@@ -40,7 +40,7 @@ export function FeaturesSection() {
                   hidden: { opacity: 0 },
                   show: { opacity: 1, transition: { duration: 0.6 } }
                 }}
-                className={`${FEATURE_BORDER_CLASSES[i]} flex items-start gap-3 p-5 text-left sm:gap-6 sm:p-8 lg:p-12`}
+                className={`${FEATURE_BORDER_CLASSES[i]} flex items-start gap-3 p-5 text-left sm:gap-6 sm:p-8 lg:px-0 lg:py-12`}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#2c211b] sm:h-16 sm:w-16">
                   {feature.icon === "S" ? (
