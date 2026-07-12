@@ -74,7 +74,10 @@
     },
     "contacts": {
       "heading": "Свяжитесь с нами",
-      "description": "Мы всегда на связи и будем рады помочь."
+      "description": "Мы всегда на связи и будем рады помочь.",
+      "emailLabel": "E-MAIL",
+      "phoneLabel": "ТЕЛЕФОН",
+      "telegramLabel": "TELEGRAM"
     },
     "newsletter": {
       "label": "ЭКСКЛЮЗИВНЫЕ ПРЕДЛОЖЕНИЯ",

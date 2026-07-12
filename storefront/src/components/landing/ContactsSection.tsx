@@ -5,19 +5,19 @@ import { useTranslations } from "next-intl";
 
 const contactLinks = [
   {
-    label: "E-MAIL",
+    labelKey: "contacts.emailLabel",
     value: "Infosunluk@gmail.com",
     href: "mailto:Infosunluk@gmail.com",
     icon: "mail",
   },
   {
-    label: "ТЕЛЕФОН",
+    labelKey: "contacts.phoneLabel",
     value: "+7 (995) 770-72-54",
     href: "tel:+79957707254",
     icon: "phone",
   },
   {
-    label: "TELEGRAM",
+    labelKey: "contacts.telegramLabel",
     value: "@sunluk",
     href: "https://t.me/sunluk",
     icon: "telegram",
@@ -77,7 +77,7 @@ export function ContactsSection() {
         <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-10 md:mt-14 md:grid-cols-3 md:gap-0">
           {contactLinks.map((contact, i) => (
             <motion.div
-              key={contact.label}
+              key={contact.icon}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -99,7 +99,7 @@ export function ContactsSection() {
               >
                 <ContactIcon icon={contact.icon} />
                 <span className="mt-5 text-[10px] font-medium tracking-[0.35em] text-[#2c211b]">
-                  {contact.label}
+                  {t(contact.labelKey)}
                 </span>
                 <span className="mt-4 max-w-full border-b border-[#a78343]/60 pb-1 font-sans text-base text-[#2c211b] transition-colors duration-200 group-hover:text-[#2f6f78] sm:text-lg">
                   {contact.value}

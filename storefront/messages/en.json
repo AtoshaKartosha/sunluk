@@ -74,7 +74,10 @@
     },
     "contacts": {
       "heading": "Get in touch",
-      "description": "We are always here and happy to help."
+      "description": "We are always here and happy to help.",
+      "emailLabel": "E-MAIL",
+      "phoneLabel": "PHONE",
+      "telegramLabel": "TELEGRAM"
     },
     "newsletter": {
       "label": "EXCLUSIVE OFFERS",
