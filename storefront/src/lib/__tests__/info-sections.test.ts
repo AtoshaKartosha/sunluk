@@ -1,83 +1,102 @@
-import { describe, it, expect } from "vitest";
-import { INFO_SECTION_IDS } from "../info-sections";
+import { describe, expect, it } from "vitest";
+import enInfo from "../../../messages/info/en.json";
+import ruInfo from "../../../messages/info/ru.json";
 import { getFooterGroups } from "../landing-data";
-import ruJson from "../../../messages/ru.json";
-import enJson from "../../../messages/en.json";
+import { INFO_SECTION_IDS } from "../info-sections";
+
+const expectedBlockCounts = {
+  terms: 85,
+  privacy: 47,
+  purchase: 26,
+  shipping: 8,
+  returns: 7,
+} as const;
 
 describe("Info Page Section IDs", () => {
-  it("has exactly 4 expected section IDs in correct order", () => {
-    expect(INFO_SECTION_IDS).toEqual(["shipping", "returns", "privacy", "terms"]);
-  });
-
-  it("has unique section IDs", () => {
-    const uniqueIds = new Set(INFO_SECTION_IDS);
-    expect(uniqueIds.size).toBe(INFO_SECTION_IDS.length);
+  it("lists all five policies in source-document order", () => {
+    expect(INFO_SECTION_IDS).toEqual(["terms", "privacy", "purchase", "shipping", "returns"]);
+    expect(new Set(INFO_SECTION_IDS).size).toBe(INFO_SECTION_IDS.length);
   });
 });
 
 describe("Footer Links to Info Page Anchors", () => {
-  it("points to correct info page anchors for Russian locale", () => {
-    const groups = getFooterGroups("ru");
-    const customerServiceGroup = groups.find((g) => g.title === "СЕРВИС КЛИЕНТОВ");
-    expect(customerServiceGroup).toBeDefined();
-    if (customerServiceGroup) {
-      const links = customerServiceGroup.links;
-      expect(links).toHaveLength(3);
-      expect(links[0]).toEqual({ label: "Доставка и возврат", href: "/ru/info#shipping" });
-      expect(links[1]).toEqual({ label: "Условия и положения", href: "/ru/info#terms" });
-      expect(links[2]).toEqual({ label: "Политика конфиденциальности", href: "/ru/info#privacy" });
-    }
+  it("links every Russian policy to its own info-page section", () => {
+    const customerServiceGroup = getFooterGroups("ru").find(
+      (group) => group.title === "СЕРВИС КЛИЕНТОВ",
+    );
+
+    expect(customerServiceGroup?.links).toEqual([
+      { label: "Пользовательское соглашение", href: "/ru/info#terms" },
+      { label: "Политика конфиденциальности", href: "/ru/info#privacy" },
+      { label: "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
+      { label: "Правила доставки", href: "/ru/info#shipping" },
+      { label: "Правила возврата товаров", href: "/ru/info#returns" },
+    ]);
   });
 
-  it("points to correct info page anchors for English locale", () => {
-    const groups = getFooterGroups("en");
-    const customerServiceGroup = groups.find((g) => g.title === "CUSTOMER SERVICE");
-    expect(customerServiceGroup).toBeDefined();
-    if (customerServiceGroup) {
-      const links = customerServiceGroup.links;
-      expect(links).toHaveLength(3);
-      expect(links[0]).toEqual({ label: "Shipping & Returns", href: "/en/info#shipping" });
-      expect(links[1]).toEqual({ label: "Terms & Conditions", href: "/en/info#terms" });
-      expect(links[2]).toEqual({ label: "Privacy Policy", href: "/en/info#privacy" });
-    }
+  it("links every English policy to its own info-page section", () => {
+    const customerServiceGroup = getFooterGroups("en").find(
+      (group) => group.title === "CUSTOMER SERVICE",
+    );
+
+    expect(customerServiceGroup?.links).toEqual([
+      { label: "User Agreement", href: "/en/info#terms" },
+      { label: "Privacy Policy", href: "/en/info#privacy" },
+      {
+        label: "Terms for Placing Orders and Purchasing Goods",
+        href: "/en/info#purchase",
+      },
+      { label: "Delivery Policy", href: "/en/info#shipping" },
+      { label: "Returns Policy", href: "/en/info#returns" },
+    ]);
   });
 });
 
-describe("Translation Keys Completeness", () => {
-  function validateInfoTranslation(info: unknown) {
-    expect(info).toBeDefined();
-    if (info && typeof info === "object") {
-      expect("pageTitle" in info).toBe(true);
-      expect(typeof (info as Record<string, unknown>).pageTitle).toBe("string");
-      expect((info as Record<string, unknown>).pageTitle).not.toBe("");
+describe("Policy Translation Completeness", () => {
+  function validateInfoTranslation(info: Record<string, unknown>) {
+    expect(typeof info.pageTitle).toBe("string");
+    expect(info.pageTitle).not.toBe("");
 
-      const sections = ["shipping", "returns", "privacy", "terms"] as const;
-      for (const section of sections) {
-        expect(section in info).toBe(true);
-        const sectionData = (info as Record<string, unknown>)[section];
-        expect(sectionData).toBeDefined();
-        if (sectionData && typeof sectionData === "object") {
-          expect("title" in sectionData).toBe(true);
-          expect(typeof (sectionData as Record<string, unknown>).title).toBe("string");
-          expect((sectionData as Record<string, unknown>).title).not.toBe("");
+    for (const id of INFO_SECTION_IDS) {
+      const policy = info[id] as { title?: unknown; blocks?: unknown };
+      expect(typeof policy.title).toBe("string");
+      expect(policy.title).not.toBe("");
+      expect(Array.isArray(policy.blocks)).toBe(true);
+      expect(policy.blocks).toHaveLength(expectedBlockCounts[id]);
 
-          expect("content" in sectionData).toBe(true);
-          expect(typeof (sectionData as Record<string, unknown>).content).toBe("string");
-          expect((sectionData as Record<string, unknown>).content).not.toBe("");
+      for (const block of policy.blocks as Array<Record<string, unknown>>) {
+        expect(["heading", "paragraph", "list"]).toContain(block.type);
+        if (block.type === "list") {
+          expect(Array.isArray(block.items)).toBe(true);
+          expect(block.items).not.toHaveLength(0);
+          for (const item of block.items as unknown[]) {
+            expect(typeof item).toBe("string");
+            expect(item).not.toBe("");
+          }
         } else {
-          throw new Error(`Section ${section} is not an object`);
+          expect(typeof block.text).toBe("string");
+          expect(block.text).not.toBe("");
         }
       }
-    } else {
-      throw new Error("Info namespace is not an object");
     }
   }
 
-  it("verifies Russian info translations match structural requirements", () => {
-    validateInfoTranslation(ruJson.info);
+  it("contains every structured Russian policy block", () => {
+    validateInfoTranslation(ruInfo);
+    expect(ruInfo.terms.title).toBe("Пользовательское соглашение");
+    expect(ruInfo.purchase.title).toBe("Условия оформления и покупки товаров");
   });
 
-  it("verifies English info translations match structural requirements", () => {
-    validateInfoTranslation(enJson.info);
+  it("contains a complete English counterpart without untranslated Cyrillic", () => {
+    validateInfoTranslation(enInfo);
+    expect(JSON.stringify(enInfo)).not.toMatch(/[А-Яа-яЁё]/);
+
+    for (const id of INFO_SECTION_IDS) {
+      const russianBlocks = ruInfo[id].blocks;
+      const englishBlocks = enInfo[id].blocks;
+      expect(englishBlocks.map((block) => block.type)).toEqual(
+        russianBlocks.map((block) => block.type),
+      );
+    }
   });
 });

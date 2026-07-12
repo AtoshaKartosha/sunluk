@@ -7,6 +7,11 @@ import { INFO_SECTION_IDS } from "@/lib/info-sections";
 
 export const dynamic = "force-dynamic";
 
+type InfoBlock =
+  | { type: "heading"; text: string }
+  | { type: "paragraph"; text: string }
+  | { type: "list"; items: string[] };
+
 interface Props {
   params: Promise<{ locale: string }>;
 }
@@ -53,17 +58,42 @@ export default async function InfoPage({ params }: Props) {
             <div className="space-y-16 lg:space-y-24">
               {INFO_SECTION_IDS.map((id) => {
                 const title = t(`${id}.title`);
-                const content = t(`${id}.content`);
-                const paragraphs = content.split("\n\n");
+                const blocks = t.raw(`${id}.blocks`) as InfoBlock[];
+
                 return (
                   <section key={id} id={id} className="scroll-mt-24">
                     <h2 className="font-serif text-2xl lg:text-3xl font-light tracking-wide text-[#2c211b] uppercase mb-6 pb-2 border-b border-[#2c211b]/10">
                       {title}
                     </h2>
                     <div className="space-y-4 text-base leading-relaxed text-[#2c211b]/80">
-                      {paragraphs.map((para, idx) => (
-                        <p key={idx}>{para}</p>
-                      ))}
+                      {blocks.map((block, index) => {
+                        if (block.type === "heading") {
+                          return (
+                            <h3
+                              key={index}
+                              className="pt-5 font-serif text-xl font-semibold tracking-wide text-[#2c211b]"
+                            >
+                              {block.text}
+                            </h3>
+                          );
+                        }
+
+                        if (block.type === "list") {
+                          return (
+                            <ul key={index} className="list-disc space-y-2 pl-6">
+                              {block.items.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          );
+                        }
+
+                        return (
+                          <p key={index} className="whitespace-pre-line">
+                            {block.text}
+                          </p>
+                        );
+                      })}
                     </div>
                   </section>
                 );

@@ -117,9 +117,11 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "СЕРВИС КЛИЕНТОВ",
     links: [
-      { label: "Доставка и возврат", href: "/ru/info#shipping" },
-      { label: "Условия и положения", href: "/ru/info#terms" },
+      { label: "Пользовательское соглашение", href: "/ru/info#terms" },
       { label: "Политика конфиденциальности", href: "/ru/info#privacy" },
+      { label: "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
+      { label: "Правила доставки", href: "/ru/info#shipping" },
+      { label: "Правила возврата товаров", href: "/ru/info#returns" },
     ],
   },
   {
@@ -170,9 +172,11 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
       {
         title: "CUSTOMER SERVICE",
         links: [
-          { label: "Shipping & Returns", href: "/en/info#shipping" },
-          { label: "Terms & Conditions", href: "/en/info#terms" },
+          { label: "User Agreement", href: "/en/info#terms" },
           { label: "Privacy Policy", href: "/en/info#privacy" },
+          { label: "Terms for Placing Orders and Purchasing Goods", href: "/en/info#purchase" },
+          { label: "Delivery Policy", href: "/en/info#shipping" },
+          { label: "Returns Policy", href: "/en/info#returns" },
         ],
       },
       {

@@ -3,71 +3,110 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
-// ponytail: swap hello@sunluk.com + t.me/ + max.ru/ for real handles when known
 const contactLinks = [
-  { label: "Email", value: "hello@sunluk.com", href: "mailto:hello@sunluk.com" },
-  { label: "Telegram", value: "@sunluk", href: "https://t.me/" },
-  { label: "Max", value: "@sunluk", href: "https://max.ru/" },
+  {
+    label: "E-MAIL",
+    value: "Infosunluk@gmail.com",
+    href: "mailto:Infosunluk@gmail.com",
+    icon: "mail",
+  },
+  {
+    label: "ТЕЛЕФОН",
+    value: "+7 (995) 770-72-54",
+    href: "tel:+79957707254",
+    icon: "phone",
+  },
+  {
+    label: "TELEGRAM",
+    value: "@sunluk",
+    href: "https://t.me/sunluk",
+    icon: "telegram",
+  },
 ] as const;
+
+function ContactIcon({ icon }: { icon: (typeof contactLinks)[number]["icon"] }) {
+  const className = "h-10 w-10 stroke-current";
+
+  if (icon === "mail") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" className={className}>
+        <rect x="5" y="10" width="38" height="28" rx="2" strokeWidth="1.5" />
+        <path d="m7 13 17 14 17-14" strokeWidth="1.5" />
+      </svg>
+    );
+  }
+
+  if (icon === "phone") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" className={className}>
+        <rect x="14" y="4" width="20" height="40" rx="3" strokeWidth="1.5" />
+        <path d="M21 9h6M22 38h4" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" className={className}>
+      <path d="m5 22 38-16-11 37-9-13-18-8Z" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M23 30 43 6" strokeWidth="1.5" />
+    </svg>
+  );
+}
 
 export function ContactsSection() {
   const t = useTranslations("home");
 
   return (
-    <section id="contacts" className="pt-6 sm:pt-8 pb-2.5 bg-[#f4ebe6]">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
+    <section id="contacts" className="bg-[#f4ebe6] px-4 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
+      <div className="mx-auto max-w-[1600px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="max-w-xl mx-auto text-center mb-2.5"
+          className="mx-auto max-w-3xl text-center"
         >
-          <h2 className="font-serif text-4xl sm:text-5xl font-light tracking-wide text-[#2c211b] mb-4">
+          <h2 className="font-serif text-4xl font-light tracking-wide text-[#2c211b] sm:text-5xl lg:text-6xl">
             {t("contacts.heading")}
           </h2>
-          <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80">
+          <p className="mt-5 text-base leading-relaxed text-[#2c211b]/70 sm:text-lg">
             {t("contacts.description")}
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
-          {contactLinks.map((c, i) => (
-            <motion.a
-              key={c.label}
-              href={c.href}
-              target={c.href.startsWith("http") ? "_blank" : undefined}
-              rel={c.href.startsWith("http") ? "noreferrer noopener" : undefined}
+        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-10 md:mt-14 md:grid-cols-3 md:gap-0">
+          {contactLinks.map((contact, i) => (
+            <motion.div
+              key={contact.label}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="flex flex-col items-center text-center p-6 sm:p-8 border border-[#2c211b]/15 hover:border-[#2f6f78] transition-colors duration-200"
+              className="relative flex min-w-0 justify-center px-4 md:px-10"
             >
-              <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78] mb-3">
-                {c.label}
-              </span>
-              <span className="font-serif text-lg sm:text-xl text-[#2c211b]">
-                {c.value}
-              </span>
-            </motion.a>
+              {i > 0 && (
+                <div aria-hidden="true" className="absolute inset-y-1/2 left-0 hidden h-28 -translate-y-1/2 md:flex md:flex-col md:items-center">
+                  <span className="h-10 w-px bg-[#a78343]/30" />
+                  <span className="font-serif text-2xl font-light leading-8 text-[#a78343]/70">S</span>
+                  <span className="h-10 w-px bg-[#a78343]/30" />
+                </div>
+              )}
+              <a
+                href={contact.href}
+                target={contact.href.startsWith("http") ? "_blank" : undefined}
+                rel={contact.href.startsWith("http") ? "noreferrer noopener" : undefined}
+                className="group flex min-w-0 flex-col items-center text-center text-[#a78343]"
+              >
+                <ContactIcon icon={contact.icon} />
+                <span className="mt-5 text-[10px] font-medium tracking-[0.35em] text-[#2c211b]">
+                  {contact.label}
+                </span>
+                <span className="mt-4 max-w-full border-b border-[#a78343]/60 pb-1 font-sans text-base text-[#2c211b] transition-colors duration-200 group-hover:text-[#2f6f78] sm:text-lg">
+                  {contact.value}
+                </span>
+              </a>
+            </motion.div>
           ))}
-        </div>
-
-        {/* Send message CTA row */}
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 pt-2.5">
-          <a
-            href="mailto:Sunluk@gmail.com"
-            className="text-[10px] sm:text-xs font-medium tracking-[0.3em] uppercase text-[#2f6f78] hover:text-[#2c211b] transition-colors duration-200"
-          >
-            {t("contacts.sendLabel")}
-          </a>
-          <a
-            href="mailto:Sunluk@gmail.com"
-            className="font-serif text-xl sm:text-2xl text-[#2c211b] hover:text-[#2f6f78] transition-colors duration-200"
-          >
-            Sunluk@gmail.com
-          </a>
         </div>
       </div>
     </section>
