@@ -22,7 +22,7 @@ export function HeroSection() {
           initial={playIntroAnimation ? { opacity: 0, scale: 1.08 } : false}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[56%]"
+          className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[52%]"
         >
           <div className="absolute inset-0 overflow-hidden">
             <video
@@ -32,12 +32,12 @@ export function HeroSection() {
               playsInline
               preload="auto"
               aria-label="SUNLUK eyewear accessory editorial video"
-              className="h-full w-full origin-top scale-[1.05] object-cover object-[20%_center]"
+              className="h-full w-full scale-[1.10] translate-y-3 object-cover object-[20%_center]"
             >
               <source src="/videos/hero-live-frame.mp4" type="video/mp4" />
             </video>
           </div>
-          <div className="pointer-events-none absolute inset-y-0 -left-20 z-10 hidden w-[34%] bg-[linear-gradient(to_right,#f4ebe6_0%,#f4ebe6_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
+          <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,#f4ebe6_0%,#f4ebe6_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
         <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
           <motion.div 
