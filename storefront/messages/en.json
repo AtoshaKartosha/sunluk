@@ -105,7 +105,6 @@
   },
   "product": {
     "brand": "SUNLUK ACCESSORIES",
-    "vatIncluded": "VAT included",
     "handmade": "Handmade",
     "delivery": "Delivery to DE & Worldwide",
     "giftWrap": "Gift wrapping available",
@@ -113,7 +112,7 @@
     "shippingText": "We guarantee fast delivery of our eyewear accessory — wherever you live.",
     "shippingItem1": "✔️ Orders placed before 4:00 PM ship the same day",
     "shippingItem2": "✔️ Delivery takes 2 to 14 days depending on the destination city",
-    "shippingItem3": "✔️ Free worldwide delivery on orders over 5,000 RUB (60 EUR)",
+    "shippingItem3": "✔️ Free worldwide delivery on orders over 4,999 RUB (60 EUR)",
     "returnsHeading": "RETURNS",
     "returnsText": "For your peace of mind, we offer a 30-day return policy. If you are not satisfied with your purchase, return it within 30 days for a full refund or replacement.",
     "turquoise": "Turquoise",

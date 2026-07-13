@@ -1333,15 +1333,15 @@ export default function CheckoutPage() {
                 <div className="flex justify-between">
                   <dt className="text-[#2c211b]/60">{tsm("shipping")}</dt>
                   <dd className="font-medium">
-                    {cart.shipping_total > 0
-                      ? formatPrice(
-                          cart.shipping_total,
-                          cart.currency_code ?? "dkk",
-                          locale,
-                        )
-                      : displaySubtotal >= 50
-                        ? tsm("shippingFree")
-                        : tsm("shippingPending")}
+                    {cart.shipping_methods && cart.shipping_methods.length > 0
+                      ? cart.shipping_total > 0
+                        ? formatPrice(
+                            cart.shipping_total,
+                            cart.currency_code ?? "dkk",
+                            locale,
+                          )
+                        : tsm("shippingFree")
+                      : tsm("shippingPending")}
                   </dd>
                 </div>
                 <div className="flex justify-between">

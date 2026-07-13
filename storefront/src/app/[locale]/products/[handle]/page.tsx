@@ -277,7 +277,6 @@ export default async function ProductDetailPage({ params }: Props) {
   const pt = await getTranslations({ locale, namespace: "product" });
   const productLabels: ProductInfoBlockLabels = {
     brand: pt("brand"),
-    vatIncluded: pt("vatIncluded"),
     handmade: pt("handmade"),
     delivery: pt("delivery"),
     giftWrap: pt("giftWrap"),

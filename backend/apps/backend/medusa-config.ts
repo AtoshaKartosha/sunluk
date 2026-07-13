@@ -18,6 +18,17 @@ module.exports = defineConfig({
     {
       resolve: "@medusajs/medusa/translation",
     },
+    {
+      resolve: "@medusajs/medusa/fulfillment",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/regional-fulfillment",
+            id: "regional-fulfillment",
+          },
+        ],
+      },
+    },
   ],
   featureFlags: {
     translation: true,

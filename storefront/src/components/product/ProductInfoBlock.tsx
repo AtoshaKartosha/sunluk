@@ -10,7 +10,6 @@ import { Package } from "lucide-react";
 import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
   brand: string;
-  vatIncluded: string;
   handmade: string;
   delivery: string;
   giftWrap: string;
@@ -42,7 +41,6 @@ export interface ProductInfoBlockLabels {
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   brand: "АКСЕССУАРЫ SUNLUK",
-  vatIncluded: "НДС включен",
   handmade: "Ручная работа",
   delivery: "Доставка в DE и РФ",
   giftWrap: "Упаковка в подарок",
@@ -50,7 +48,7 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   shippingText: "Мы гарантируем быструю доставку нашего аксессуара для очков – где бы вы ни жили.",
   shippingItem1: "✔️ Заказ, оформленный до 16:00, отправляется сегодня",
   shippingItem2: "✔️ Доставка от 2 до 14 дней в зависимости от города доставки",
-  shippingItem3: "✔️ Доставка при покупке от 5000 Руб (60 Евро) по всему миру бесплатная",
+  shippingItem3: "✔️ Доставка при покупке от 4999 Руб (60 Евро) по всему миру бесплатная",
   returnsHeading: "ВОЗВРАТ",
   returnsText: "Для вашего спокойствия мы предлагаем 30-дневную политику возврата. Если вы не удовлетворены своей покупкой, верните её в течение 30 дней для полного возврата средств или замены.",
   materialNames: {
@@ -189,7 +187,6 @@ export function ProductInfoBlock({
     if (locale === "en") {
       return {
         brand: "SUNLUK ACCESSORIES",
-        vatIncluded: "VAT included",
         handmade: "Handmade",
         delivery: "Delivery to DE & Worldwide",
         giftWrap: "Gift wrapping available",
@@ -197,7 +194,7 @@ export function ProductInfoBlock({
         shippingText: "We guarantee fast delivery of our eyewear accessory — wherever you live.",
         shippingItem1: "✔️ Orders placed before 4:00 PM ship the same day",
         shippingItem2: "✔️ Delivery takes 2 to 14 days depending on the destination city",
-        shippingItem3: "✔️ Free worldwide delivery on orders over 5,000 RUB (60 EUR)",
+        shippingItem3: "✔️ Free worldwide delivery on orders over 4,999 RUB (60 EUR)",
         returnsHeading: "RETURNS",
         returnsText: "For your peace of mind, we offer a 30-day return policy. If you are not satisfied with your purchase, return it within 30 days for a full refund or replacement.",
         materialNames: {
@@ -365,9 +362,6 @@ export function ProductInfoBlock({
             price={headlinePrice}
             className="text-2xl sm:text-3xl font-light font-serif text-[#2c211b]"
           />
-          <span className="text-[10px] tracking-wide text-[#2c211b]/50 uppercase font-medium">
-            {labels.vatIncluded}
-          </span>
         </div>
 
         {/* Brief description */}
