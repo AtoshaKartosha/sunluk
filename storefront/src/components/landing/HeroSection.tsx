@@ -13,25 +13,31 @@ export function HeroSection() {
   const playIntroAnimation =
     !previousPathname ||
     stripLocalePrefix(previousPathname) !== stripLocalePrefix(pathname);
-
   return (
     <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-[#f4ebe6] overflow-hidden">
       {/* Hero Contents */}
       <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-2.5">
-        {/* Background Image / Split Layout - constrained to hero top-half/side */}
+        {/* Hero video / split layout */}
         <motion.div
           initial={playIntroAnimation ? { opacity: 0, scale: 1.08 } : false}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute inset-y-0 right-0 w-full md:w-[54%] h-full overflow-hidden"
+          className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[56%]"
         >
-          <div className="hidden md:block absolute inset-y-0 left-0 w-[15%] bg-gradient-to-r from-[#f4ebe6] to-transparent md:-left-2 z-10" />
-          <div 
-            role="img"
-            aria-label="Warm beach editorial sunglasses and premium chain with sea beads" 
-            className="w-full h-full bg-cover bg-[position:20%_center]"
-            style={{ backgroundImage: "url('/images/hero-wide.webp')" }}
-          />
+          <div className="absolute inset-0 overflow-hidden">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-label="SUNLUK eyewear accessory editorial video"
+              className="h-full w-full origin-top scale-[1.05] object-cover object-[20%_center]"
+            >
+              <source src="/videos/hero-live-frame.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 -left-20 z-10 hidden w-[34%] bg-[linear-gradient(to_right,#f4ebe6_0%,#f4ebe6_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
         <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
           <motion.div 
