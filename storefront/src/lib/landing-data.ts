@@ -127,7 +127,7 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "МАГАЗИН",
     links: [
-      { label: "Все товары", href: "#" },
+      { label: "Коллекция", href: "#" },
     ],
   },
   {
