@@ -539,84 +539,69 @@ export default async function initial_data_seed({
 
   const accessoriesCategory = categoryResult[0];
   const packagingCategory = categoryResult[1];
+  const azureMetadata = {
+    wear_it_your_way: {
+      ru: [
+        { icon: "👓", title: "Как цепочку для очков", text: "Силиконовые держатели надежно фиксируются на большинстве оправ." },
+        { icon: "✨", title: "Как колье", text: "Снимите силиконовые держатели — аксессуар превращается в элегантное украшение." },
+        { icon: "🕶", title: "Как держатель для очков", text: "Закрепите очки на фирменном кольце, не снимая колье. Удобно, безопасно и всегда под рукой." }
+      ],
+      en: [
+        { icon: "👓", title: "As an Eyewear Chain", text: "Silicone loops securely fit most eyeglass frames." },
+        { icon: "✨", title: "As a Necklace", text: "Remove the silicone loops to transform it into an elegant everyday necklace." },
+        { icon: "🕶", title: "As an Eyewear Holder", text: "Attach your glasses to the signature ring without taking off the necklace. Secure, stylish, and always within reach." }
+      ]
+    },
+    whats_included: {
+      ru: ["Украшение SUNLUK (Длина – 72 см)", "Фирменное кольцо", "Прозрачные силиконовые держатели"],
+      en: ["SUNLUK Accessory (Length: 72 cm)", "Signature Ring", "Clear Silicone Loops"]
+    }
+  };
+
+  const duneMetadata = {
+    wear_it_your_way: {
+      ru: [
+        { icon: "👓", title: "Как держатель для очков", text: "Закрепите очки на фирменном кольце. Они всегда будут под рукой и не займут место в сумке или кармане." },
+        { icon: "✨", title: "Как колье", text: "Лаконичный дизайн делает аксессуар элегантным украшением на каждый день." },
+        { icon: "🕶", title: "С очками на кольце", text: "Повесьте очки на фирменном кольце, не снимая колье. Удобно, безопасно и всегда под рукой." }
+      ],
+      en: [
+        { icon: "👓", title: "As an Eyewear Holder", text: "Attach your glasses to the signature ring to keep them secure and always within easy reach." },
+        { icon: "✨", title: "As a Necklace", text: "Its clean, minimalist design makes it an elegant everyday accessory." },
+        { icon: "🕶", title: "With Glasses on the Ring", text: "Hang your glasses on the signature ring without taking off the necklace. Secure, stylish, and always within reach." }
+      ]
+    },
+    whats_included: {
+      ru: ["Украшение SUNLUK (Длина – 72 см)", "Фирменное кольцо"],
+      en: ["SUNLUK Accessory (Length: 72 cm)", "Signature Ring"]
+    }
+  };
 
   const { result: productResults } = await createProductsWorkflow(container).run({
     input: {
       products: [
         {
-          title: "Бирюза",
+          title: "Лазурь",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Акцентный цвет и природные мотивы",
-          handle: "turquoise-chain",
+          description: "Фирменная цепочка SUNLUK с лазурными акцентами, вдохновленными цветом моря. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "azure",
           weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-turquoise.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Turquoise"],
+              values: ["Azure"],
             },
           ],
           variants: [
             {
-              title: "Turquoise",
-              sku: "TURQUOISE-CHAIN",
+              title: "Azure",
+              sku: "AZURE-CHAIN",
               options: {
-                Material: "Turquoise",
-              },
-              prices: [
-                {
-                  amount: 49,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 54,
-                  currency_code: "usd",
-                },
-                {
-                  amount: 4900,
-                  currency_code: "rub",
-                },
-              ],
-              manage_inventory: true,
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-        {
-          title: "Leather Loop",
-          category_ids: [accessoriesCategory.id],
-          description: "Натуральная кожа и премиальный металл",
-          handle: "leather-loop",
-          weight: 150,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-leather.webp",
-            },
-          ],
-          options: [
-            {
-              title: "Material",
-              values: ["Leather"],
-            },
-          ],
-          variants: [
-            {
-              title: "Leather",
-              sku: "LEATHER-LOOP",
-              options: {
-                Material: "Leather",
+                Material: "Azure",
               },
               prices: [
                 {
@@ -628,7 +613,7 @@ export default async function initial_data_seed({
                   currency_code: "usd",
                 },
                 {
-                  amount: 5900,
+                  amount: 4999,
                   currency_code: "rub",
                 },
               ],
@@ -640,32 +625,77 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
         },
         {
-          title: "Silver Chain",
+          title: "Дюна",
+          subtitle: "Держатель для очков • Колье • Подвес для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Минимализм, строгость и лёгкий блеск",
-          handle: "silver-chain",
-          weight: 100,
+          description: "Минималистичное украшение SUNLUK с фирменным кольцом в теплых природных оттенках. Носите его как стильное колье или закрепляйте очки на кольце, чтобы они всегда были под рукой.",
+          handle: "dune",
+          weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-silver.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Silver"],
+              values: ["Dune"],
             },
           ],
           variants: [
             {
-              title: "Silver",
-              sku: "SILVER-CHAIN",
+              title: "Dune",
+              sku: "DUNE-CHAIN",
               options: {
-                Material: "Silver",
+                Material: "Dune",
+              },
+              prices: [
+                {
+                  amount: 59,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 65,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4999,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: duneMetadata,
+        },
+        {
+          title: "Луна",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Лаконичная серебристая цепочка SUNLUK в минималистичном дизайне. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "luna",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Luna"],
+            },
+          ],
+          variants: [
+            {
+              title: "Luna",
+              sku: "LUNA-CHAIN",
+              options: {
+                Material: "Luna",
               },
               prices: [
                 {
@@ -673,11 +703,11 @@ export default async function initial_data_seed({
                   currency_code: "eur",
                 },
                 {
-                  amount: 49,
+                  amount: 50,
                   currency_code: "usd",
                 },
                 {
-                  amount: 4500,
+                  amount: 3999,
                   currency_code: "rub",
                 },
               ],
@@ -689,44 +719,42 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
         },
         {
-          title: "Sand Chain",
+          title: "Шелк",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Тёплый металл и морской песчаный оттенок",
-          handle: "sand-chain",
-          weight: 130,
+          description: "Элегантная цепочка SUNLUK с мягким плоским плетением и золотистым сиянием. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "silk",
+          weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-sand.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Gold-plated"],
+              values: ["Silk"],
             },
           ],
           variants: [
             {
-              title: "Gold-plated",
-              sku: "SAND-CHAIN",
+              title: "Silk",
+              sku: "SILK-CHAIN",
               options: {
-                Material: "Gold-plated",
+                Material: "Silk",
               },
               prices: [
                 {
-                  amount: 55,
+                  amount: 54,
                   currency_code: "eur",
                 },
                 {
-                  amount: 60,
+                  amount: 59,
                   currency_code: "usd",
                 },
                 {
-                  amount: 5500,
+                  amount: 4499,
                   currency_code: "rub",
                 },
               ],
@@ -738,6 +766,101 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
+        },
+        {
+          title: "Аметист",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Эффектная цепочка SUNLUK с бусинами глубокого аметистового оттенка. Добавляет яркий акцент образу, легко превращается в стильное колье и позволяет удобно закрепить очки с помощью силиконовых держателей.",
+          handle: "amethyst",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Amethyst"],
+            },
+          ],
+          variants: [
+            {
+              title: "Amethyst",
+              sku: "AMETHYST-CHAIN",
+              options: {
+                Material: "Amethyst",
+              },
+              prices: [
+                {
+                  amount: 54,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 59,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4499,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: azureMetadata,
+        },
+        {
+          title: "Лагуна",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Элегантная цепочка SUNLUK с бусинами насыщенного зелёного оттенка, вдохновленная спокойствием морской лагуны. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "lagoon",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Lagoon"],
+            },
+          ],
+          variants: [
+            {
+              title: "Lagoon",
+              sku: "LAGOON-CHAIN",
+              options: {
+                Material: "Lagoon",
+              },
+              prices: [
+                {
+                  amount: 54,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 59,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4499,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: azureMetadata,
         },
         {
           title: "Фирменный мешочек",
@@ -997,8 +1120,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Бирюза",
-            description: "Акцентный цвет и природные мотивы",
+            title: "Лазурь",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Фирменная цепочка SUNLUK с лазурными акцентами, вдохновленными цветом моря. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -1006,8 +1130,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Turquoise Chain",
-            description: "Accent color and natural motifs",
+            title: "Azure",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "SUNLUK's signature eyewear chain featuring azure accents inspired by the colors of the sea. Easily transforms into an elegant necklace, while the signature ring keeps your glasses secure and within easy reach whenever you're not wearing them.",
           },
         },
         {
@@ -1015,8 +1140,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Leather Loop",
-            description: "Натуральная кожа и премиальный металл",
+            title: "Дюна",
+            subtitle: "Держатель для очков • Колье • Подвес для очков",
+            description: "Минималистичное украшение SUNLUK с фирменным кольцом в теплых природных оттенках. Носите его как стильное колье или закрепляйте очки на кольце, чтобы они всегда были под рукой.",
           },
         },
         {
@@ -1024,8 +1150,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Leather Loop",
-            description: "Genuine leather and premium metal",
+            title: "Dune",
+            subtitle: "Eyewear Holder • Necklace • Glasses Pendant",
+            description: "A minimalist SUNLUK accessory featuring the signature ring in warm, natural tones. Wear it as an elegant necklace or use the ring to keep your glasses secure and always within reach.",
           },
         },
         {
@@ -1033,8 +1160,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Silver Chain",
-            description: "Минимализм, строгость и лёгкий блеск",
+            title: "Луна",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Лаконичная серебристая цепочка SUNLUK в минималистичном дизайне. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -1042,8 +1170,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Silver Chain",
-            description: "Minimalism, rigor, and a light sheen",
+            title: "Luna",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "A minimalist silver-tone SUNLUK chain that easily transforms from an eyewear chain into an elegant necklace. The signature ring keeps your glasses secure and always within easy reach.",
           },
         },
         {
@@ -1051,8 +1180,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Sand Chain",
-            description: "Тёплый металл и морской песчаный оттенок",
+            title: "Шелк",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Элегантная цепочка SUNLUK с мягким плоским плетением и золотистым сиянием. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -1060,12 +1190,53 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Sand Chain",
-            description: "Warm metal and sea-sand shade",
+            title: "Silk",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "An elegant SUNLUK chain with a smooth flat weave and a refined gold finish. Easily transforms into a stylish necklace, while the signature ring keeps your glasses secure and always within reach.",
           },
         },
         {
           reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Аметист",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Эффектная цепочка SUNLUK с бусинами глубокого аметистового оттенка. Добавляет яркий акцент образу, легко превращается в стильное колье и позволяет удобно закрепить очки с помощью силиконовых держателей.",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Amethyst",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "A striking SUNLUK chain featuring deep amethyst-colored beads. Adds a bold touch to any look, transforms into an elegant necklace, and keeps your glasses secure with the included silicone loops.",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Лагуна",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Элегантная цепочка SUNLUK с бусинами насыщенного зелёного оттенка, вдохновленная спокойствием морской лагуны. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Lagoon",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "An elegant SUNLUK chain featuring rich green beads inspired by the calm waters of a tropical lagoon. Easily transforms into a stylish necklace, while the signature ring keeps your glasses secure and always within reach.",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1074,7 +1245,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[4].id,
+          reference_id: productResults[6].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -1083,7 +1254,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[5].id,
+          reference_id: productResults[7].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1092,7 +1263,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[5].id,
+          reference_id: productResults[7].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -1101,7 +1272,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[6].id,
+          reference_id: productResults[8].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1110,7 +1281,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[6].id,
+          reference_id: productResults[8].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -1119,7 +1290,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[7].id,
+          reference_id: productResults[9].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1128,7 +1299,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[7].id,
+          reference_id: productResults[9].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -1137,7 +1308,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[8].id,
+          reference_id: productResults[10].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1146,7 +1317,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[8].id,
+          reference_id: productResults[10].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -1155,7 +1326,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[9].id,
+          reference_id: productResults[11].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -1164,7 +1335,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[9].id,
+          reference_id: productResults[11].id,
           reference: "product",
           locale_code: "en-US",
           translations: {

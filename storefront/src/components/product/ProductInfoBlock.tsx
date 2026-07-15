@@ -27,11 +27,8 @@ export interface ProductInfoBlockLabels {
   breadcrumbCatalog: string;
   /** Social proof section labels. */
   socialProof: import("./types").SocialProofLabels;
-  /** Product facts heading. */
-  factsHeading: string;
-  factName: string;
-  factMaterial: string;
-  factLength: string;
+  wearHeading?: string;
+  kitHeading?: string;
   packagingHeading?: string;
   packagingNone?: string;
   packagingFree?: string;
@@ -52,14 +49,12 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   returnsHeading: "ВОЗВРАТ",
   returnsText: "Для вашего спокойствия мы предлагаем 30-дневную политику возврата. Если вы не удовлетворены своей покупкой, верните её в течение 30 дней для полного возврата средств или замены.",
   materialNames: {
-    turquoise: "Бирюза",
-    leather: "Кожа",
-    silver: "Сталь",
-    "gold-plated": "Золото",
-    Turquoise: "Бирюза",
-    Leather: "Кожа",
-    Silver: "Сталь",
-    "Gold-plated": "Золото",
+    Azure: "Лазурь",
+    Dune: "Дюна",
+    Luna: "Луна",
+    Silk: "Шелк",
+    Amethyst: "Аметист",
+    Lagoon: "Лагуна",
   },
   variantSelector: {
     selectAllOptions: "Выберите все параметры",
@@ -80,14 +75,12 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     deliveryPromise: "Бесплатная доставка",
     adding: "Добавление...",
     materialNames: {
-      turquoise: "Бирюза",
-      leather: "Кожа",
-      silver: "Сталь",
-      "gold-plated": "Золото",
-      Turquoise: "Бирюза",
-      Leather: "Кожа",
-      Silver: "Сталь",
-      "Gold-plated": "Золото",
+      Azure: "Лазурь",
+      Dune: "Дюна",
+      Luna: "Луна",
+      Silk: "Шелк",
+      Amethyst: "Аметист",
+      Lagoon: "Лагуна",
     },
   },
   breadcrumbCatalog: "КАТАЛОГ",
@@ -95,10 +88,8 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     heading: "ПОКУПАТЕЛИ ГОВОРЯТ",
     placeholder: "Отзывы скоро появятся. Станьте первым!",
   },
-  factsHeading: "ХАРАКТЕРИСТИКИ",
-  factName: "Название",
-  factMaterial: "Материал",
-  factLength: "Длина",
+  wearHeading: "НОСИТЕ ТАК, КАК УДОБНО",
+  kitHeading: "КОМПЛЕКТ",
   packagingHeading: "УПАКОВКА",
   packagingNone: "Без упаковки",
   packagingFree: "Бесплатно",
@@ -198,14 +189,12 @@ export function ProductInfoBlock({
         returnsHeading: "RETURNS",
         returnsText: "For your peace of mind, we offer a 30-day return policy. If you are not satisfied with your purchase, return it within 30 days for a full refund or replacement.",
         materialNames: {
-          turquoise: "Turquoise",
-          leather: "Leather",
-          silver: "Silver",
-          "gold-plated": "Gold-plated",
-          Turquoise: "Turquoise",
-          Leather: "Leather",
-          Silver: "Silver",
-          "Gold-plated": "Gold-plated",
+          Azure: "Azure",
+          Dune: "Dune",
+          Luna: "Luna",
+          Silk: "Silk",
+          Amethyst: "Amethyst",
+          Lagoon: "Lagoon",
         },
         variantSelector: {
           selectAllOptions: "Select all options",
@@ -226,14 +215,12 @@ export function ProductInfoBlock({
           deliveryPromise: "Free delivery",
           adding: "Adding…",
           materialNames: {
-            turquoise: "Turquoise",
-            leather: "Leather",
-            silver: "Silver",
-            "gold-plated": "Gold-plated",
-            Turquoise: "Turquoise",
-            Leather: "Leather",
-            Silver: "Silver",
-            "Gold-plated": "Gold-plated",
+            Azure: "Azure",
+            Dune: "Dune",
+            Luna: "Luna",
+            Silk: "Silk",
+            Amethyst: "Amethyst",
+            Lagoon: "Lagoon",
           },
         },
         breadcrumbCatalog: "CATALOG",
@@ -241,10 +228,8 @@ export function ProductInfoBlock({
           heading: "WHAT OUR CUSTOMERS SAY",
           placeholder: "Reviews coming soon. Be the first!",
         },
-        factsHeading: "SPECIFICATIONS",
-        factName: "Name",
-        factMaterial: "Material",
-        factLength: "Length",
+        wearHeading: "WEAR IT YOUR WAY",
+        kitHeading: "WHAT'S INCLUDED",
         packagingHeading: "PACKAGING",
         packagingNone: "No packaging",
         packagingFree: "Free",
@@ -320,27 +305,15 @@ export function ProductInfoBlock({
   const headlinePrice: CalculatedPrice | null =
     resolvedVariant?.calculated_price ?? price;
 
-  // ponytail: derive the three characteristics (Name, Material, Length).
-  // Match options by base title (EN+RU) since Medusa does not translate
-  // product option titles — only the product title/description.
-  const materialOption = product.options?.find((o) => {
-    const t = o.title.toLowerCase();
-    return t === "material" || t === "материал";
-  });
-  const lengthOption = product.options?.find((o) => {
-    const t = o.title.toLowerCase();
-    return t === "length" || t === "длина";
-  });
 
-  const materialValue = materialOption
-    ? selectedOptions[materialOption.id]
-    : undefined;
-  const lengthValue = lengthOption
-    ? selectedOptions[lengthOption.id]
-    : undefined;
-
-  const materialDisplay = materialValue
-    ? (labels.materialNames[materialValue] ?? materialValue)
+  const metaLocale = locale === "en" ? "en" : "ru";
+  const wearWays = product.metadata?.wear_it_your_way;
+  const wearData = wearWays && typeof wearWays === "object" && !Array.isArray(wearWays)
+    ? (wearWays as Record<string, Array<{icon: string; title: string; text: string}>>)[metaLocale]
+    : null;
+  const kitItems = product.metadata?.whats_included;
+  const kitData = kitItems && typeof kitItems === "object" && !Array.isArray(kitItems)
+    ? (kitItems as Record<string, string[]>)[metaLocale]
     : null;
 
   return (
@@ -354,6 +327,11 @@ export function ProductInfoBlock({
           <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase pb-2 border-b border-[#2c211b]/10">
             {product.title}
           </h1>
+          {product.subtitle && (
+            <p className="text-[11px] text-[#2c211b]/60 uppercase tracking-wider mt-2">
+              {product.subtitle}
+            </p>
+          )}
         </div>
 
         {/* Headline Price — variant-driven */}
@@ -542,26 +520,33 @@ export function ProductInfoBlock({
 
         {/* Collapsible Sections */}
         <div className="border-t border-[#2c211b]/10">
-          <AccordionItem title={labels.factsHeading}>
-            <dl className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factName}</dt>
-                <dd className="text-[#2c211b] font-medium">{product.title}</dd>
+          {wearData && Array.isArray(wearData) && wearData.length > 0 && (
+            <AccordionItem title={labels.wearHeading ?? ""}>
+              <div className="space-y-4">
+                {wearData.map((way, i) => (
+                  <div key={i} className="flex gap-3">
+                    <span className="text-base flex-shrink-0">{way.icon}</span>
+                    <div>
+                      <p className="font-medium text-[#2c211b] text-xs">{way.title}</p>
+                      <p className="text-[#2c211b]/70 text-xs mt-1">{way.text}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              {materialDisplay && (
-                <div className="flex justify-between text-xs">
-                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factMaterial}</dt>
-                  <dd className="text-[#2c211b] font-medium">{materialDisplay}</dd>
-                </div>
-              )}
-              {lengthValue && (
-                <div className="flex justify-between text-xs">
-                  <dt className="text-[#2c211b]/50 uppercase tracking-wide">{labels.factLength}</dt>
-                  <dd className="text-[#2c211b] font-medium">{lengthValue}</dd>
-                </div>
-              )}
-            </dl>
-          </AccordionItem>
+            </AccordionItem>
+          )}
+
+          {/* What's Included */}
+          {kitData && Array.isArray(kitData) && kitData.length > 0 && (
+            <AccordionItem title={labels.kitHeading ?? ""}>
+              <ul className="space-y-1">
+                {kitData.map((item, i) => (
+                  <li key={i}>• {item}</li>
+                ))}
+              </ul>
+            </AccordionItem>
+          )}
+
 
           <AccordionItem title={labels.shippingHeading}>
             <p>{labels.shippingText}</p>

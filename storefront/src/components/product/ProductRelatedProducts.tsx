@@ -4,7 +4,7 @@ import type { Locale } from "@/i18n/routing";
 
 interface ProductRelatedProductsProps {
   products?: StoreProduct[];
-  locale?: Locale;
+  locale: Locale;
   heading?: string;
 }
 
@@ -15,6 +15,7 @@ interface ProductRelatedProductsProps {
 export function ProductRelatedProducts({
   products,
   heading,
+  locale,
 }: ProductRelatedProductsProps) {
   if (!products || products.length === 0) return null;
 
@@ -25,7 +26,7 @@ export function ProductRelatedProducts({
           {heading}
         </h2>
       )}
-      <ProductGrid products={products} />
+      <ProductGrid products={products} locale={locale} />
     </section>
   );
 }

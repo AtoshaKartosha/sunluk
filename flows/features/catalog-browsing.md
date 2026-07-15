@@ -21,7 +21,7 @@ In scope:
 - Product detail viewing from the product list.
 - Rendering localized catalog content supplied by `flows/features/catalog-localization.md`.
 - Variant display, product-gallery interaction, and local variant selection on product detail.
-- Product detail merchandising blocks: breadcrumb, structured product facts, stock/delivery messaging, social-proof placeholder, and related products.
+- Product detail merchandising blocks: breadcrumb, localized merchandising metadata accordions, stock/delivery messaging, social-proof placeholder, and related products.
 - Quantity selection and cart handoff when the cart flow is implemented.
 
 Out of scope:
@@ -161,6 +161,7 @@ Storefront projection:
 - Store API request fails: show retryable error without mutating cart state.
 - Gallery has one image only: hide non-functional gallery controls and lightbox rail affordances.
 - Requested locale has partial or missing translations: render the fallback content produced by catalog-localization and keep catalog pricing/variant behavior unchanged.
+- Related-product navigation from a supported locale must preserve that locale prefix; changing the product handle must not silently change `/en` to `/ru`.
 
 ## 8. Side Effects
 
@@ -168,7 +169,7 @@ Storefront projection:
 - Region selection/config affects product prices and cart compatibility, while locale affects only content projection.
 - `catalog:localized-content-ready` feeds localized title/description into catalog list/detail rendering.
 - Selected variant changes update the headline price, stock label, delivery promise, sticky/mobile CTA, and metadata projection from the same variant-derived source.
-- Product detail renders breadcrumb context and related-product continuation without mutating catalog or cart state.
+- Product detail renders breadcrumb context and related-product continuation without mutating catalog/cart state; related-product destinations preserve the active locale.
 - `cart:item-selected` begins cart mutation in the cart flow once the cart UI is wired; current product-screen slice may render disabled/pending add-to-cart if cart flow is not yet implemented.
 
 ## 9. Schemas Touched
@@ -184,7 +185,6 @@ Expected implementation files for the product-list-to-product-detail slice:
 - `storefront/src/components/product/ProductCard.tsx`.
 - `storefront/src/components/product/ProductGrid.tsx`.
 - `storefront/src/components/product/ProductGallery.tsx`.
-- `storefront/src/components/product/ProductFacts.tsx`.
 - `storefront/src/components/product/ProductRelatedProducts.tsx`.
 - `storefront/src/components/product/VariantSelector.tsx`.
 - `storefront/src/components/product/PriceDisplay.tsx`.
@@ -207,17 +207,20 @@ Current files that inform the flow:
 | Storefront UI/integration | Product gallery thumbnails switch the hero image and lightbox navigation remains available on mobile/desktop | To add with product detail implementation | Pending implementation |
 | Storefront UI/integration | Sticky mobile CTA reflects selected variant price/availability and remains disabled for invalid selections | To add with product detail implementation | Pending implementation |
 | Storefront UI/integration | Product detail renders breadcrumb and related products when catalog context is available | To add with product detail implementation | Pending implementation |
+| Storefront browser smoke | Product detail renders localized subtitle plus Wear It Your Way and included-kit metadata accordions | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
+| Storefront browser smoke | Related-product continuation preserves `/en` and `/ru` while changing the handle | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
+
 ## 11. Implementation Plan
 
 1. Extract shared price/availability projection helpers so PDP headline, selector, and cards consume the same source.
-2. Upgrade `/products/[handle]` to render breadcrumb, interactive gallery, richer stock/delivery messaging, and structured product facts.
+2. Upgrade `/products/[handle]` to render breadcrumb, interactive gallery, richer stock/delivery messaging, and locale-aware product metadata accordions.
 3. Add sticky mobile purchase controls driven by the selected variant projection.
-4. Add related products and social-proof placeholder blocks without coupling PDP to checkout state.
+4. Add related products with active-locale destinations and social-proof placeholder blocks without coupling PDP to checkout state.
 5. Add localized metadata/JSON-LD and targeted tests for variant-driven PDP behavior.
 
 ## 12. Implementation Trace
 
-Current status: base product-list-to-product-detail slice and PDP merchandising blocks (Facts, Related, JsonLd) fully implemented.
+Current status: base product-list-to-product-detail slice and PDP merchandising blocks (metadata accordions, locale-preserving Related products, JsonLd) fully implemented.
 
 Current implementation files:
 
@@ -230,13 +233,15 @@ Current implementation files:
 - `storefront/src/components/product/PriceDisplay.tsx`
 - `storefront/src/components/product/types.ts`
 - `storefront/src/components/product/index.ts`
-- `storefront/src/components/product/ProductFacts.tsx`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/ProductJsonLd.tsx`
 
 Validation:
 
-- Next.js build completed cleanly.
+- `npm run build --prefix storefront` completed successfully.
+- Browser smoke passed for `/ru/products/azure` and `/en/products/azure`, including localized subtitle and both metadata accordions.
+- Browser navigation passed from `/en/products/azure` to `/en/products/dune` and from `/ru/products/azure` to `/ru/products/dune`.
+
 Notes:
 
 - `/` landing remains active.
@@ -248,7 +253,7 @@ Notes:
 
 - Should production default region remain Denmark (`dk`) or use a different first market for Sunluk? v0 proceeds with `NEXT_PUBLIC_DEFAULT_REGION ?? "dk"` until product chooses otherwise.
 - Should region selection later be explicit, inferred, or both? v0 defers selector UI.
-- Should localized product attributes beyond title/description (for example option labels or merchandising copy) be part of catalog browsing v1 or remain in `flows/features/catalog-localization.md` as a follow-up?
+- Localized product attributes beyond title/description are implemented through `flows/features/catalog-localization.md`: material names use message catalogs and merchandising metadata carries explicit `ru`/`en` values.
 - Should unavailable products be hidden or shown with disabled purchase actions? v0 follows Store API product visibility and disables impossible variant/cart actions.
 
 ## 14. Review Checklist

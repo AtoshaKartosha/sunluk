@@ -266,7 +266,14 @@ function CartLineItem({
     calcPrice.original_amount > item.unit_price;
   const packagingTotal = linkedItems.reduce((sum, li) => sum + (li.unit_price ?? 0), 0);
   const rowTotal = ((unitPrice ?? 0) + packagingTotal) * item.quantity;
-  const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
+  const materialNames: Record<string, string> = {
+    Azure: pt("azure"),
+    Dune: pt("dune"),
+    Luna: pt("luna"),
+    Silk: pt("silk"),
+    Amethyst: pt("amethyst"),
+    Lagoon: pt("lagoon")
+  };
   const optionLabel = lineItemOptionLabel(item, materialNames);
   // Use the line-item snapshot (set with the locale at add time, so it
   // carries the Medusa translation) as the source of truth, with the
