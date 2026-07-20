@@ -93,6 +93,8 @@
   "catalog": {
     "breadcrumb": "CATALOG",
     "heading": "ALL PRODUCTS",
+    "pageTitle": "SUNLUK — All Products",
+    "pageDescription": "SUNLUK eyewear accessories catalog: cases, cords, cloths and kits. Choose your accessory.",
     "empty": "No products found",
     "regionUnsupported": "REGION NOT SUPPORTED",
     "regionUnsupportedDesc": "Unfortunately, delivery to {countryCode} is temporarily unavailable.",

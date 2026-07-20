@@ -4,6 +4,8 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import type { Locale } from "@/i18n/routing";
 import { getNavLinks, getFooterGroups, getCopyright } from "@/lib/landing-data";
 import { INFO_SECTION_IDS } from "@/lib/info-sections";
+import type { Metadata } from "next";
+import { buildRouteMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +18,17 @@ interface Props {
   params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "info" });
-  return { title: t("pageTitle") };
+  return buildRouteMetadata({
+    locale: locale as Locale,
+    route: "info",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  });
 }
 
 export default async function InfoPage({ params }: Props) {
@@ -30,7 +39,7 @@ export default async function InfoPage({ params }: Props) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased selection:bg-[#2f6f78] selection:text-white">
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
-      <main className="flex-1 w-full">
+      <div className="flex-1 w-full">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 py-16 sm:py-24">
           <div className="mb-12 lg:mb-16">
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#2c211b] uppercase">
@@ -101,7 +110,7 @@ export default async function InfoPage({ params }: Props) {
             </div>
           </div>
         </div>
-      </main>
+      </div>
       <SiteFooter
         locale={resolvedLocale}
         footerGroups={getFooterGroups(resolvedLocale)}

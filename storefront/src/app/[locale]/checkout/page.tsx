@@ -130,14 +130,14 @@ function LoadingState({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div aria-hidden="true" className="w-8 h-8 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
           <p role="status" aria-live="polite" className="text-sm text-[#2c211b]/60 tracking-wide">
             {t("loading")}
           </p>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );
@@ -153,7 +153,7 @@ function EmptyCartState({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4 py-16">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
           <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
@@ -169,7 +169,7 @@ function EmptyCartState({
             {t("emptyCta")}
           </Link>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );
@@ -699,7 +699,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
       <SiteHeader />
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
+      <div className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
         {/* Header */}
         <div className="mb-12">
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide">
@@ -707,14 +707,14 @@ export default function CheckoutPage() {
           </h1>
           <div className="w-16 h-0.5 bg-[#2f6f78] mt-4" />
         </div>
-
+      
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 lg:gap-20">
           {/* ================================================================ */}
           {/* Left Column — Checkout Steps */}
           {/* ================================================================ */}
           <div className="order-2 lg:order-1">
             <StepIndicator currentStep={currentStep} tsteps={tsteps} />
-
+      
             {/* ---- Step 1: Contact & Address ---- */}
             {currentStep === "contact" && (
               <form onSubmit={handleContactSubmit} className="space-y-8">
@@ -726,7 +726,7 @@ export default function CheckoutPage() {
                     {tc("desc")}
                   </p>
                 </div>
-
+      
                 {/* Email */}
                 <div className="space-y-1.5">
                   <label
@@ -751,7 +751,7 @@ export default function CheckoutPage() {
                   />
                   {fieldErrorEl("email")}
                 </div>
-
+      
                 {/* Name fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -805,7 +805,7 @@ export default function CheckoutPage() {
                     {fieldErrorEl("last_name")}
                   </div>
                 </div>
-
+      
                 {/* Address */}
                 <div className="space-y-1.5">
                   <label
@@ -832,7 +832,7 @@ export default function CheckoutPage() {
                   />
                   {fieldErrorEl("address_1")}
                 </div>
-
+      
                 {/* Country / City */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -899,7 +899,7 @@ export default function CheckoutPage() {
                     {fieldErrorEl("city")}
                   </div>
                 </div>
-
+      
                 {/* Postal Code / Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -949,7 +949,7 @@ export default function CheckoutPage() {
                     />
                   </div>
                 </div>
-
+      
                 {stepError && (
                   <div
                     id="checkout-contact-error"
@@ -960,7 +960,7 @@ export default function CheckoutPage() {
                     {stepError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="submit"
@@ -979,7 +979,7 @@ export default function CheckoutPage() {
                 </div>
               </form>
             )}
-
+      
             {/* ---- Step 2: Shipping Method ---- */}
             {currentStep === "shipping" && (
               <form onSubmit={handleShippingSubmit} className="space-y-8">
@@ -991,7 +991,7 @@ export default function CheckoutPage() {
                     {ts("desc")}
                   </p>
                 </div>
-
+      
                 {shippingLoading ? (
                   <div className="flex items-center gap-3 py-8">
                     <div aria-hidden="true" className="w-5 h-5 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
@@ -1038,7 +1038,7 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                 )}
-
+      
                 {stepError && (
                   <div
                     id="checkout-shipping-error"
@@ -1049,7 +1049,7 @@ export default function CheckoutPage() {
                     {stepError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -1071,7 +1071,7 @@ export default function CheckoutPage() {
                 </div>
               </form>
             )}
-
+      
             {/* ---- Step 3: Payment ---- */}
             {currentStep === "payment" && (
               <form onSubmit={handlePaymentSubmit} className="space-y-8">
@@ -1083,7 +1083,7 @@ export default function CheckoutPage() {
                     {tp("desc")}
                   </p>
                 </div>
-
+      
                 <div className="space-y-3">
                   <label className="flex items-center gap-4 p-4 border border-[#2f6f78] bg-[#2f6f78]/5 cursor-pointer">
                     <input
@@ -1119,7 +1119,7 @@ export default function CheckoutPage() {
                     </div>
                   </label>
                 </div>
-
+      
                 <p className="flex items-center gap-1.5 text-xs text-[#2c211b]/50">
                   <svg
                     aria-hidden="true"
@@ -1138,7 +1138,7 @@ export default function CheckoutPage() {
                   </svg>
                   {tp("secureNote")}
                 </p>
-
+      
                 {completionError && (
                   <div
                     id="checkout-payment-error"
@@ -1149,7 +1149,7 @@ export default function CheckoutPage() {
                     {completionError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -1180,7 +1180,7 @@ export default function CheckoutPage() {
               </form>
             )}
           </div>
-
+      
           {/* ================================================================ */}
           {/* Right Column — Order Summary */}
           {/* ================================================================ */}
@@ -1220,7 +1220,7 @@ export default function CheckoutPage() {
               <h3 className="font-serif text-lg tracking-wide mb-6">
                 {tsm("yourOrder")}
               </h3>
-
+      
               {/* Line items */}
               {hasItems ? (
                 <ul className="space-y-4 mb-6 pb-6 border-b border-[#2c211b]/8">
@@ -1309,7 +1309,7 @@ export default function CheckoutPage() {
                   {t("noItems")}
                 </p>
               )}
-
+      
               {/* Totals */}
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -1371,7 +1371,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );

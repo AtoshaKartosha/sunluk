@@ -1,63 +1,96 @@
 import type { VariantProjection } from "@/lib/price";
+import { absoluteUrl, safeJsonLd } from "@/lib/seo";
+import type { Locale } from "@/i18n/routing";
 
 interface ProductJsonLdProps {
   title: string;
   description: string | null;
   imageUrl: string | null;
   projection: VariantProjection;
-  /** Canonical product URL (without locale prefix or trailing slash). */
-  url: string;
+  locale: Locale;
+  handle: string;
+  catalogLabel: string;
 }
 
 /**
- * Renders a Product JSON-LD structured data script tag.
+ * Renders Product and BreadcrumbList JSON-LD for a product detail page.
  *
- * Includes title, image, price, currency, and availability derived from the
- * selected/default variant projection. This feeds Google Shopping/search
- * rich results without requiring client-side JS.
- *
- * When no variant price is available the Offer is omitted.
+ * The Product schema carries name, image, and an Offer (price, currency,
+ * availability) derived from the selected/default variant projection; the
+ * Offer is omitted when no variant price resolves. The BreadcrumbList covers
+ * Home > Catalog > Product. Serialization escapes `<` so a data value cannot
+ * terminate the script element.
  */
 export function ProductJsonLd({
   title,
   description,
   imageUrl,
   projection,
-  url,
+  locale,
+  handle,
+  catalogLabel,
 }: ProductJsonLdProps) {
-  const json: Record<string, unknown> = {
+  const productUrl = absoluteUrl(`/${locale}/products/${handle}`);
+
+  const product: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: title,
-    url,
+    url: productUrl,
   };
-
   if (description) {
-    json.description = description;
+    product.description = description;
   }
-
   if (imageUrl) {
-    json.image = imageUrl;
+    product.image = imageUrl;
   }
-
   if (projection.price) {
-    const availability = projection.isAvailable
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock";
-
-    json.offers = {
+    product.offers = {
       "@type": "Offer",
       price: projection.price.calculated_amount,
       priceCurrency: projection.price.currency_code.toUpperCase(),
-      availability,
-      url,
+      availability: projection.isAvailable
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      url: productUrl,
     };
   }
 
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "SUNLUK",
+        item: absoluteUrl(`/${locale}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: catalogLabel,
+        item: absoluteUrl(`/${locale}/products`),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: title,
+        item: productUrl,
+      },
+    ],
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(product) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }}
+      />
+    </>
   );
 }

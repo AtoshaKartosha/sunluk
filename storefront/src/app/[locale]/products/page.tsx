@@ -8,11 +8,24 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import type { Locale } from "@/i18n/routing";
 import { toMedusaLocale } from "@/i18n/routing";
 import { getNavLinks, getFooterGroups, getCopyright } from "@/lib/landing-data";
+import type { Metadata } from "next";
+import { buildRouteMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "catalog" });
+  return buildRouteMetadata({
+    locale: locale as Locale,
+    route: "products",
+    title: t("pageTitle"),
+    description: t("pageDescription"),
+  });
 }
 
 function getPageChrome(locale: Locale) {
@@ -39,17 +52,17 @@ function UnsupportedRegion({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={chrome.navLinks} />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
-          <h2 className="font-serif text-2xl font-light tracking-wide mb-4">
+          <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
             {heading}
-          </h2>
+          </h1>
           <p className="text-sm text-[#2c211b]/60">
             {description.replace("{countryCode}", countryCode.toUpperCase())}
           </p>
         </div>
-      </main>
+      </div>
       <SiteFooter
         locale={locale}
         footerGroups={chrome.footerGroups}
@@ -75,12 +88,12 @@ function CatalogError({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={chrome.navLinks} />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
-          <h2 className="font-serif text-2xl font-light tracking-wide mb-4">
+          <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
             {heading}
-          </h2>
+          </h1>
           <p className="text-sm text-[#2c211b]/60 mb-6">{description}</p>
           <Link
             href={`/${locale}/products`}
@@ -89,7 +102,7 @@ function CatalogError({
             {retryLabel}
           </Link>
         </div>
-      </main>
+      </div>
       <SiteFooter
         locale={locale}
         footerGroups={chrome.footerGroups}
@@ -146,7 +159,7 @@ export default async function ProductsPage({ params }: Props) {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
-      <main className="flex-1">
+      <div className="flex-1">
         <section className="pt-8 sm:pt-16 pb-10 sm:pb-16">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
             <div className="max-w-xl mx-auto mb-16 sm:mb-20 text-center">
@@ -165,7 +178,7 @@ export default async function ProductsPage({ params }: Props) {
             />
           </div>
         </section>
-      </main>
+      </div>
       <SiteFooter
         locale={resolvedLocale}
         footerGroups={getFooterGroups(resolvedLocale)}

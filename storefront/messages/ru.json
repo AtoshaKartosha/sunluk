@@ -93,6 +93,8 @@
   "catalog": {
     "breadcrumb": "КАТАЛОГ",
     "heading": "ВСЕ ТОВАРЫ",
+    "pageTitle": "SUNLUK — Все товары",
+    "pageDescription": "Каталог аксессуаров для очков SUNLUK: чехлы, шнурки, салфетки и комплекты. Выберите свой аксессуар.",
     "empty": "Товары не найдены",
     "regionUnsupported": "РЕГИОН НЕ ПОДДЕРЖИВАЕТСЯ",
     "regionUnsupportedDesc": "К сожалению, доставка в регион {countryCode} временно недоступна.",

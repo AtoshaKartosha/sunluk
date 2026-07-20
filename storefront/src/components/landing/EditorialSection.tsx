@@ -2,9 +2,12 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ArrowRightIcon } from "./icons";
+import Image from "next/image";
+import { useEntrance } from "./use-entrance";
 
 export function EditorialSection() {
   const t = useTranslations("home");
+  const animate = useEntrance();
 
   return (
     <section className="relative pt-2.5 pb-2.5 z-20 bg-[#f4ebe6]">
@@ -12,7 +15,7 @@ export function EditorialSection() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
           {/* 3 Models Container with 5px padding and 5px gap */}
           <motion.div 
-            initial="hidden"
+            initial={animate ? "hidden" : false}
             whileInView="show"
             viewport={{ once: true, margin: "-100px" }}
             variants={{
@@ -34,16 +37,20 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
-              <div 
-                role="img"
-                aria-label={t("editorial.model1Aria")} 
-                className="absolute inset-0 bg-cover bg-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-                style={{ backgroundImage: "url('/images/model1.webp')" }}
+              <Image
+                src="/images/model1.webp"
+                alt={t("editorial.model1Aria")}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
               />
-              <div
+              <Image
+                src="/images/model1-2.webp"
+                alt=""
                 aria-hidden="true"
-                className="absolute inset-0 scale-[1.02] bg-cover bg-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-                style={{ backgroundImage: "url('/images/model1-2.webp')" }}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
@@ -55,16 +62,20 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
-              <div 
-                role="img"
-                aria-label={t("editorial.model2Aria")} 
-                className="absolute inset-0 bg-cover bg-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-                style={{ backgroundImage: "url('/images/model2.webp')" }}
+              <Image
+                src="/images/model2.webp"
+                alt={t("editorial.model2Aria")}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
               />
-              <div
+              <Image
+                src="/images/model2-2.webp"
+                alt=""
                 aria-hidden="true"
-                className="absolute inset-0 scale-[1.02] bg-cover bg-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-                style={{ backgroundImage: "url('/images/model2-2.webp')" }}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
@@ -76,23 +87,27 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
             >
-              <div 
-                role="img"
-                aria-label={t("editorial.model3Aria")} 
-                className="absolute inset-0 bg-cover bg-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-                style={{ backgroundImage: "url('/images/model3.webp')" }}
+              <Image
+                src="/images/model3.webp"
+                alt={t("editorial.model3Aria")}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
               />
-              <div
+              <Image
+                src="/images/model3-2.webp"
+                alt=""
                 aria-hidden="true"
-                className="absolute inset-0 scale-[1.02] bg-cover bg-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-                style={{ backgroundImage: "url('/images/model3-2.webp')" }}
+                fill
+                sizes="(min-width:1024px) 25vw, 33vw"
+                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
           </motion.div>
           {/* Text Editorial block without container wrapper */}
           <motion.div 
-            initial={{ opacity: 0 }}
+            initial={animate ? { opacity: 0 } : false}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}

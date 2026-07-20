@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { previousPathname, stripLocalePrefix } from "@/components/navigation/pathname-history";
 import { CharReveal } from "./char-reveal";
 import { ArrowRightIcon } from "./icons";
+import { useEntrance } from "./use-entrance";
 
 export function HeroSection() {
   const t = useTranslations("home");
@@ -13,13 +14,15 @@ export function HeroSection() {
   const playIntroAnimation =
     !previousPathname ||
     stripLocalePrefix(previousPathname) !== stripLocalePrefix(pathname);
+  const animate = useEntrance();
+  const intro = animate && playIntroAnimation;
   return (
     <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-[#f4ebe6] overflow-hidden">
       {/* Hero Contents */}
       <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-2.5">
         {/* Hero video / split layout */}
         <motion.div
-          initial={playIntroAnimation ? { opacity: 0, scale: 1.08 } : false}
+          initial={intro ? { opacity: 0, scale: 1.08 } : false}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[52%]"
@@ -30,7 +33,8 @@ export function HeroSection() {
               muted
               loop
               playsInline
-              preload="auto"
+              preload="metadata"
+              poster="/images/hero.webp"
               aria-label="SUNLUK eyewear accessory editorial video"
               className="h-full w-full scale-[1.10] translate-y-3 object-cover object-[20%_center]"
             >
@@ -41,7 +45,7 @@ export function HeroSection() {
         </motion.div>
         <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
           <motion.div 
-            initial={playIntroAnimation ? { opacity: 0 } : false}
+            initial={intro ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8 bg-[#2c211b]/50 backdrop-blur-md border border-white/15 p-6 sm:p-8 md:p-0 md:bg-transparent md:backdrop-blur-none md:border-none shadow-[0_20px_60px_rgba(44,33,27,0.18)] md:shadow-none"
@@ -53,7 +57,7 @@ export function HeroSection() {
                 delay={0}
                 y={0}
                 duration={0.35}
-                playAnimation={playIntroAnimation}
+                playAnimation={intro}
               />
               <br />
               <CharReveal
@@ -62,7 +66,7 @@ export function HeroSection() {
                 delay={0.14}
                 y={0}
                 duration={0.35}
-                playAnimation={playIntroAnimation}
+                playAnimation={intro}
               />
             </h1>
             <p className="text-base sm:text-lg leading-relaxed text-[#f4ebe6]/90 md:text-[#2c211b]/80 [text-shadow:0_1px_2px_rgba(44,33,27,0.45)] md:[text-shadow:none] max-w-md w-full">
@@ -72,7 +76,7 @@ export function HeroSection() {
                 delay={0.35}
                 y={0}
                 duration={0.28}
-                playAnimation={playIntroAnimation}
+                playAnimation={intro}
               />
               <br className="hidden sm:inline" />
               <CharReveal
@@ -81,11 +85,11 @@ export function HeroSection() {
                 delay={0.45}
                 y={0}
                 duration={0.28}
-                playAnimation={playIntroAnimation}
+                playAnimation={intro}
               />
             </p>
             <motion.a 
-              initial={playIntroAnimation ? { opacity: 0 } : false}
+              initial={intro ? { opacity: 0 } : false}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.75, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               whileHover={{ scale: 1.02 }}
