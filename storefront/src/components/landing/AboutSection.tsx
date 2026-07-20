@@ -19,7 +19,7 @@ export function AboutSection() {
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="group relative h-64 lg:h-auto overflow-hidden bg-background rounded-none shadow-sm cursor-pointer"
+        className="group relative h-64 lg:h-auto overflow-hidden bg-background rounded-none cursor-pointer"
       >
         <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105">
           <Image
