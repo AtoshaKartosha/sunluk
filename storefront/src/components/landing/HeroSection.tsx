@@ -54,7 +54,11 @@ export function HeroSection() {
             className="absolute inset-0 overflow-hidden cursor-pointer"
           >
             {slides.map((src, index) => {
-              const isShifted = index === 3;
+              const getTranslateClass = () => {
+                if (index === 0) return "translate-y-[10%]";
+                if (index === 3) return "translate-y-[15%]";
+                return "";
+              };
               return (
                 <Image
                   key={src}
@@ -63,9 +67,7 @@ export function HeroSection() {
                   fill
                   priority={index === 0}
                   sizes="(min-width: 768px) 52vw, 100vw"
-                  className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right transition-opacity duration-1000 ease-in-out ${
-                    isShifted ? "translate-y-[15%]" : ""
-                  } ${
+                  className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right transition-opacity duration-1000 ease-in-out ${getTranslateClass()} ${
                     currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                   }`}
                 />
