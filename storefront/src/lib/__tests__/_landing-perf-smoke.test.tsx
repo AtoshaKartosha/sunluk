@@ -40,17 +40,14 @@ describe("Landing perf smoke", () => {
     document.body.innerHTML = "";
   });
 
-  it("HeroSection: one source, loop, preload metadata, poster", () => {
+  it("HeroSection: renders background image slider", () => {
     render(<HeroSection />);
-    const video = screen.getByLabelText(
-      "SUNLUK eyewear accessory editorial video",
-    ) as HTMLVideoElement;
-    const sources = video.querySelectorAll("source");
-    expect(video.loop).toBe(true);
-    expect(video.preload).toBe("metadata");
-    expect(video.poster).toContain("hero.webp");
-    expect(sources).toHaveLength(1);
-    expect(sources[0]).toHaveAttribute("src", "/videos/hero-live-frame.mp4");
+    const img = screen.getByAltText(
+      "SUNLUK hero slide 1",
+    ) as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.getAttribute("src")).toContain("sunluk_main.webp");
+    expect(img.getAttribute("sizes")).toBe("(min-width: 768px) 52vw, 100vw");
   });
 
   it("EditorialSection: 6 imgs (3 alt + 3 decorative), all sized", () => {

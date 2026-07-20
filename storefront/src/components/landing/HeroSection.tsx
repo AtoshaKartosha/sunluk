@@ -1,13 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { previousPathname, stripLocalePrefix } from "@/components/navigation/pathname-history";
 import { CharReveal } from "./char-reveal";
 import { ArrowRightIcon } from "./icons";
 import { useEntrance } from "./use-entrance";
-
 export function HeroSection() {
   const t = useTranslations("home");
   const pathname = usePathname();
@@ -16,6 +17,26 @@ export function HeroSection() {
     stripLocalePrefix(previousPathname) !== stripLocalePrefix(pathname);
   const animate = useEntrance();
   const intro = animate && playIntroAnimation;
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [
+    "/images/sunluk_main.webp",
+    "/images/sunluk_main_2.webp",
+    "/images/sunluk_main_3.webp",
+    "/images/sunluk_main_4.webp",
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
   return (
     <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-background overflow-hidden">
       {/* Hero Contents */}
@@ -27,28 +48,32 @@ export function HeroSection() {
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[52%]"
         >
-          <div className="absolute inset-0 overflow-hidden">
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster="/images/hero.webp"
-              aria-label="SUNLUK eyewear accessory editorial video"
-              className="h-full w-full scale-[1.10] translate-y-3 object-cover object-[20%_center]"
-            >
-              <source src="/videos/hero-live-frame.mp4" type="video/mp4" />
-            </video>
+          <div 
+            onClick={handleNextSlide}
+            className="absolute inset-0 overflow-hidden cursor-pointer"
+          >
+            {slides.map((src, index) => (
+              <Image
+                key={src}
+                src={src}
+                alt={`SUNLUK hero slide ${index + 1}`}
+                fill
+                priority={index === 0}
+                sizes="(min-width: 768px) 52vw, 100vw"
+                className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right translate-y-[8%] transition-opacity duration-1000 ease-in-out ${
+                  currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                }`}
+              />
+            ))}
           </div>
           <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,var(--color-background)_0%,var(--color-background)_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
-        <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
+        <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full pointer-events-none">
           <motion.div 
             initial={intro ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8 bg-[#2c211b]/50 backdrop-blur-md border border-white/15 p-6 sm:p-8 md:p-0 md:bg-transparent md:backdrop-blur-none md:border-none shadow-[0_20px_60px_rgba(44,33,27,0.18)] md:shadow-none"
+            className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8 bg-[#2c211b]/50 backdrop-blur-md border border-white/15 p-6 sm:p-8 md:p-0 md:bg-transparent md:backdrop-blur-none md:border-none shadow-[0_20px_60px_rgba(44,33,27,0.18)] md:shadow-none pointer-events-auto"
           >
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#f4ebe6] md:text-[#2c211b] [text-shadow:0_1px_2px_rgba(44,33,27,0.45)] md:[text-shadow:none] w-full">
               <CharReveal

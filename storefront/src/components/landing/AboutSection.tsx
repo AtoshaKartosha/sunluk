@@ -59,9 +59,9 @@ export function AboutSection() {
             style={{
               left: `${split}%`,
               transform: "translateX(-50%)",
-              width: "16px",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
+              width: "160px",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
               maskImage: "linear-gradient(to right, transparent, black, transparent)",
               WebkitMaskImage: "linear-gradient(to right, transparent, black, transparent)",
             }}
