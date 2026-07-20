@@ -234,6 +234,7 @@ Validation:
 - Browser smoke passed at desktop and 390px: one `main`, no horizontal overflow, content images loaded, hero poster/preload correct, no PDP console errors.
 - Global lint completed with zero errors; remaining warnings predate this flow and are outside its runtime contract.
 - Flow-code sync: IN SYNC 2026-07-20. Final read-only audit found zero drift or blockers across SEO behavior, performance fixes, validation trace, and cross-flow contracts.
+- Implementation commits: `dfeffaf` (storefront SEO) and `674197b` (targeted tests).
 
 ## 13. Open Questions
 
