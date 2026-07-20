@@ -13,7 +13,7 @@ export default function CabinetLoading() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
       <SiteHeader />
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
+      <div className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Header skeleton */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex flex-col gap-2">
@@ -22,7 +22,7 @@ export default function CabinetLoading() {
           </div>
           <Skeleton className="h-9 w-20" />
         </div>
-
+      
         {/* Profile Card skeleton */}
         <section className="mb-10">
           <Skeleton className="h-3 w-24 mb-4" />
@@ -45,7 +45,7 @@ export default function CabinetLoading() {
             </div>
           </div>
         </section>
-
+      
         {/* Orders Section skeleton */}
         <section>
           <Skeleton className="h-3 w-28 mb-4" />
@@ -108,7 +108,7 @@ export default function CabinetLoading() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
       <SiteFooter />
     </div>
   );

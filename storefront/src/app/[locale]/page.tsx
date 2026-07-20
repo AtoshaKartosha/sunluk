@@ -2,6 +2,9 @@ import { resolveRegion } from "@/lib/medusa/regions";
 import { listProducts } from "@/lib/medusa/products";
 import { toMedusaLocale } from "@/i18n/routing";
 import type { StoreProduct } from "@/components/product";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { buildRouteMetadata, absoluteUrl, routePath, safeJsonLd, siteOrigin } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 import { AboutSection } from "@/components/landing/AboutSection";
@@ -18,6 +21,19 @@ import type { Locale } from "@/i18n/routing";
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: HomePageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+  return buildRouteMetadata({
+    locale: locale as Locale,
+    route: "home",
+    title: t("title"),
+    description: t("description"),
+  });
 }
 
 export default async function HomePage({ params }: HomePageProps) {
@@ -42,8 +58,30 @@ export default async function HomePage({ params }: HomePageProps) {
     console.error("Error fetching homepage products:", error);
   }
 
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "SUNLUK",
+    url: siteOrigin(),
+  };
+  const siteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "SUNLUK",
+    url: absoluteUrl(routePath(loc, "home")),
+    inLanguage: loc === "ru" ? "ru-RU" : "en-US",
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased selection:bg-[#2f6f78] selection:text-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(siteJsonLd) }}
+      />
       <SiteHeader navLinks={getNavLinks(loc, true)} />
       <HeroSection />
       <EditorialSection />

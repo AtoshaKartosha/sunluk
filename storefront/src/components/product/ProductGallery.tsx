@@ -151,7 +151,6 @@ export function ProductGallery({
                   src={src}
                   alt=""
                   fill
-                  unoptimized
                   sizes="64px"
                   className="object-cover"
                 />
@@ -190,7 +189,6 @@ export function ProductGallery({
                   alt={`${title} — image ${i + 1}`}
                   fill
                   priority={i === 0}
-                  unoptimized
                   sizes="(min-width: 1024px) 42vw, 100vw"
                   className="object-cover"
                   style={{
@@ -251,7 +249,6 @@ export function ProductGallery({
                     src={src}
                     alt=""
                     fill
-                    unoptimized
                     sizes="64px"
                     className="object-cover"
                   />
@@ -292,7 +289,6 @@ export function ProductGallery({
               src={sources[activeIndex]}
               alt={`${title} — image ${activeIndex + 1}`}
               fill
-              unoptimized
               sizes="90vw"
               className="object-contain"
             />

@@ -62,21 +62,21 @@ function SuccessContent() {
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-16 sm:py-24 lg:py-32">
+      <div className="flex-1 flex items-center justify-center px-4 py-16 sm:py-24 lg:py-32">
         {orderId ? (
           <div className="w-full max-w-lg mx-auto text-center my-auto">
             {/* Check icon */}
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-[#2f6f78] text-[#2f6f78] mb-8">
               <CheckIcon className="w-10 h-10" />
             </div>
-
+      
             {/* Heading */}
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#2c211b] uppercase mb-4">
               {t("title")}
             </h1>
-
+      
             <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-8" aria-hidden="true" />
-
+      
             {/* Order ID */}
             <p className="text-sm tracking-widest uppercase text-[#2c211b]/60 mb-3">
               {t("orderNumber")}
@@ -84,12 +84,12 @@ function SuccessContent() {
             <p className="font-mono text-lg font-medium text-[#2c211b] mb-8 tracking-tight">
               {orderId}
             </p>
-
+      
             {/* Confirmation note */}
             <p className="text-sm leading-relaxed text-[#2c211b]/60 max-w-sm mx-auto mb-8">
               {t("confirmation")}
             </p>
-
+      
             {/* What's next */}
             <div className="max-w-sm mx-auto text-left mb-12 border-t border-[#2c211b]/10 pt-6">
               <p className="text-xs tracking-widest uppercase text-[#2c211b]/60 mb-3">
@@ -101,7 +101,7 @@ function SuccessContent() {
                 <li>{t("nextSupport")}</li>
               </ul>
             </div>
-
+      
             {/* CTAs */}
             <div className="flex flex-col items-center gap-5">
               {primaryCta}
@@ -114,14 +114,14 @@ function SuccessContent() {
             <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#2c211b] uppercase mb-4">
               {t("missingTitle")}
             </h1>
-
+      
             <div className="w-16 h-0.5 bg-[#2c211b]/20 mx-auto mb-8" aria-hidden="true" />
-
+      
             {/* Description */}
             <p className="text-sm leading-relaxed text-[#2c211b]/60 max-w-sm mx-auto mb-12">
               {t("missingDesc")}
             </p>
-
+      
             {/* CTAs */}
             <div className="flex flex-col items-center gap-5">
               {contactCta}
@@ -129,7 +129,7 @@ function SuccessContent() {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       <SiteFooter locale={locale} />
     </div>
@@ -149,17 +149,15 @@ export default function CheckoutSuccessPage() {
       fallback={
         <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
           <SiteHeader />
-          <main
-            className="flex-1 flex items-center justify-center"
-            role="status"
-            aria-live="polite"
-          >
+          <div className="flex-1 flex items-center justify-center"
+          role="status"
+          aria-live="polite">
             <div
               className="w-20 h-20 rounded-full border-2 border-[#2f6f78] animate-pulse motion-reduce:animate-none"
               aria-hidden="true"
             />
             <span className="sr-only">{t("loading")}</span>
-          </main>
+          </div>
           <SiteFooter locale={locale} />
         </div>
       }
