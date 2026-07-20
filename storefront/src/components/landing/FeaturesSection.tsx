@@ -1,11 +1,31 @@
 "use client";
+import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { FEATURES, FEATURE_BORDER_CLASSES } from "@/lib/landing-data";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { GemIcon, LeafIcon, ModulesIcon, ShieldIcon } from "./icons";
 
+const SLIDER_IMAGES = [
+  "/images/product-turquoise.webp",
+  "/images/product-leather.webp",
+  "/images/product-silver.webp",
+  "/images/product-sand.webp",
+];
+
 export function FeaturesSection() {
   const t = useTranslations("home");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  const handlePointerMove = useCallback((clientX: number) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const relX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    setActiveIdx(Math.min(SLIDER_IMAGES.length - 1, Math.floor((relX / rect.width) * SLIDER_IMAGES.length)));
+  }, []);
 
   // Map features with translated titles/descriptions but keep icons
   const localizedFeatures = FEATURES.map((feature, i) => ({
@@ -84,6 +104,27 @@ export function FeaturesSection() {
               {t("features.description")}
             </p>
             <div className="mt-2 h-0.5 w-20 bg-[#2c211b]/20" />
+            <div
+              ref={sliderRef}
+              role="img"
+              aria-label={t("features.sliderAria")}
+              className="relative mt-8 aspect-[5/3] w-full overflow-hidden cursor-ew-resize touch-none select-none"
+              onMouseMove={(e) => handlePointerMove(e.clientX)}
+              onTouchMove={(e) => e.touches[0] && handlePointerMove(e.touches[0].clientX)}
+            >
+              {SLIDER_IMAGES.map((src, i) => (
+                <Image
+                  key={src}
+                  src={src}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, 100vw"
+                  className={`absolute inset-0 object-cover object-center transition-opacity duration-300 ease-out ${
+                    i === activeIdx ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              ))}
+            </div>
           </motion.div>
         </div>
       </div>
