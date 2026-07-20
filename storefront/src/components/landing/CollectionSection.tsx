@@ -19,7 +19,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
   const animate = useEntrance();
 
   return (
-    <section id="collection" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
+    <section id="collection" className="pt-2.5 pb-2.5 bg-background">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
         <motion.div
           initial={animate ? { opacity: 0 } : false}
@@ -72,7 +72,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
                 }}
                 className="group flex flex-col text-left bg-transparent transition-all duration-300"
               >
-                <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-3 sm:mb-5 rounded-none relative">
+                <div className="aspect-[4/5] overflow-hidden bg-background mb-3 sm:mb-5 rounded-none relative">
                   <Image
                     src={product.image}
                     alt={t(`collection.products.${i}.title`)}

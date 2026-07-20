@@ -9,14 +9,14 @@ export function AboutSection() {
   const animate = useEntrance();
 
   return (
-    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-[#f4ebe6] overflow-hidden">
+    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden">
       {/* Left packaging/beach image */}
       <motion.div 
         initial={animate ? { opacity: 0, scale: 0.95 } : false}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="relative h-64 lg:h-auto overflow-hidden bg-[#f4ebe6]"
+        className="relative h-64 lg:h-auto overflow-hidden bg-background"
       >
         <Image
           src="/images/about-packaging.webp"
@@ -27,7 +27,7 @@ export function AboutSection() {
         />
       </motion.div>
       {/* Right text and button */}
-      <div className="bg-[#f4ebe6] py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
+      <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
         <motion.div 
           initial={animate ? { opacity: 0, x: 30 } : false}
           whileInView={{ opacity: 1, x: 0 }}

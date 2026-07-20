@@ -15,7 +15,7 @@ export function FeaturesSection() {
   }));
 
   return (
-    <section id="about" className="bg-[#f4ebe6] pt-2.5 pb-2.5 overflow-hidden">
+    <section id="about" className="bg-background pt-2.5 pb-2.5 overflow-hidden">
       <div className="mx-auto max-w-[1600px] px-4 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16">
           <motion.div
