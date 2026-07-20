@@ -42,7 +42,7 @@ export function EditorialSection() {
                 alt={t("editorial.model1Aria")}
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-700 ease-in-out group-hover:scale-105"
+                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-500 ease-out group-hover:scale-105"
               />
               <Image
                 src="/images/model1-2.webp"
@@ -50,7 +50,7 @@ export function EditorialSection() {
                 aria-hidden="true"
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-700 ease-in-out group-hover:scale-105 group-hover:opacity-100"
+                className="absolute inset-0 object-cover object-center opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
@@ -67,7 +67,7 @@ export function EditorialSection() {
                 alt={t("editorial.model2Aria")}
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-700 ease-in-out group-hover:scale-105"
+                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-500 ease-out group-hover:scale-105"
               />
               <Image
                 src="/images/model2-2.webp"
@@ -75,7 +75,7 @@ export function EditorialSection() {
                 aria-hidden="true"
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-700 ease-in-out group-hover:scale-105 group-hover:opacity-100"
+                className="absolute inset-0 object-cover object-center opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
@@ -92,7 +92,7 @@ export function EditorialSection() {
                 alt={t("editorial.model3Aria")}
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-700 ease-in-out group-hover:scale-105"
+                className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-500 ease-out group-hover:scale-105"
               />
               <Image
                 src="/images/model3-2.webp"
@@ -100,7 +100,7 @@ export function EditorialSection() {
                 aria-hidden="true"
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-700 ease-in-out group-hover:scale-105 group-hover:opacity-100"
+                className="absolute inset-0 object-cover object-center opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
