@@ -17,7 +17,7 @@ export function HeroSection() {
   const animate = useEntrance();
   const intro = animate && playIntroAnimation;
   return (
-    <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-[#f4ebe6] overflow-hidden">
+    <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-background overflow-hidden">
       {/* Hero Contents */}
       <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-2.5">
         {/* Hero video / split layout */}
@@ -41,7 +41,7 @@ export function HeroSection() {
               <source src="/videos/hero-live-frame.mp4" type="video/mp4" />
             </video>
           </div>
-          <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,#f4ebe6_0%,#f4ebe6_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
+          <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,var(--color-background)_0%,var(--color-background)_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
         <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full">
           <motion.div 

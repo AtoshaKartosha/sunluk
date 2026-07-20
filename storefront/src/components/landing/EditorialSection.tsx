@@ -10,7 +10,7 @@ export function EditorialSection() {
   const animate = useEntrance();
 
   return (
-    <section className="relative pt-2.5 pb-2.5 z-20 bg-[#f4ebe6]">
+    <section className="relative pt-2.5 pb-2.5 z-20 bg-background">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-center">
           {/* 3 Models Container with 5px padding and 5px gap */}
@@ -35,7 +35,7 @@ export function EditorialSection() {
                 hidden: { opacity: 0 },
                 show: { opacity: 1, transition: { duration: 0.6 } }
               }}
-              className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
               <Image
                 src="/images/model1.webp"
@@ -60,7 +60,7 @@ export function EditorialSection() {
                 hidden: { opacity: 0 },
                 show: { opacity: 1, transition: { duration: 0.6 } }
               }}
-              className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
               <Image
                 src="/images/model2.webp"
@@ -85,7 +85,7 @@ export function EditorialSection() {
                 hidden: { opacity: 0 },
                 show: { opacity: 1, transition: { duration: 0.6 } }
               }}
-              className="group relative aspect-[3/4] overflow-hidden bg-[#f4ebe6] rounded-none shadow-sm"
+              className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
               <Image
                 src="/images/model3.webp"

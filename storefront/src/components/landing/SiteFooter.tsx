@@ -23,7 +23,7 @@ export function SiteFooter({
   const [serviceGroup, ...secondaryGroups] = groups;
 
   return (
-    <footer className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
+    <footer className="bg-background border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12 lg:gap-16 mb-16 sm:mb-20">

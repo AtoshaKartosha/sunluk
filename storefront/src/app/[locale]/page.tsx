@@ -73,7 +73,7 @@ export default async function HomePage({ params }: HomePageProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased selection:bg-[#2f6f78] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-background text-[#2c211b] antialiased selection:bg-[#2f6f78] selection:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }}

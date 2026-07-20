@@ -57,7 +57,7 @@ export function ContactsSection() {
   const t = useTranslations("home");
 
   return (
-    <section id="contacts" className="bg-[#f4ebe6] px-4 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
+    <section id="contacts" className="bg-background px-4 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24">
       <div className="mx-auto max-w-[1600px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

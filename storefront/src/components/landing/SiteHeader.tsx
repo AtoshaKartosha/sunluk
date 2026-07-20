@@ -42,7 +42,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
   const { itemCount, openCart } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 bg-[#f4ebe6]/90 backdrop-blur-md border-b border-[#2c211b]/10 transition-all duration-300">
+    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-[#2c211b]/10 transition-all duration-300">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
 
         {/* Logo */}
@@ -102,7 +102,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
       {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-[#f4ebe6] border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto">
+        <div className="md:hidden absolute top-full left-0 w-full bg-background border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto">
           {links.map((link) => (
             <NavLink
               key={link.href}
