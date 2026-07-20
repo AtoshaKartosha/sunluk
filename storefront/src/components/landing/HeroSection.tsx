@@ -54,7 +54,7 @@ export function HeroSection() {
             className="absolute inset-0 overflow-hidden cursor-pointer"
           >
             {slides.map((src, index) => {
-              const isShifted = index === 0 || index === 3;
+              const isShifted = index === 3;
               return (
                 <Image
                   key={src}
