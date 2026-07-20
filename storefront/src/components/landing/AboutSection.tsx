@@ -10,7 +10,7 @@ export function AboutSection() {
   const animate = useEntrance();
 
   return (
-    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden">
+    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden pt-6 sm:pt-10">
       {/* Left packaging/beach image */}
       <motion.div 
         role="img"
