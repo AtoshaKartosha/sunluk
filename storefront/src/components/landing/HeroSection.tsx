@@ -24,6 +24,7 @@ export function HeroSection() {
     "/images/sunluk_main_2.webp",
     "/images/sunluk_main_3.webp",
     "/images/sunluk_main_4.webp",
+    "/images/sunluk_main_5.webp",
   ];
 
   useEffect(() => {
