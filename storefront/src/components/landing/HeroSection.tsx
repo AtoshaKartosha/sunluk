@@ -53,19 +53,24 @@ export function HeroSection() {
             onClick={handleNextSlide}
             className="absolute inset-0 overflow-hidden cursor-pointer"
           >
-            {slides.map((src, index) => (
-              <Image
-                key={src}
-                src={src}
-                alt={`SUNLUK hero slide ${index + 1}`}
-                fill
-                priority={index === 0}
-                sizes="(min-width: 768px) 52vw, 100vw"
-                className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right translate-y-[8%] transition-opacity duration-1000 ease-in-out ${
-                  currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                }`}
-              />
-            ))}
+            {slides.map((src, index) => {
+              const isShifted = index === 0 || index === 3;
+              return (
+                <Image
+                  key={src}
+                  src={src}
+                  alt={`SUNLUK hero slide ${index + 1}`}
+                  fill
+                  priority={index === 0}
+                  sizes="(min-width: 768px) 52vw, 100vw"
+                  className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right transition-opacity duration-1000 ease-in-out ${
+                    isShifted ? "translate-y-[8%]" : ""
+                  } ${
+                    currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                  }`}
+                />
+              );
+            })}
           </div>
           <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,var(--color-background)_0%,var(--color-background)_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
