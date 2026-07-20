@@ -63,12 +63,16 @@ describe("Landing perf smoke", () => {
     imgs.forEach((i) => expect(i.getAttribute("sizes")).toBeTruthy());
   });
 
-  it("AboutSection: 1 img with alt + sizes", () => {
+  it("AboutSection: image slider container with role img and aria-label", () => {
     const { container } = render(<AboutSection />);
+    const slider = container.querySelector('[role="img"]');
+    expect(slider).toBeTruthy();
+    expect(slider?.getAttribute("aria-label")).toBeTruthy();
     const imgs = container.querySelectorAll("img");
-    expect(imgs.length).toBe(1);
-    expect(imgs[0].getAttribute("alt")).toBeTruthy();
-    expect(imgs[0].getAttribute("sizes")).toBeTruthy();
+    expect(imgs.length).toBe(2);
+    imgs.forEach((img) => {
+      expect(img.getAttribute("sizes")).toBeTruthy();
+    });
   });
 
   it("NewsletterSection: 1 bg img alt+sizes, svg aria-hidden+focusable=false", () => {

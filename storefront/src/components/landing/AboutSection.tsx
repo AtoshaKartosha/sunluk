@@ -36,20 +36,37 @@ export function AboutSection() {
         onTouchMove={(e) => e.touches[0] && handlePointerMove(e.touches[0].clientX)}
       >
         <Image
-          src="/images/product-leather.webp"
+          src="/images/sunluk_slider_02.webp"
           alt=""
           fill
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="absolute inset-0 object-cover object-center"
         />
         <Image
-          src="/images/product-turquoise.webp"
+          src="/images/sunluk_slider_01.webp"
           alt=""
           fill
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="absolute inset-0 object-cover object-center"
-          style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
+          style={{
+            clipPath: `inset(0 ${100 - split}% 0 0)`,
+            WebkitClipPath: `inset(0 ${100 - split}% 0 0)`,
+          }}
         />
+        {split > 0 && split < 100 && (
+          <div
+            className="absolute top-0 bottom-0 pointer-events-none z-10"
+            style={{
+              left: `${split}%`,
+              transform: "translateX(-50%)",
+              width: "16px",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+              maskImage: "linear-gradient(to right, transparent, black, transparent)",
+              WebkitMaskImage: "linear-gradient(to right, transparent, black, transparent)",
+            }}
+          />
+        )}
       </motion.div>
       {/* Right text and button */}
       <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
