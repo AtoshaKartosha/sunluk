@@ -64,7 +64,7 @@ export function HeroSection() {
                   priority={index === 0}
                   sizes="(min-width: 768px) 52vw, 100vw"
                   className={`absolute inset-0 h-full w-full object-cover object-right-bottom scale-[1.30] origin-bottom-right transition-opacity duration-1000 ease-in-out ${
-                    isShifted ? "translate-y-[8%]" : ""
+                    isShifted ? "translate-y-[15%]" : ""
                   } ${
                     currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                   }`}
