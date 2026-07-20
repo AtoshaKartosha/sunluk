@@ -10,6 +10,8 @@ import React, {
   useState,
 } from "react";
 import { resolveRegion, type RegionResult } from "@/lib/medusa/regions";
+import { useLocale } from "next-intl";
+import { toMedusaLocale, type Locale } from "@/i18n/routing";
 import {
   addLineItem,
   clearCartId,
@@ -18,6 +20,7 @@ import {
   getStoredCartId,
   isCartNotFound,
   removeLineItem,
+  updateCart,
   updateLineItem,
 } from "@/lib/medusa/cart";
 import type { StoreCart } from "./types";
@@ -53,25 +56,71 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<StoreCart | null>(null);
-  const [loading, setLoading] = useState(() => !!getStoredCartId());
+  const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const regionRef = useRef<RegionResult | null>(null);
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
+  const locale = useLocale() as Locale;
+  const medusaLocale = toMedusaLocale(locale);
 
   // ---- Initialise on mount: restore cart from storage ----
   useEffect(() => {
+    const myId = ++requestIdRef.current;
     mountedRef.current = true;
-    if (!getStoredCartId()) return;
+    const isCurrent = () => mountedRef.current && requestIdRef.current === myId;
+
+    if (!getStoredCartId()) {
+      if (isCurrent()) {
+        setCart(null);
+        setLoading(false);
+      }
+      return;
+    }
 
     (async () => {
       try {
-        const restored = await getCart();
-        if (mountedRef.current) {
-          setCart(restored as unknown as StoreCart | null);
+        const restored = await getCart(medusaLocale);
+        if (isCurrent()) {
+          if (restored && medusaLocale) {
+            const targetRegion = await resolveRegion(undefined, medusaLocale);
+            if (
+              !("type" in targetRegion) &&
+              restored.region_id !== targetRegion.regionId
+            ) {
+              try {
+                const synced = await updateCart(
+                  restored.id,
+                  { region_id: targetRegion.regionId },
+                  medusaLocale,
+                );
+                if (isCurrent()) {
+                  setCart(synced as unknown as StoreCart | null);
+                }
+              } catch (error) {
+                // ponytail: fallback to un-synced cart on update failure
+                if (isCurrent()) {
+                  setCart(restored as unknown as StoreCart | null);
+                }
+              }
+            } else {
+              if (isCurrent()) {
+                setCart(restored as unknown as StoreCart | null);
+              }
+            }
+          } else {
+            if (isCurrent()) {
+              setCart(restored as unknown as StoreCart | null);
+            }
+          }
+        }
+      } catch (err) {
+        if (isCurrent()) {
+          setCart(null);
         }
       } finally {
-        if (mountedRef.current) {
+        if (isCurrent()) {
           setLoading(false);
         }
       }
@@ -80,13 +129,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [medusaLocale]);
 
   // ---- Resolve region once (lazily, on first mutation) ----
   const ensureRegion = useCallback(async (): Promise<RegionResult> => {
     if (regionRef.current) return regionRef.current;
 
-    const resolved = await resolveRegion();
+    const resolved = await resolveRegion(undefined, medusaLocale);
 
     if ("type" in resolved) {
       throw new Error(
@@ -97,7 +146,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     regionRef.current = resolved;
     return resolved;
-  }, []);
+  }, [medusaLocale]);
 
   // ---- Stale-cart recovery ----
   //
@@ -119,7 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (!isCartNotFound(err)) throw err;
         clearCartId();
         const region = await ensureRegion();
-        const fresh = (await createCart(region)) as unknown as StoreCart;
+        const fresh = (await createCart(region, medusaLocale)) as unknown as StoreCart;
         setCart(fresh);
         if (retry) return await run(fresh.id);
         return fresh as unknown as T;
@@ -127,14 +176,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [ensureRegion],
   );
-
-  // ---- Derived ----
-
   const itemCount = useMemo(
-    () =>
-      cart?.items
-        ?.filter((item) => !item.metadata?.parent_line_item_id)
-        .reduce((sum, item) => sum + item.quantity, 0) ?? 0,
+    () => {
+      const items = cart?.items ?? [];
+      return items
+        .filter((item) => {
+          const parentId = item.metadata?.parent_line_item_id;
+          if (!parentId) return true;
+          return !items.some((i) => i.id === parentId);
+        })
+        .reduce((sum, item) => sum + item.quantity, 0);
+    },
     [cart],
   );
 
@@ -153,7 +205,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         // Create a new cart if one doesn't exist.
         if (!currentId) {
-          const fresh = (await createCart(region)) as unknown as StoreCart;
+          const fresh = (await createCart(region, medusaLocale)) as unknown as StoreCart;
           currentId = fresh.id;
           setCart(fresh);
         }
@@ -162,7 +214,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const updated = await runWithRecovery(
           currentId,
           async (id) =>
-            (await addLineItem(id, variantId, quantity, metadata)) as unknown as StoreCart,
+            (await addLineItem(id, variantId, quantity, metadata, medusaLocale)) as unknown as StoreCart,
           true,
         );
         setCart(updated);
@@ -174,7 +226,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [cart, ensureRegion, runWithRecovery],
   );
-
   const updateItem = useCallback(
     async (lineItemId: string, quantity: number) => {
       const currentId = cart?.id;
@@ -182,23 +233,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const linkedItem = cart?.items?.find(
+        const linkedItems = cart?.items?.filter(
           (item) => item.metadata?.parent_line_item_id === lineItemId,
-        );
+        ) ?? [];
 
         const updated = await runWithRecovery(
           currentId,
           async (id): Promise<StoreCart> => {
             if (quantity <= 0) {
-              let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
-              if (linkedItem) {
-                next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+              let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
+              for (const linked of linkedItems) {
+                next = (await removeLineItem(id, linked.id, medusaLocale)) as unknown as StoreCart;
               }
               return next;
             }
-            let next = (await updateLineItem(id, lineItemId, quantity)) as unknown as StoreCart;
-            if (linkedItem) {
-              next = (await updateLineItem(id, linkedItem.id, quantity)) as unknown as StoreCart;
+            let next = (await updateLineItem(id, lineItemId, quantity, medusaLocale)) as unknown as StoreCart;
+            for (const linked of linkedItems) {
+              next = (await updateLineItem(id, linked.id, quantity)) as unknown as StoreCart;
             }
             return next;
           },
@@ -211,9 +262,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setMutating(false);
       }
     },
-    [cart, runWithRecovery],
+    [cart, runWithRecovery, medusaLocale],
   );
-
   const removeItem = useCallback(
     async (lineItemId: string) => {
       const currentId = cart?.id;
@@ -221,16 +271,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       setMutating(true);
       try {
-        const linkedItem = cart?.items?.find(
+        const linkedItems = cart?.items?.filter(
           (item) => item.metadata?.parent_line_item_id === lineItemId,
-        );
+        ) ?? [];
 
         const updated = await runWithRecovery(
           currentId,
           async (id): Promise<StoreCart> => {
-            let next = (await removeLineItem(id, lineItemId)) as unknown as StoreCart;
-            if (linkedItem) {
-              next = (await removeLineItem(id, linkedItem.id)) as unknown as StoreCart;
+            let next = (await removeLineItem(id, lineItemId, medusaLocale)) as unknown as StoreCart;
+            for (const linked of linkedItems) {
+              next = (await removeLineItem(id, linked.id, medusaLocale)) as unknown as StoreCart;
             }
             return next;
           },
@@ -243,7 +293,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setMutating(false);
       }
     },
-    [cart, runWithRecovery],
+    [cart, runWithRecovery, medusaLocale],
   );
 
   // ---- Drawer controls ----

@@ -10,15 +10,18 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
 import type { StoreCart, StoreCartLineItem } from "@/components/cart/types";
+import { getPackagingName } from "@/lib/medusa/packaging-names";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number | null | undefined, currency: string): string {
+// ponytail: duplicated from PriceDisplay.tsx to avoid complex import chain
+function formatPrice(amount: number | null | undefined, currency: string, locale?: string): string {
   if (amount == null) return "—";
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    const bcp47 = locale === "en" ? "en-US" : "ru-RU";
+    return new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: currency.toUpperCase(),
       minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -115,7 +118,11 @@ export default function CartDrawer() {
   );
 
   const items = cart?.items ?? [];
-  const mainItems = items.filter((item) => !item.metadata?.parent_line_item_id);
+  const mainItems = items.filter((item) => {
+    const parentId = item.metadata?.parent_line_item_id;
+    if (!parentId) return true;
+    return !items.some((i) => i.id === parentId);
+  });
 
   return (
     <AnimatePresence>
@@ -171,14 +178,14 @@ export default function CartDrawer() {
               ) : (
                 <ul className="divide-y divide-[#2c211b]/5">
                   {mainItems.map((item) => {
-                    const linkedItem = items.find(
+                    const linkedItems = items.filter(
                       (i) => i.metadata?.parent_line_item_id === item.id
                     );
                     return (
                       <CartLineItem
                         key={item.id}
                         item={item}
-                        linkedItem={linkedItem}
+                        linkedItems={linkedItems}
                         currency={currency}
                         disabled={mutating}
                         onUpdate={handleUpdate}
@@ -232,7 +239,7 @@ function EmptyState() {
 
 interface CartLineItemProps {
   item: StoreCartLineItem;
-  linkedItem?: StoreCartLineItem | null;
+  linkedItems?: StoreCartLineItem[];
   currency: string;
   disabled: boolean;
   onUpdate: (lineItemId: string, quantity: number) => void;
@@ -241,7 +248,7 @@ interface CartLineItemProps {
 
 function CartLineItem({
   item,
-  linkedItem = null,
+  linkedItems = [],
   currency,
   disabled,
   onUpdate,
@@ -249,15 +256,30 @@ function CartLineItem({
 }: CartLineItemProps) {
   const pt = useTranslations("product");
   const t = useTranslations("cart");
+  const locale = useLocale();
   const thumbnail = item.thumbnail;
   const unitPrice = item.unit_price;
   const calcPrice = item.metadata?.calculated_price;
   const hasDiscount =
     calcPrice?.original_amount != null &&
+    calcPrice.currency_code === currency &&
     calcPrice.original_amount > item.unit_price;
-  const materialNames: Record<string, string> = { turquoise: pt("turquoise"), leather: pt("leather"), silver: pt("silver"), "gold-plated": pt("gold-plated"), Turquoise: pt("turquoise"), Leather: pt("leather"), Silver: pt("silver"), "Gold-plated": pt("gold-plated") };
+  const packagingTotal = linkedItems.reduce((sum, li) => sum + (li.unit_price ?? 0), 0);
+  const rowTotal = ((unitPrice ?? 0) + packagingTotal) * item.quantity;
+  const materialNames: Record<string, string> = {
+    Azure: pt("azure"),
+    Dune: pt("dune"),
+    Luna: pt("luna"),
+    Silk: pt("silk"),
+    Amethyst: pt("amethyst"),
+    Lagoon: pt("lagoon")
+  };
   const optionLabel = lineItemOptionLabel(item, materialNames);
-
+  // Use the line-item snapshot (set with the locale at add time, so it
+  // carries the Medusa translation) as the source of truth, with the
+  // explicit handle map as the primary override. The product join's
+  // title is the last-resort fallback because Medusa's cart expand
+  // doesn't apply x-medusa-locale to it.
   const decrement = () => {
     if (item.quantity <= 1) return;
     onUpdate(item.id, item.quantity - 1);
@@ -289,7 +311,7 @@ function CartLineItem({
       <div className="flex flex-1 flex-col justify-between">
         <div>
           <h3 className="text-sm font-medium leading-snug text-[#2c211b]">
-            {item.title}
+            {item.product?.title ?? item.title}
           </h3>
           {item.subtitle && (
             <p className="mt-0.5 text-xs text-[#2c211b]/50">{item.subtitle}</p>
@@ -297,18 +319,38 @@ function CartLineItem({
           {optionLabel && (
             <p className="mt-0.5 text-xs text-[#2c211b]/40">{optionLabel}</p>
           )}
-          {linkedItem && (
-            <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
-              <span className="font-medium text-[#2f6f78]">
-                + {linkedItem.title}
+          {unitPrice != null && (
+            <div className="mt-1 flex items-baseline gap-1.5 text-xs text-[#2c211b]/70">
+              {hasDiscount && (
+                <span className="line-through text-[#2c211b]/40">
+                  {formatPrice(calcPrice.original_amount! * item.quantity, currency, locale)}
+                </span>
+              )}
+              <span className="font-medium">
+                {formatPrice(unitPrice * item.quantity, currency, locale)}
               </span>
-              <span className="text-[#2c211b]/40">
-                ({linkedItem.unit_price === 0 || !linkedItem.unit_price
-                  ? pt("packaging.free").toLowerCase()
-                  : `+ ${formatPrice(linkedItem.unit_price, currency)}`})
-              </span>
+              {hasDiscount && (
+                <span className="text-[10px] font-bold text-[#b85c3a]">
+                  −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
+                </span>
+              )}
             </div>
           )}
+          {linkedItems.map((linkedItem) => {
+            const linkedName = getPackagingName(linkedItem.product, locale, linkedItem.title);
+            return (
+              <div key={linkedItem.id} className="mt-1.5 flex items-center gap-1.5 text-xs text-[#2c211b]/60">
+                <span className="font-medium text-[#2f6f78]">
+                  + {linkedName}
+                </span>
+                <span className="text-[#2c211b]/40">
+                  ({linkedItem.unit_price === 0 || !linkedItem.unit_price
+                    ? pt("packaging.free").toLowerCase()
+                    : `+ ${formatPrice(linkedItem.unit_price * item.quantity, currency, locale)}`})
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-2 flex items-center justify-between">
@@ -336,25 +378,9 @@ function CartLineItem({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Unit price */}
-            <span className="text-sm font-medium tabular-nums text-[#2c211b] flex items-baseline">
-              {unitPrice != null ? (
-                <>
-                  {hasDiscount && (
-                    <span className="line-through text-[#2c211b]/40 mr-1.5 text-xs font-normal">
-                      {formatPrice(calcPrice.original_amount!, currency)}
-                    </span>
-                  )}
-                  <span>{formatPrice(unitPrice, currency)}</span>
-                  {hasDiscount && (
-                    <span className="ml-1.5 text-[10px] font-bold text-[#b85c3a]">
-                      −{Math.round((1 - unitPrice / calcPrice.original_amount!) * 100)}%
-                    </span>
-                  )}
-                </>
-              ) : (
-                "—"
-              )}
+            {/* Combined row total */}
+            <span className="text-sm font-semibold tabular-nums text-[#2c211b]">
+              {unitPrice != null ? formatPrice(rowTotal, currency, locale) : "—"}
             </span>
             {/* Remove */}
             <button
@@ -411,7 +437,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
   }
 
   return (
-    <div className="border-t border-[#2c211b]/10 px-5 py-4">
+    <div className="border-t border-[#2c211b]/10 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       {/* Totals */}
       <div className="space-y-1.5 text-sm">
         {rows.map((row) => (
@@ -427,6 +453,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
                 ? `${row.positive === false ? "−" : ""}${formatPrice(
                     row.positive === false ? Math.abs(row.value) : row.value,
                     currency,
+                    locale,
                   )}`
                 : "—"}
             </span>
@@ -435,7 +462,7 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
         <div className="flex justify-between border-t border-[#2c211b]/10 pt-2 text-base font-semibold">
           <span className="text-[#2c211b]">{t("total")}</span>
           <span className="tabular-nums text-[#2c211b]">
-            {total != null ? formatPrice(total, currency) : "—"}
+            {total != null ? formatPrice(total, currency, locale) : "—"}
           </span>
         </div>
       </div>

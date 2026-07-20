@@ -11,6 +11,7 @@ Success criteria:
 - Product translations for supported storefront locales are stored in Medusa and become available to localized storefront catalog reads.
 - Orders created by checkout become visible and actionable in admin order management.
 - Storefront does not bypass admin-configured Medusa state.
+- A trusted one-time migration reuses existing `purple` and `sun-chain` product identities for Amethyst and Lagoon, removing only redundant unreferenced duplicates.
 
 ## 2. Scope
 
@@ -21,6 +22,7 @@ In scope:
 - Product locale and translation management for supported storefront languages.
 - Region, shipping, payment, and promotion configuration.
 - Order visibility and operational follow-up after checkout.
+- Idempotent operator-run catalog migrations that preserve commerce references while correcting product identity.
 
 Out of scope:
 
@@ -41,6 +43,7 @@ Deferred decisions:
 | Admin user | Manage products, prices, regions, shipping, payments, promotions, orders according to assigned admin role | Medusa Admin authentication/authorization |
 | Storefront visitor/customer | No admin access; consumes published state only through Store API | Medusa Store API publishable key/session |
 | Medusa backend | Enforces admin/store API boundaries and persists commerce state | Medusa modules/workflows/database |
+| Trusted operator | Run reviewed Medusa execution scripts against the configured database; cannot bypass referential-safety checks | Deployment/runtime access + Medusa execution context |
 
 ## 4. Diagrams
 
@@ -64,6 +67,20 @@ flowchart TD
   PublishTranslations --> NotifyLocalization[Emit catalog:translation-published]
   Publish --> NotifyCheckout[Emit commerce:settings-updated]
   Orders --> OrderState[Update operational order state in Medusa]
+  Migration[Trusted operator runs launch catalog correction] --> Legacy{Legacy purple or sun-chain exists?}
+  Legacy -->|no| Canonical{Canonical amethyst or lagoon exists?}
+  Canonical -->|yes| UpdateCanonical[Update canonical product idempotently]
+  Canonical -->|no| CreateCanonical[Create missing canonical product]
+  Legacy -->|yes| Duplicate{Canonical duplicate also exists?}
+  Duplicate -->|no| RemapLegacy[Remap legacy product ID to canonical identity]
+  Duplicate -->|yes| Referenced{Duplicate has cart or order references?}
+  Referenced -->|no| DeleteDuplicate[Delete redundant duplicate]
+  Referenced -->|yes| ArchiveDuplicate[Unpublish and move duplicate to archived handle]
+  DeleteDuplicate --> RemapLegacy
+  ArchiveDuplicate --> RemapLegacy
+  RemapLegacy --> NotifyCatalog
+  UpdateCanonical --> NotifyCatalog
+  CreateCanonical --> NotifyCatalog
 ```
 
 ### State machine
@@ -93,6 +110,17 @@ stateDiagram-v2
   SettingsRejected --> Authenticated
   OrderUpdateRejected --> Authenticated
   Authenticated --> Unauthenticated: logout/session expires
+  [*] --> CatalogMigrationResolving: trusted operator executes migration
+  CatalogMigrationResolving --> CanonicalUpdated: canonical product exists without legacy product
+  CatalogMigrationResolving --> LegacyRemapped: legacy product exists without duplicate
+  CatalogMigrationResolving --> DuplicateDeleting: duplicate has no cart/order references
+  CatalogMigrationResolving --> DuplicateArchiving: duplicate has commerce references
+  CatalogMigrationResolving --> CanonicalCreated: neither identity exists
+  DuplicateDeleting --> LegacyRemapped: delete duplicate then remap legacy ID
+  DuplicateArchiving --> LegacyRemapped: unpublish/archive duplicate then remap legacy ID
+  CanonicalUpdated --> [*]
+  CanonicalCreated --> [*]
+  LegacyRemapped --> [*]
 ```
 
 ### Data/event flow
@@ -121,6 +149,7 @@ Authoritative state:
 
 - Admin users, products, categories, variants, prices, price lists, regions, tax regions, sales channels, stock locations, inventory, shipping options, payment providers, promotions, customers, carts, orders, fulfillments, returns/refunds are Medusa-owned.
 - PostgreSQL is the durable store configured through Medusa.
+- During launch-collection correction, the legacy product IDs (`purple`, `sun-chain`) are authoritative predecessors for Amethyst and Lagoon because reusing them preserves cart/order references.
 
 Admin projection:
 
@@ -144,6 +173,7 @@ Storefront projection:
 | Internal | `admin:login` | None | `{ email }` | Credentials/session accepted by Medusa | Invalid credentials/session |
 | Internal | `admin:catalog-saved` | None | `{ entityType, entityIds }` | Admin role can edit entity and validation passes | Forbidden, invalid schema, conflicting state |
 | Internal | `admin:translation-saved` | None | `{ productIds, locales }` | Admin role can edit translations and locale configuration is valid | Forbidden, invalid locale, missing source product, conflicting translation state |
+| Internal | `admin:catalog-migration-run` | None | `{ mappings: [{ oldHandle, newHandle }], dryRun?: false }` | Trusted operator runs the reviewed script in Medusa execution context | Missing prerequisites, unsafe duplicate references, or unresolved handle collision |
 | Internal | `admin:order-updated` | None | `{ orderId, operation }` | Admin role can perform operation and order is in a legal state | Forbidden, stale order state, invalid transition |
 
 ## 7. Edge Cases
@@ -156,12 +186,19 @@ Storefront projection:
 - Admin attempts an illegal order transition: reject through Medusa; do not invent storefront-side compensating state.
 - Admin publishes a product before RU/EN translations are complete: source product may be sellable, but localization flow must decide whether storefront shows fallback content or release QA blocks publication.
 - Admin saves translations for a locale that storefront does not route (`ru`/`en` only in v1): Medusa may store the translation, but storefront ignores it until routing is expanded.
+- Both legacy and canonical handles exist: prefer the legacy product ID, delete the canonical duplicate only when it has no cart or order references, then remap the legacy product.
+- Canonical duplicate has cart or order references: do not delete it; unpublish it and move it to an archived unique handle before remapping the legacy product to the canonical handle.
+- Only the legacy handle exists: update that product, variant, prices, translations, and metadata in place.
+- Only the canonical handle exists: update it idempotently; do not create another product.
+- Neither handle exists: create the canonical product once.
+- Re-running after any completed or partial branch converges to one published canonical product and never recreates a redundant duplicate.
 
 ## 8. Side Effects
 
 - Persist commerce configuration and translation records in Medusa/PostgreSQL.
 - Storefront catalog, localization, and checkout projections change after the next Store API read/revalidation.
 - Orders created by checkout become visible in Medusa Admin.
+- Catalog correction preserves the legacy product/variant identity where possible, deletes only unreferenced duplicates, and hides referenced duplicates from Store API visibility.
 - Future provider integrations may create side effects with payment, storage, search, monitoring, or fulfillment systems; those require dedicated integration flows before implementation.
 
 ## 9. Schemas Touched
@@ -178,6 +215,8 @@ Current files that inform the flow:
 - The placeholder custom admin route (`api/admin/custom/route.ts`) has been removed; no Sunluk-specific custom admin HTTP routes exist yet.
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` seeds initial admin-managed commerce data.
 - `backend/apps/backend/medusa-config.ts` configures Medusa backend environment and HTTP boundaries.
+- `backend/apps/backend/src/migration-scripts/update-product-cards.ts` performs the one-time, idempotent launch-collection catalog migration through Medusa execution context.
+- The launch correction maps `purple` to `amethyst` and `sun-chain` to `lagoon`; the seed continues to create only canonical handles on fresh databases.
 
 ## 10. Targeted Tests
 
@@ -186,6 +225,9 @@ Current files that inform the flow:
 | Backend integration | Custom admin routes require admin authorization before mutating state | To add when custom admin routes are implemented | Pending implementation |
 | Backend integration | Catalog/config changes are visible through Store API only when published/sellable | To add when storefront catalog integration is implemented | Pending implementation |
 | Backend integration | Checkout-affecting setting changes force cart/checkout revalidation | To add when checkout integration is implemented | Pending implementation |
+| Backend migration smoke | Launch-collection update is rerunnable, preserves mapped product IDs, and exposes six published products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration smoke | Existing Purple and Sun Chain IDs become Amethyst and Lagoon; redundant unreferenced canonical duplicates are removed | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration safety | A duplicate with cart/order references is archived and unpublished instead of deleted; rerun remains idempotent | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
 
 ## 11. Implementation Plan
 
@@ -193,10 +235,21 @@ Current files that inform the flow:
 2. Add custom admin routes/extensions only when a concrete Sunluk-specific operation cannot be represented by Medusa defaults.
 3. Keep product/cart/order/payment logic in Medusa modules, workflows, subscribers, and providers.
 4. Add backend integration tests for every custom admin mutation before exposing it to storefront flows.
+5. Correct the launch migration mappings to `purple` -> `amethyst` and `sun-chain` -> `lagoon`, preserving legacy IDs and converging duplicate states safely.
 
 ## 12. Implementation Trace
 
-Current status: partial. Default Medusa Admin is active, and a Sunluk-specific admin widget (`src/admin/widgets/product-checklist-widget.tsx`) plus admin RU translations (`src/admin/i18n`) are implemented. No custom admin HTTP routes exist (the placeholder route was removed).
+Current status: partial. Default Medusa Admin and its Sunluk extensions remain active; the corrected one-time product-card migration reuses existing Purple and Sun Chain records for Amethyst and Lagoon and safely converges redundant duplicate states.
+
+Flow review: APPROVED 2026-07-15. Identity precedence, referential safety, duplicate convergence, rerun behavior, and validation paths are explicit with no unresolved blocker.
+
+
+Validation:
+
+- `npx tsc --noEmit` in `backend/apps/backend` completed successfully.
+- `npx medusa exec ./src/migration-scripts/update-product-cards.ts` completed successfully twice against the local database.
+- Store API returned all six launch products with localized copy/metadata and no legacy handles.
+- Corrected migration completed twice. `prod_01KXD77RCZR088H58YSG2BEEK3` now owns `amethyst`; `prod_01KXDBBK6V5TXA74QWR0XXH0TY` now owns `lagoon`; redundant canonical duplicates and synthetic test data were removed; the pre-existing Purple cart reference remains valid; Store API exposes no `purple`, `sun-chain`, or archived duplicate handle.
 
 ## 13. Open Questions
 
@@ -215,3 +268,4 @@ Current status: partial. Default Medusa Admin is active, and a Sunluk-specific a
 - [x] Translation publication policy is surfaced as an open question instead of silently assumed.
 - [x] Unsupported storefront locales remain ignored until routing explicitly enables them.
 - [x] Custom provider/integration decisions are open questions, not silently assumed.
+- [x] Catalog migration identity precedence and duplicate deletion/archive rules are explicit.

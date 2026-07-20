@@ -20,8 +20,10 @@ import {
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
   updateStoresWorkflow,
+  deleteShippingOptionsWorkflow,
+  CreateShippingOptionsWorkflowInput,
 } from "@medusajs/medusa/core-flows";
-
+import { REGIONAL_FULFILLMENT_PROVIDER_ID } from "../modules/regional-fulfillment/service";
 export default async function initial_data_seed({
   container,
 }: {
@@ -183,7 +185,14 @@ export default async function initial_data_seed({
   });
   const stockLocation = stockLocationResult[0];
 
-  await link.create({
+  const europeRegion = regionResult.find((r) => r.name === "Europe");
+  const russiaRegion = regionResult.find((r) => r.name === "Russia");
+  if (!europeRegion || !russiaRegion) {
+    throw new Error("Europe or Russia region is missing.");
+  }
+
+  // Idempotent manual provider link creation
+  const existingManualLinks = await link.list({
     [Modules.STOCK_LOCATION]: {
       stock_location_id: stockLocation.id,
     },
@@ -191,6 +200,56 @@ export default async function initial_data_seed({
       fulfillment_provider_id: "manual_manual",
     },
   });
+  if (existingManualLinks.length === 0) {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: "manual_manual",
+      },
+    });
+  }
+
+  // Dismiss old provider link if it exists
+  const oldProviderLinks = await link.list({
+    [Modules.STOCK_LOCATION]: {
+      stock_location_id: stockLocation.id,
+    },
+    [Modules.FULFILLMENT]: {
+      fulfillment_provider_id: "regional-fulfillment",
+    },
+  });
+  if (oldProviderLinks.length > 0) {
+    await link.dismiss({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: "regional-fulfillment",
+      },
+    });
+  }
+
+  // Idempotent regional provider link creation
+  const existingProviderLinks = await link.list({
+    [Modules.STOCK_LOCATION]: {
+      stock_location_id: stockLocation.id,
+    },
+    [Modules.FULFILLMENT]: {
+      fulfillment_provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+    },
+  });
+  if (existingProviderLinks.length === 0) {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+      },
+    });
+  }
 
   logger.info("Seeding fulfillment data...");
   // This is created by a migration script in core.
@@ -200,47 +259,95 @@ export default async function initial_data_seed({
   });
   const shippingProfile = shippingProfileResult[0];
 
-  const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: "European Warehouse delivery",
-    type: "shipping",
-    service_zones: [
-      {
-        name: "Europe",
-        geo_zones: [
-          {
-            country_code: "gb",
-            type: "country",
-          },
-          {
-            country_code: "de",
-            type: "country",
-          },
-          {
-            country_code: "dk",
-            type: "country",
-          },
-          {
-            country_code: "se",
-            type: "country",
-          },
-          {
-            country_code: "fr",
-            type: "country",
-          },
-          {
-            country_code: "es",
-            type: "country",
-          },
-          {
-            country_code: "it",
-            type: "country",
-          },
-        ],
-      },
-    ],
+  // Find or create fulfillment set
+  const { data: fulfillmentSetsList } = await query.graph({
+    entity: "fulfillment_set",
+    fields: ["id", "name", "service_zones.*", "service_zones.geo_zones.*"],
   });
 
-  await link.create({
+  interface GeoZoneShape {
+    id: string;
+    country_code: string;
+    type: string;
+  }
+  interface ServiceZoneShape {
+    id: string;
+    name: string;
+    geo_zones: GeoZoneShape[];
+  }
+  interface FulfillmentSetShape {
+    id: string;
+    name: string;
+    service_zones: ServiceZoneShape[];
+  }
+  let fulfillmentSet: FulfillmentSetShape | undefined;
+  
+  if (fulfillmentSetsList && Array.isArray(fulfillmentSetsList)) {
+    const typedFS = fulfillmentSetsList as unknown as FulfillmentSetShape[];
+    fulfillmentSet = typedFS.find((fs) => fs.name === "European Warehouse delivery");
+  }
+
+  if (!fulfillmentSet) {
+    const createdFS = await fulfillmentModuleService.createFulfillmentSets({
+      name: "European Warehouse delivery",
+      type: "shipping",
+      service_zones: [
+        {
+          name: "Europe",
+          geo_zones: [
+            { country_code: "gb", type: "country" },
+            { country_code: "de", type: "country" },
+            { country_code: "dk", type: "country" },
+            { country_code: "se", type: "country" },
+            { country_code: "fr", type: "country" },
+            { country_code: "es", type: "country" },
+            { country_code: "it", type: "country" },
+          ],
+        },
+        {
+          name: "Russia",
+          geo_zones: [
+            { country_code: "ru", type: "country" },
+          ],
+        },
+      ],
+    });
+    fulfillmentSet = createdFS as unknown as FulfillmentSetShape;
+  }
+
+  let europeServiceZone = fulfillmentSet.service_zones?.find((sz) => sz.name === "Europe");
+  let russiaServiceZone = fulfillmentSet.service_zones?.find((sz) => sz.name === "Russia");
+
+  if (!europeServiceZone) {
+    const createdSZ = await fulfillmentModuleService.createServiceZones({
+      fulfillment_set_id: fulfillmentSet.id,
+      name: "Europe",
+      geo_zones: [
+        { country_code: "gb", type: "country" },
+        { country_code: "de", type: "country" },
+        { country_code: "dk", type: "country" },
+        { country_code: "se", type: "country" },
+        { country_code: "fr", type: "country" },
+        { country_code: "es", type: "country" },
+        { country_code: "it", type: "country" },
+      ],
+    });
+    europeServiceZone = (Array.isArray(createdSZ) ? createdSZ[0] : createdSZ) as unknown as ServiceZoneShape;
+  }
+
+  if (!russiaServiceZone) {
+    const createdSZ = await fulfillmentModuleService.createServiceZones({
+      fulfillment_set_id: fulfillmentSet.id,
+      name: "Russia",
+      geo_zones: [
+        { country_code: "ru", type: "country" },
+      ],
+    });
+    russiaServiceZone = (Array.isArray(createdSZ) ? createdSZ[0] : createdSZ) as unknown as ServiceZoneShape;
+  }
+
+  // Idempotent link creation for stock location to fulfillment set
+  const existingSetLinks = await link.list({
     [Modules.STOCK_LOCATION]: {
       stock_location_id: stockLocation.id,
     },
@@ -248,89 +355,160 @@ export default async function initial_data_seed({
       fulfillment_set_id: fulfillmentSet.id,
     },
   });
+  if (existingSetLinks.length === 0) {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_set_id: fulfillmentSet.id,
+      },
+    });
+  }
 
-  await createShippingOptionsWorkflow(container).run({
-    input: [
-      {
-        name: "Standard Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Standard",
-          description: "Ship in 2-3 days.",
-          code: "standard",
-        },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
-          },
-          {
-            currency_code: "eur",
-            amount: 10,
-          },
-          {
-            region_id: region.id,
-            amount: 10,
-          },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
-      },
-      {
-        name: "Express Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Express",
-          description: "Ship in 24 hours.",
-          code: "express",
-        },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
-          },
-          {
-            currency_code: "eur",
-            amount: 10,
-          },
-          {
-            region_id: region.id,
-            amount: 10,
-          },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
-      },
-    ],
+  const { data: existingOptions } = await query.graph({
+    entity: "shipping_option",
+    fields: ["id", "name", "service_zone_id", "provider_id"],
   });
-  logger.info("Finished seeding fulfillment data.");
 
+  interface ShippingOptionShape {
+    id: string;
+    name: string;
+    service_zone_id: string;
+    provider_id: string;
+  }
+  let typedExistingOptions = existingOptions as unknown as ShippingOptionShape[];
+
+  // Delete outdated options with old provider_id "regional-fulfillment"
+  const oldCalculatedOptions = typedExistingOptions.filter(
+    (so) => so.provider_id === "regional-fulfillment"
+  );
+  if (oldCalculatedOptions.length > 0) {
+    const oldOptionIds = oldCalculatedOptions.map((o) => o.id);
+    await deleteShippingOptionsWorkflow(container).run({
+      input: { ids: oldOptionIds }
+    });
+    typedExistingOptions = typedExistingOptions.filter(
+      (so) => !oldOptionIds.includes(so.id)
+    );
+  }
+
+  // Seed manual shipping options if not present
+  const hasEuropeManualStandard = typedExistingOptions.some(
+    (so) => so.provider_id === "manual_manual" && so.service_zone_id === europeServiceZone.id && so.name === "Standard Shipping"
+  );
+  const hasEuropeManualExpress = typedExistingOptions.some(
+    (so) => so.provider_id === "manual_manual" && so.service_zone_id === europeServiceZone.id && so.name === "Express Shipping"
+  );
+
+  const manualOptionsToCreate: CreateShippingOptionsWorkflowInput = [];
+  if (!hasEuropeManualStandard) {
+    manualOptionsToCreate.push({
+      name: "Standard Shipping",
+      price_type: "flat",
+      provider_id: "manual_manual",
+      service_zone_id: europeServiceZone.id,
+      shipping_profile_id: shippingProfile.id,
+      type: {
+        label: "Standard",
+        description: "Ship in 2-3 days.",
+        code: "standard",
+      },
+      prices: [
+        { currency_code: "usd", amount: 10 },
+        { currency_code: "eur", amount: 10 },
+        { region_id: europeRegion.id, amount: 10 },
+      ],
+      rules: [
+        { attribute: "enabled_in_store", value: "true", operator: "eq" },
+        { attribute: "is_return", value: "false", operator: "eq" },
+      ],
+    });
+  }
+
+  if (!hasEuropeManualExpress) {
+    manualOptionsToCreate.push({
+      name: "Express Shipping",
+      price_type: "flat",
+      provider_id: "manual_manual",
+      service_zone_id: europeServiceZone.id,
+      shipping_profile_id: shippingProfile.id,
+      type: {
+        label: "Express",
+        description: "Ship in 24 hours.",
+        code: "express",
+      },
+      prices: [
+        { currency_code: "usd", amount: 10 },
+        { currency_code: "eur", amount: 10 },
+        { region_id: europeRegion.id, amount: 10 },
+      ],
+      rules: [
+        { attribute: "enabled_in_store", value: "true", operator: "eq" },
+        { attribute: "is_return", value: "false", operator: "eq" },
+      ],
+    });
+  }
+
+  if (manualOptionsToCreate.length > 0) {
+    await createShippingOptionsWorkflow(container).run({
+      input: manualOptionsToCreate,
+    });
+  }
+
+  // Seed regional calculated shipping options
+  const hasEuropeCalculated = typedExistingOptions.some(
+    (so) => so.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID && so.service_zone_id === europeServiceZone.id
+  );
+  const hasRussiaCalculated = typedExistingOptions.some(
+    (so) => so.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID && so.service_zone_id === russiaServiceZone.id
+  );
+
+  const calculatedOptionsToCreate: CreateShippingOptionsWorkflowInput = [];
+  if (!hasEuropeCalculated) {
+    calculatedOptionsToCreate.push({
+      name: "Standard Shipping (Calculated)",
+      price_type: "calculated",
+      provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+      service_zone_id: europeServiceZone.id,
+      shipping_profile_id: shippingProfile.id,
+      type: {
+        label: "Standard",
+        description: "Calculated delivery based on total",
+        code: "standard-calculated-europe",
+      },
+      rules: [
+        { attribute: "enabled_in_store", value: "true", operator: "eq" },
+        { attribute: "is_return", value: "false", operator: "eq" },
+      ],
+    });
+  }
+
+  if (!hasRussiaCalculated) {
+    calculatedOptionsToCreate.push({
+      name: "Standard Shipping (Calculated)",
+      price_type: "calculated",
+      provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+      service_zone_id: russiaServiceZone.id,
+      shipping_profile_id: shippingProfile.id,
+      type: {
+        label: "Standard",
+        description: "Calculated delivery based on total",
+        code: "standard-calculated-russia",
+      },
+      rules: [
+        { attribute: "enabled_in_store", value: "true", operator: "eq" },
+        { attribute: "is_return", value: "false", operator: "eq" },
+      ],
+    });
+  }
+
+  if (calculatedOptionsToCreate.length > 0) {
+    await createShippingOptionsWorkflow(container).run({
+      input: calculatedOptionsToCreate,
+    });
+  }
+  logger.info("Finished seeding fulfillment data.");
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
       id: stockLocation.id,
@@ -361,84 +539,69 @@ export default async function initial_data_seed({
 
   const accessoriesCategory = categoryResult[0];
   const packagingCategory = categoryResult[1];
+  const azureMetadata = {
+    wear_it_your_way: {
+      ru: [
+        { icon: "👓", title: "Как цепочку для очков", text: "Силиконовые держатели надежно фиксируются на большинстве оправ." },
+        { icon: "✨", title: "Как колье", text: "Снимите силиконовые держатели — аксессуар превращается в элегантное украшение." },
+        { icon: "🕶", title: "Как держатель для очков", text: "Закрепите очки на фирменном кольце, не снимая колье. Удобно, безопасно и всегда под рукой." }
+      ],
+      en: [
+        { icon: "👓", title: "As an Eyewear Chain", text: "Silicone loops securely fit most eyeglass frames." },
+        { icon: "✨", title: "As a Necklace", text: "Remove the silicone loops to transform it into an elegant everyday necklace." },
+        { icon: "🕶", title: "As an Eyewear Holder", text: "Attach your glasses to the signature ring without taking off the necklace. Secure, stylish, and always within reach." }
+      ]
+    },
+    whats_included: {
+      ru: ["Украшение SUNLUK (Длина – 72 см)", "Фирменное кольцо", "Прозрачные силиконовые держатели"],
+      en: ["SUNLUK Accessory (Length: 72 cm)", "Signature Ring", "Clear Silicone Loops"]
+    }
+  };
+
+  const duneMetadata = {
+    wear_it_your_way: {
+      ru: [
+        { icon: "👓", title: "Как держатель для очков", text: "Закрепите очки на фирменном кольце. Они всегда будут под рукой и не займут место в сумке или кармане." },
+        { icon: "✨", title: "Как колье", text: "Лаконичный дизайн делает аксессуар элегантным украшением на каждый день." },
+        { icon: "🕶", title: "С очками на кольце", text: "Повесьте очки на фирменном кольце, не снимая колье. Удобно, безопасно и всегда под рукой." }
+      ],
+      en: [
+        { icon: "👓", title: "As an Eyewear Holder", text: "Attach your glasses to the signature ring to keep them secure and always within easy reach." },
+        { icon: "✨", title: "As a Necklace", text: "Its clean, minimalist design makes it an elegant everyday accessory." },
+        { icon: "🕶", title: "With Glasses on the Ring", text: "Hang your glasses on the signature ring without taking off the necklace. Secure, stylish, and always within reach." }
+      ]
+    },
+    whats_included: {
+      ru: ["Украшение SUNLUK (Длина – 72 см)", "Фирменное кольцо"],
+      en: ["SUNLUK Accessory (Length: 72 cm)", "Signature Ring"]
+    }
+  };
 
   const { result: productResults } = await createProductsWorkflow(container).run({
     input: {
       products: [
         {
-          title: "Бирюза",
+          title: "Лазурь",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Акцентный цвет и природные мотивы",
-          handle: "turquoise-chain",
+          description: "Фирменная цепочка SUNLUK с лазурными акцентами, вдохновленными цветом моря. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "azure",
           weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-turquoise.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Turquoise"],
+              values: ["Azure"],
             },
           ],
           variants: [
             {
-              title: "Turquoise",
-              sku: "TURQUOISE-CHAIN",
+              title: "Azure",
+              sku: "AZURE-CHAIN",
               options: {
-                Material: "Turquoise",
-              },
-              prices: [
-                {
-                  amount: 49,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 54,
-                  currency_code: "usd",
-                },
-                {
-                  amount: 4900,
-                  currency_code: "rub",
-                },
-              ],
-              manage_inventory: true,
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-        {
-          title: "Leather Loop",
-          category_ids: [accessoriesCategory.id],
-          description: "Натуральная кожа и премиальный металл",
-          handle: "leather-loop",
-          weight: 150,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-leather.webp",
-            },
-          ],
-          options: [
-            {
-              title: "Material",
-              values: ["Leather"],
-            },
-          ],
-          variants: [
-            {
-              title: "Leather",
-              sku: "LEATHER-LOOP",
-              options: {
-                Material: "Leather",
+                Material: "Azure",
               },
               prices: [
                 {
@@ -450,7 +613,7 @@ export default async function initial_data_seed({
                   currency_code: "usd",
                 },
                 {
-                  amount: 5900,
+                  amount: 4999,
                   currency_code: "rub",
                 },
               ],
@@ -462,32 +625,77 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
         },
         {
-          title: "Silver Chain",
+          title: "Дюна",
+          subtitle: "Держатель для очков • Колье • Подвес для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Минимализм, строгость и лёгкий блеск",
-          handle: "silver-chain",
-          weight: 100,
+          description: "Минималистичное украшение SUNLUK с фирменным кольцом в теплых природных оттенках. Носите его как стильное колье или закрепляйте очки на кольце, чтобы они всегда были под рукой.",
+          handle: "dune",
+          weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-silver.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Silver"],
+              values: ["Dune"],
             },
           ],
           variants: [
             {
-              title: "Silver",
-              sku: "SILVER-CHAIN",
+              title: "Dune",
+              sku: "DUNE-CHAIN",
               options: {
-                Material: "Silver",
+                Material: "Dune",
+              },
+              prices: [
+                {
+                  amount: 59,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 65,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4999,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: duneMetadata,
+        },
+        {
+          title: "Луна",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Лаконичная серебристая цепочка SUNLUK в минималистичном дизайне. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "luna",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Luna"],
+            },
+          ],
+          variants: [
+            {
+              title: "Luna",
+              sku: "LUNA-CHAIN",
+              options: {
+                Material: "Luna",
               },
               prices: [
                 {
@@ -495,11 +703,11 @@ export default async function initial_data_seed({
                   currency_code: "eur",
                 },
                 {
-                  amount: 49,
+                  amount: 50,
                   currency_code: "usd",
                 },
                 {
-                  amount: 4500,
+                  amount: 3999,
                   currency_code: "rub",
                 },
               ],
@@ -511,44 +719,42 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
         },
         {
-          title: "Sand Chain",
+          title: "Шелк",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
           category_ids: [accessoriesCategory.id],
-          description: "Тёплый металл и морской песчаный оттенок",
-          handle: "sand-chain",
-          weight: 130,
+          description: "Элегантная цепочка SUNLUK с мягким плоским плетением и золотистым сиянием. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "silk",
+          weight: 120,
           status: ProductStatus.PUBLISHED,
           shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "/images/product-sand.webp",
-            },
-          ],
+          images: [],
           options: [
             {
               title: "Material",
-              values: ["Gold-plated"],
+              values: ["Silk"],
             },
           ],
           variants: [
             {
-              title: "Gold-plated",
-              sku: "SAND-CHAIN",
+              title: "Silk",
+              sku: "SILK-CHAIN",
               options: {
-                Material: "Gold-plated",
+                Material: "Silk",
               },
               prices: [
                 {
-                  amount: 55,
+                  amount: 54,
                   currency_code: "eur",
                 },
                 {
-                  amount: 60,
+                  amount: 59,
                   currency_code: "usd",
                 },
                 {
-                  amount: 5500,
+                  amount: 4499,
                   currency_code: "rub",
                 },
               ],
@@ -560,6 +766,101 @@ export default async function initial_data_seed({
               id: defaultSalesChannel.id,
             },
           ],
+          metadata: azureMetadata,
+        },
+        {
+          title: "Аметист",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Эффектная цепочка SUNLUK с бусинами глубокого аметистового оттенка. Добавляет яркий акцент образу, легко превращается в стильное колье и позволяет удобно закрепить очки с помощью силиконовых держателей.",
+          handle: "amethyst",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Amethyst"],
+            },
+          ],
+          variants: [
+            {
+              title: "Amethyst",
+              sku: "AMETHYST-CHAIN",
+              options: {
+                Material: "Amethyst",
+              },
+              prices: [
+                {
+                  amount: 54,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 59,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4499,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: azureMetadata,
+        },
+        {
+          title: "Лагуна",
+          subtitle: "Цепочка для очков • Колье • Держатель для очков",
+          category_ids: [accessoriesCategory.id],
+          description: "Элегантная цепочка SUNLUK с бусинами насыщенного зелёного оттенка, вдохновленная спокойствием морской лагуны. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          handle: "lagoon",
+          weight: 120,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Material",
+              values: ["Lagoon"],
+            },
+          ],
+          variants: [
+            {
+              title: "Lagoon",
+              sku: "LAGOON-CHAIN",
+              options: {
+                Material: "Lagoon",
+              },
+              prices: [
+                {
+                  amount: 54,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 59,
+                  currency_code: "usd",
+                },
+                {
+                  amount: 4499,
+                  currency_code: "rub",
+                },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+          metadata: azureMetadata,
         },
         {
           title: "Фирменный мешочек",
@@ -741,6 +1042,70 @@ export default async function initial_data_seed({
             },
           ],
         },
+        {
+          title: "Фирменный мешочек (Бирюзового цвета)",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек бирюзового цвета SUNLUK",
+          handle: "cotton-pouch-turquoise",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "COTTON-POUCH-TURQUOISE",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                { amount: 3, currency_code: "eur" },
+                { amount: 3, currency_code: "usd" },
+                { amount: 300, currency_code: "rub" },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [{ id: defaultSalesChannel.id }],
+        },
+        {
+          title: "Фирменный мешочек (Коричневого цвета)",
+          category_ids: [packagingCategory.id],
+          description: "Фирменный хлопковый мешочек коричневого цвета SUNLUK",
+          handle: "cotton-pouch-brown",
+          weight: 50,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [],
+          options: [
+            {
+              title: "Default Option",
+              values: ["Default Value"],
+            },
+          ],
+          variants: [
+            {
+              title: "Default Variant",
+              sku: "COTTON-POUCH-BROWN",
+              options: {
+                "Default Option": "Default Value",
+              },
+              prices: [
+                { amount: 3, currency_code: "eur" },
+                { amount: 3, currency_code: "usd" },
+                { amount: 300, currency_code: "rub" },
+              ],
+              manage_inventory: true,
+            },
+          ],
+          sales_channels: [{ id: defaultSalesChannel.id }],
+        },
       ],
     },
   });
@@ -755,8 +1120,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Бирюза",
-            description: "Акцентный цвет и природные мотивы",
+            title: "Лазурь",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Фирменная цепочка SUNLUK с лазурными акцентами, вдохновленными цветом моря. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -764,8 +1130,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Turquoise Chain",
-            description: "Accent color and natural motifs",
+            title: "Azure",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "SUNLUK's signature eyewear chain featuring azure accents inspired by the colors of the sea. Easily transforms into an elegant necklace, while the signature ring keeps your glasses secure and within easy reach whenever you're not wearing them.",
           },
         },
         {
@@ -773,8 +1140,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Leather Loop",
-            description: "Натуральная кожа и премиальный металл",
+            title: "Дюна",
+            subtitle: "Держатель для очков • Колье • Подвес для очков",
+            description: "Минималистичное украшение SUNLUK с фирменным кольцом в теплых природных оттенках. Носите его как стильное колье или закрепляйте очки на кольце, чтобы они всегда были под рукой.",
           },
         },
         {
@@ -782,8 +1150,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Leather Loop",
-            description: "Genuine leather and premium metal",
+            title: "Dune",
+            subtitle: "Eyewear Holder • Necklace • Glasses Pendant",
+            description: "A minimalist SUNLUK accessory featuring the signature ring in warm, natural tones. Wear it as an elegant necklace or use the ring to keep your glasses secure and always within reach.",
           },
         },
         {
@@ -791,8 +1160,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Silver Chain",
-            description: "Минимализм, строгость и лёгкий блеск",
+            title: "Луна",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Лаконичная серебристая цепочка SUNLUK в минималистичном дизайне. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -800,8 +1170,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Silver Chain",
-            description: "Minimalism, rigor, and a light sheen",
+            title: "Luna",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "A minimalist silver-tone SUNLUK chain that easily transforms from an eyewear chain into an elegant necklace. The signature ring keeps your glasses secure and always within easy reach.",
           },
         },
         {
@@ -809,8 +1180,9 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "ru-RU",
           translations: {
-            title: "Sand Chain",
-            description: "Тёплый металл и морской песчаный оттенок",
+            title: "Шелк",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Элегантная цепочка SUNLUK с мягким плоским плетением и золотистым сиянием. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
           },
         },
         {
@@ -818,12 +1190,53 @@ export default async function initial_data_seed({
           reference: "product",
           locale_code: "en-US",
           translations: {
-            title: "Sand Chain",
-            description: "Warm metal and sea-sand shade",
+            title: "Silk",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "An elegant SUNLUK chain with a smooth flat weave and a refined gold finish. Easily transforms into a stylish necklace, while the signature ring keeps your glasses secure and always within reach.",
           },
         },
         {
           reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Аметист",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Эффектная цепочка SUNLUK с бусинами глубокого аметистового оттенка. Добавляет яркий акцент образу, легко превращается в стильное колье и позволяет удобно закрепить очки с помощью силиконовых держателей.",
+          },
+        },
+        {
+          reference_id: productResults[4].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Amethyst",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "A striking SUNLUK chain featuring deep amethyst-colored beads. Adds a bold touch to any look, transforms into an elegant necklace, and keeps your glasses secure with the included silicone loops.",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Лагуна",
+            subtitle: "Цепочка для очков • Колье • Держатель для очков",
+            description: "Элегантная цепочка SUNLUK с бусинами насыщенного зелёного оттенка, вдохновленная спокойствием морской лагуны. Легко трансформируется в стильное колье, а фирменное кольцо позволяет удобно закрепить очки, когда они не используются.",
+          },
+        },
+        {
+          reference_id: productResults[5].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Lagoon",
+            subtitle: "Eyewear Chain • Necklace • Eyewear Holder",
+            description: "An elegant SUNLUK chain featuring rich green beads inspired by the calm waters of a tropical lagoon. Easily transforms into a stylish necklace, while the signature ring keeps your glasses secure and always within reach.",
+          },
+        },
+        {
+          reference_id: productResults[6].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -832,7 +1245,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[4].id,
+          reference_id: productResults[6].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -841,7 +1254,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[5].id,
+          reference_id: productResults[7].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -850,7 +1263,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[5].id,
+          reference_id: productResults[7].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -859,7 +1272,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[6].id,
+          reference_id: productResults[8].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -868,7 +1281,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[6].id,
+          reference_id: productResults[8].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
@@ -877,7 +1290,7 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[7].id,
+          reference_id: productResults[9].id,
           reference: "product",
           locale_code: "ru-RU",
           translations: {
@@ -886,12 +1299,48 @@ export default async function initial_data_seed({
           },
         },
         {
-          reference_id: productResults[7].id,
+          reference_id: productResults[9].id,
           reference: "product",
           locale_code: "en-US",
           translations: {
             title: "Wooden Case",
             description: "Wooden jewelry case",
+          },
+        },
+        {
+          reference_id: productResults[10].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек (Бирюзового цвета)",
+            description: "Фирменный хлопковый мешочек бирюзового цвета SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[10].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Branded Pouch (Turquoise)",
+            description: "Branded turquoise cotton pouch SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[11].id,
+          reference: "product",
+          locale_code: "ru-RU",
+          translations: {
+            title: "Фирменный мешочек (Коричневого цвета)",
+            description: "Фирменный хлопковый мешочек коричневого цвета SUNLUK",
+          },
+        },
+        {
+          reference_id: productResults[11].id,
+          reference: "product",
+          locale_code: "en-US",
+          translations: {
+            title: "Branded Pouch (Brown)",
+            description: "Branded brown cotton pouch SUNLUK",
           },
         },
       ],

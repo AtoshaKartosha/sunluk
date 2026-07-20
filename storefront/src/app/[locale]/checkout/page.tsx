@@ -20,6 +20,7 @@ import {
 } from "@/lib/medusa/cart";
 import { getRegionCountries } from "@/lib/medusa/regions";
 import { getClientCustomer } from "@/lib/medusa/customer";
+import { getPackagingName } from "@/lib/medusa/packaging-names";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -99,10 +100,12 @@ const CITY_SUGGESTIONS: Record<string, string[]> = {
 // Formatting helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number | null | undefined, currency: string | null | undefined): string {
+// ponytail: duplicated from PriceDisplay.tsx to avoid complex import chain
+function formatPrice(amount: number | null | undefined, currency: string | null | undefined, locale?: string): string {
   if (amount == null || !currency) return "—";
   try {
-    return new Intl.NumberFormat("ru-RU", {
+    const bcp47 = locale === "en" ? "en-US" : "ru-RU";
+    return new Intl.NumberFormat(bcp47, {
       style: "currency",
       currency: currency.toUpperCase(),
       minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -127,14 +130,14 @@ function LoadingState({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div aria-hidden="true" className="w-8 h-8 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
           <p role="status" aria-live="polite" className="text-sm text-[#2c211b]/60 tracking-wide">
             {t("loading")}
           </p>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );
@@ -150,7 +153,7 @@ function EmptyCartState({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4 py-16">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
           <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
@@ -166,7 +169,7 @@ function EmptyCartState({
             {t("emptyCta")}
           </Link>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );
@@ -696,7 +699,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
       <SiteHeader />
-      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
+      <div className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-10 lg:px-16 py-10 sm:py-16 lg:py-20">
         {/* Header */}
         <div className="mb-12">
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light tracking-wide">
@@ -704,14 +707,14 @@ export default function CheckoutPage() {
           </h1>
           <div className="w-16 h-0.5 bg-[#2f6f78] mt-4" />
         </div>
-
+      
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 lg:gap-20">
           {/* ================================================================ */}
           {/* Left Column — Checkout Steps */}
           {/* ================================================================ */}
           <div className="order-2 lg:order-1">
             <StepIndicator currentStep={currentStep} tsteps={tsteps} />
-
+      
             {/* ---- Step 1: Contact & Address ---- */}
             {currentStep === "contact" && (
               <form onSubmit={handleContactSubmit} className="space-y-8">
@@ -723,7 +726,7 @@ export default function CheckoutPage() {
                     {tc("desc")}
                   </p>
                 </div>
-
+      
                 {/* Email */}
                 <div className="space-y-1.5">
                   <label
@@ -748,7 +751,7 @@ export default function CheckoutPage() {
                   />
                   {fieldErrorEl("email")}
                 </div>
-
+      
                 {/* Name fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -802,7 +805,7 @@ export default function CheckoutPage() {
                     {fieldErrorEl("last_name")}
                   </div>
                 </div>
-
+      
                 {/* Address */}
                 <div className="space-y-1.5">
                   <label
@@ -829,7 +832,7 @@ export default function CheckoutPage() {
                   />
                   {fieldErrorEl("address_1")}
                 </div>
-
+      
                 {/* Country / City */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -896,7 +899,7 @@ export default function CheckoutPage() {
                     {fieldErrorEl("city")}
                   </div>
                 </div>
-
+      
                 {/* Postal Code / Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -946,7 +949,7 @@ export default function CheckoutPage() {
                     />
                   </div>
                 </div>
-
+      
                 {stepError && (
                   <div
                     id="checkout-contact-error"
@@ -957,7 +960,7 @@ export default function CheckoutPage() {
                     {stepError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="submit"
@@ -976,7 +979,7 @@ export default function CheckoutPage() {
                 </div>
               </form>
             )}
-
+      
             {/* ---- Step 2: Shipping Method ---- */}
             {currentStep === "shipping" && (
               <form onSubmit={handleShippingSubmit} className="space-y-8">
@@ -988,7 +991,7 @@ export default function CheckoutPage() {
                     {ts("desc")}
                   </p>
                 </div>
-
+      
                 {shippingLoading ? (
                   <div className="flex items-center gap-3 py-8">
                     <div aria-hidden="true" className="w-5 h-5 border-2 border-[#2f6f78] border-t-transparent rounded-full animate-spin motion-reduce:animate-none" />
@@ -1028,13 +1031,14 @@ export default function CheckoutPage() {
                           {formatPrice(
                             option.amount ?? option.calculated_amount,
                             option.currency_code,
+                            locale,
                           )}
                         </span>
                       </label>
                     ))}
                   </div>
                 )}
-
+      
                 {stepError && (
                   <div
                     id="checkout-shipping-error"
@@ -1045,7 +1049,7 @@ export default function CheckoutPage() {
                     {stepError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -1067,7 +1071,7 @@ export default function CheckoutPage() {
                 </div>
               </form>
             )}
-
+      
             {/* ---- Step 3: Payment ---- */}
             {currentStep === "payment" && (
               <form onSubmit={handlePaymentSubmit} className="space-y-8">
@@ -1079,7 +1083,7 @@ export default function CheckoutPage() {
                     {tp("desc")}
                   </p>
                 </div>
-
+      
                 <div className="space-y-3">
                   <label className="flex items-center gap-4 p-4 border border-[#2f6f78] bg-[#2f6f78]/5 cursor-pointer">
                     <input
@@ -1115,7 +1119,7 @@ export default function CheckoutPage() {
                     </div>
                   </label>
                 </div>
-
+      
                 <p className="flex items-center gap-1.5 text-xs text-[#2c211b]/50">
                   <svg
                     aria-hidden="true"
@@ -1134,7 +1138,7 @@ export default function CheckoutPage() {
                   </svg>
                   {tp("secureNote")}
                 </p>
-
+      
                 {completionError && (
                   <div
                     id="checkout-payment-error"
@@ -1145,7 +1149,7 @@ export default function CheckoutPage() {
                     {completionError}
                   </div>
                 )}
-
+      
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -1168,7 +1172,7 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       ta("placeOrderWithTotal", {
-                        total: formatPrice(cart.total, cart.currency_code ?? "dkk"),
+                        total: formatPrice(cart.total, cart.currency_code ?? "dkk", locale),
                       })
                     )}
                   </button>
@@ -1176,7 +1180,7 @@ export default function CheckoutPage() {
               </form>
             )}
           </div>
-
+      
           {/* ================================================================ */}
           {/* Right Column — Order Summary */}
           {/* ================================================================ */}
@@ -1194,7 +1198,7 @@ export default function CheckoutPage() {
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="text-sm font-bold">
-                    {formatPrice(cart.total, cart.currency_code ?? "dkk")}
+                    {formatPrice(cart.total, cart.currency_code ?? "dkk", locale)}
                   </span>
                   <svg
                     aria-hidden="true"
@@ -1216,7 +1220,7 @@ export default function CheckoutPage() {
               <h3 className="font-serif text-lg tracking-wide mb-6">
                 {tsm("yourOrder")}
               </h3>
-
+      
               {/* Line items */}
               {hasItems ? (
                 <ul className="space-y-4 mb-6 pb-6 border-b border-[#2c211b]/8">
@@ -1227,6 +1231,7 @@ export default function CheckoutPage() {
                     const calcPrice = mainItem.metadata?.calculated_price;
                     const hasDiscount =
                       calcPrice?.original_amount != null &&
+                      calcPrice.currency_code === cart.currency_code &&
                       calcPrice.original_amount > mainItem.unit_price;
                     return (
                       <li key={mainItem.id} className="flex gap-4">
@@ -1245,7 +1250,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
                             <p className="text-sm font-medium truncate">
-                              {mainItem.title}
+                              {mainItem.product?.title ?? mainItem.title}
                               {mainItem.quantity > 1 && (
                                 <span className="text-xs text-[#2c211b]/50 ml-1">× {mainItem.quantity}</span>
                               )}
@@ -1256,6 +1261,7 @@ export default function CheckoutPage() {
                                   {formatPrice(
                                     calcPrice.original_amount! * mainItem.quantity,
                                     cart.currency_code ?? "dkk",
+                                    locale,
                                   )}
                                 </span>
                               )}
@@ -1263,6 +1269,7 @@ export default function CheckoutPage() {
                                 {formatPrice(
                                   mainItem.total,
                                   cart.currency_code ?? "dkk",
+                                  locale,
                                 )}
                               </span>
                               {hasDiscount && (
@@ -1281,10 +1288,14 @@ export default function CheckoutPage() {
                           {linkedPackaging && (
                             <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#2c211b]/6">
                               <span className="text-xs text-[#2c211b]/50 italic truncate">
-                                + {linkedPackaging.title}
+                                + {getPackagingName(
+                                    linkedPackaging.product,
+                                    locale,
+                                    linkedPackaging.title,
+                                  )}
                               </span>
                               <span className="text-xs text-[#2c211b]/60 font-medium whitespace-nowrap">
-                                {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk")}
+                                {formatPrice(linkedPackaging.total, cart.currency_code ?? "dkk", locale)}
                               </span>
                             </div>
                           )}
@@ -1298,7 +1309,7 @@ export default function CheckoutPage() {
                   {t("noItems")}
                 </p>
               )}
-
+      
               {/* Totals */}
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -1307,6 +1318,7 @@ export default function CheckoutPage() {
                     {formatPrice(
                       displaySubtotal,
                       cart.currency_code ?? "dkk",
+                      locale,
                     )}
                   </dd>
                 </div>
@@ -1314,21 +1326,22 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <dt className="text-[#2c211b]/60">{tsm("discount")}</dt>
                     <dd className="font-medium text-[#b85c3a]">
-                      −{formatPrice(displayDiscount, cart.currency_code ?? "dkk")}
+                      −{formatPrice(displayDiscount, cart.currency_code ?? "dkk", locale)}
                     </dd>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <dt className="text-[#2c211b]/60">{tsm("shipping")}</dt>
                   <dd className="font-medium">
-                    {cart.shipping_total > 0
-                      ? formatPrice(
-                          cart.shipping_total,
-                          cart.currency_code ?? "dkk",
-                        )
-                      : displaySubtotal >= 50
-                        ? tsm("shippingFree")
-                        : tsm("shippingPending")}
+                    {cart.shipping_methods && cart.shipping_methods.length > 0
+                      ? cart.shipping_total > 0
+                        ? formatPrice(
+                            cart.shipping_total,
+                            cart.currency_code ?? "dkk",
+                            locale,
+                          )
+                        : tsm("shippingFree")
+                      : tsm("shippingPending")}
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -1338,6 +1351,7 @@ export default function CheckoutPage() {
                       ? formatPrice(
                           cart.tax_total,
                           cart.currency_code ?? "dkk",
+                          locale,
                         )
                       : "—"}
                   </dd>
@@ -1348,6 +1362,7 @@ export default function CheckoutPage() {
                     {formatPrice(
                       cart.total,
                       cart.currency_code ?? "dkk",
+                      locale,
                     )}
                   </dd>
                 </div>
@@ -1356,7 +1371,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InstagramIcon, SendIcon, YoutubeIcon } from "./icons";
+import { InstagramIcon, SendIcon } from "./icons";
 import { getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,7 +23,7 @@ export function SiteFooter({
   const [serviceGroup, ...secondaryGroups] = groups;
 
   return (
-    <footer id="contacts" className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
+    <footer className="bg-[#f4ebe6] border-t border-[#2c211b]/10 py-16 sm:py-24 text-sm text-[#2c211b]/80">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10 sm:gap-x-10 sm:gap-y-12 lg:gap-16 mb-16 sm:mb-20">
@@ -32,9 +32,9 @@ export function SiteFooter({
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <Link href={locale ? `/${locale}` : "/"} className="flex items-center group">
               <img
-                src="/images/sunluk_logo.svg"
+                src={activeLocale === "ru" ? "/images/sunluk_logo_cyrillic.svg" : "/images/sunluk_logo.svg"}
                 alt="Sunluk"
-                className="h-8 sm:h-10 w-auto transition-opacity duration-300 group-hover:opacity-80"
+                className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-10"
               />
             </Link>
             <div className="flex items-center gap-4 mt-2">
@@ -44,8 +44,8 @@ export function SiteFooter({
               <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Telegram">
                 <SendIcon className="w-5 h-5" />
               </a>
-              <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="YouTube">
-                <YoutubeIcon className="w-5 h-5" />
+              <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Max">
+                <img src="/images/max.svg" alt="" className="w-5 h-5 opacity-70" />
               </a>
             </div>
           </div>

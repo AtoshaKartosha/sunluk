@@ -61,7 +61,7 @@ export const PRODUCTS: ProductData[] = [
   },
 ];
 
-export type FeatureIcon = "S" | "gem" | "leaf" | "shield";
+export type FeatureIcon = "S" | "gem" | "leaf" | "shield" | "modules";
 
 export interface FeatureData {
   icon: FeatureIcon;
@@ -76,9 +76,9 @@ export const FEATURES: FeatureData[] = [
     description: "Фирменная деталь SUNLUK",
   },
   {
-    icon: "gem",
-    title: "Премиальные материалы",
-    description: "Отборные материалы, которые служат долго.",
+    icon: "modules",
+    title: "Модульность",
+    description: "Сменные модули под любой образ.",
   },
   {
     icon: "leaf",
@@ -86,9 +86,9 @@ export const FEATURES: FeatureData[] = [
     description: "Комфортные на весь день.",
   },
   {
-    icon: "shield",
-    title: "Надёжные",
-    description: "Прочное крепление для ваших очков.",
+    icon: "gem",
+    title: "Премиальные материалы",
+    description: "Отборные материалы, которые служат долго.",
   },
 ];
 
@@ -117,17 +117,17 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "СЕРВИС КЛИЕНТОВ",
     links: [
-      { label: "Наша история", href: "#" },
-      { label: "Доставка и возврат", href: "#" },
-      { label: "Условия и положения", href: "#" },
-      { label: "Политика конфиденциальности", href: "#" },
+      { label: "Пользовательское соглашение", href: "/ru/info#terms" },
+      { label: "Политика конфиденциальности", href: "/ru/info#privacy" },
+      { label: "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
+      { label: "Правила доставки", href: "/ru/info#shipping" },
+      { label: "Правила возврата товаров", href: "/ru/info#returns" },
     ],
   },
   {
     title: "МАГАЗИН",
     links: [
-      { label: "Все товары", href: "#" },
-      { label: "Подарочные карты", href: "#" },
+      { label: "Коллекция", href: "#" },
     ],
   },
   {
@@ -147,24 +147,24 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
 
 
 
-export function getNavLinks(locale: Locale): NavLinkData[] {
+export function getNavLinks(locale: Locale, isLanding = false): NavLinkData[] {
+  const prefix = isLanding ? "" : `/${locale}`;
   switch (locale) {
     case "en":
       return [
-        { href: "/en/products", label: "CATALOG" },
-        { href: "#collection", label: "COLLECTION" },
-        { href: "#about", label: "ABOUT" },
-        { href: "#contacts", label: "CONTACTS" },
+        { href: `${prefix}#collection`, label: "COLLECTION" },
+        { href: `${prefix}#about`, label: "DETAILS" },
+        { href: `${prefix}#contacts`, label: "CONTACTS" },
       ];
     default:
       return [
-        { href: "/ru/products", label: "КАТАЛОГ" },
-        { href: "#collection", label: "КОЛЛЕКЦИЯ" },
-        { href: "#about", label: "О НАС" },
-        { href: "#contacts", label: "КОНТАКТЫ" },
+        { href: `${prefix}#collection`, label: "КОЛЛЕКЦИЯ" },
+        { href: `${prefix}#about`, label: "ДЕТАЛИ" },
+        { href: `${prefix}#contacts`, label: "КОНТАКТЫ" },
       ];
   }
 }
+
 
 export function getFooterGroups(locale: Locale): FooterGroupData[] {
   if (locale === "en") {
@@ -172,17 +172,17 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
       {
         title: "CUSTOMER SERVICE",
         links: [
-          { label: "Our Story", href: "#" },
-          { label: "Shipping & Returns", href: "#" },
-          { label: "Terms & Conditions", href: "#" },
-          { label: "Privacy Policy", href: "#" },
+          { label: "User Agreement", href: "/en/info#terms" },
+          { label: "Privacy Policy", href: "/en/info#privacy" },
+          { label: "Terms for Placing Orders and Purchasing Goods", href: "/en/info#purchase" },
+          { label: "Delivery Policy", href: "/en/info#shipping" },
+          { label: "Returns Policy", href: "/en/info#returns" },
         ],
       },
       {
         title: "SHOP",
         links: [
           { label: "All Products", href: "#" },
-          { label: "Gift Cards", href: "#" },
         ],
       },
       {

@@ -48,6 +48,12 @@ flowchart LR
     D0[Checks passed]
     D1[VPS deployment complete]
   end
+
+  subgraph SEO["SEO Readiness\nflows/features/seo-readiness.md"]
+    S0[Public route classified]
+    S1[Metadata and sitemap projected]
+    S2[Search crawler response]
+  end
   Admin -- "catalog:published" --> Catalog
   Admin -- "catalog:published" --> Localization
   Admin -- "catalog:translation-published" --> Localization
@@ -57,6 +63,8 @@ flowchart LR
   Addons -- "cart:line-items-added" --> Cart
   Cart -- "order:placed" --> Admin
   Cart -- "order:placed" --> Cabinet
+  Catalog -. "catalog:indexable-route-projection" .-> SEO
+  Localization -. "catalog:locale-routing-map" .-> SEO
 
 ## Cross-flow contracts
 | Source | Event/data | Target | Notes |
@@ -71,6 +79,8 @@ flowchart LR
 | Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |
 | Cart and Checkout | `order:placed` | Admin Operations | Payload: `{ orderId, cartId, customerId? }`; order appears in Medusa admin/order management. |
 | CI/CD | None | Commerce flows | Infrastructure-only v0; it does not emit or consume commerce domain events. |
+| Catalog Browsing | `catalog:indexable-route-projection` | SEO Readiness | Read-only shared data: `{ locale, path, productHandle?, product? }`. Only public, published storefront routes may enter search projections. |
+| Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, stableProductHandles }`. Canonical and language alternates use the configured locale prefixes. |
 
 ## Non-negotiables
 
@@ -86,3 +96,4 @@ flowchart LR
 - Storefront locale routing: `storefront/src/proxy.ts` (next-intl proxy; Next 16 successor to the deprecated `middleware.ts` convention).
 - Storefront entry points: `storefront/src/app/[locale]/page.tsx`, `storefront/src/app/[locale]/products/page.tsx`, `storefront/src/app/[locale]/products/[handle]/page.tsx`.
 - CI/CD automation: `flows/integrations/ci-cd.md`.
+- Storefront SEO readiness: `flows/features/seo-readiness.md`.

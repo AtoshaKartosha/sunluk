@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { resolveRegion } from "@/lib/medusa/regions";
 import { getProduct, listRelatedProducts, listPackagingProducts } from "@/lib/medusa/products";
 import type { ProductDetail } from "@/lib/medusa/products";
@@ -22,6 +23,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import type { Locale } from "@/i18n/routing";
 import { toMedusaLocale } from "@/i18n/routing";
 import { getNavLinks, getFooterGroups, getCopyright } from "@/lib/landing-data";
+import { buildRouteMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -50,42 +52,38 @@ export async function generateMetadata({
   }
 
   let product: ProductDetail | null = null;
+  let upstreamFailed = false;
   try {
     product = await getProduct(handle, region, medusaLocale);
   } catch {
-    // metadata is best-effort; fall through
+    upstreamFailed = true;
   }
 
+  // Upstream failure stays a dependency error, never a false 404.
+  if (upstreamFailed) {
+    return { title: "Product" };
+  }
+
+  // Truly missing: the page returns 404; keep metadata neutral.
   if (!product) {
     return { title: "Product Not Found" };
   }
 
-  const projection = projectVariant(
-    product.variants,
-    product.options,
-  );
-
+  const projection = projectVariant(product.variants, product.options);
   const priceText = projection.price
     ? `${projection.price.calculated_amount} ${projection.price.currency_code.toUpperCase()}`
     : "";
+  const title = priceText ? `${product.title} — ${priceText}` : product.title;
+  const image = product.thumbnail ?? product.images?.[0]?.url ?? undefined;
 
-  const title = priceText
-    ? `${product.title} — ${priceText}`
-    : product.title;
-
-  return {
+  return buildRouteMetadata({
+    locale: resolvedLocale,
+    route: "product",
+    handle,
     title,
     description: product.description ?? product.title,
-    openGraph: {
-      title: product.title,
-      description: product.description ?? undefined,
-      images: product.thumbnail
-        ? [{ url: product.thumbnail }]
-        : product.images?.[0]?.url
-          ? [{ url: product.images[0].url }]
-          : undefined,
-    },
-  };
+    image,
+  });
 }
 
 // ---- Page chrome helpers ----
@@ -116,17 +114,17 @@ function UnsupportedRegion({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={chrome.navLinks} />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
-          <h2 className="font-serif text-2xl font-light tracking-wide mb-4">
+          <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
             {heading}
-          </h2>
+          </h1>
           <p className="text-sm text-[#2c211b]/60">
             {description.replace("{countryCode}", countryCode.toUpperCase())}
           </p>
         </div>
-      </main>
+      </div>
       <SiteFooter
         locale={locale}
         footerGroups={chrome.footerGroups}
@@ -152,12 +150,12 @@ function ProductDetailState({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
       <SiteHeader navLinks={chrome.navLinks} />
-      <main className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-6" />
-          <h2 className="font-serif text-2xl font-light tracking-wide mb-4">
+          <h1 className="font-serif text-2xl font-light tracking-wide mb-4">
             {heading}
-          </h2>
+          </h1>
           <p className="text-sm text-[#2c211b]/60">{description}</p>
           {retryLabel && (
             <Link
@@ -168,7 +166,7 @@ function ProductDetailState({
             </Link>
           )}
         </div>
-      </main>
+      </div>
       <SiteFooter
         locale={locale}
         footerGroups={chrome.footerGroups}
@@ -226,14 +224,7 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   if (!product) {
-    return (
-      <ProductDetailState
-        locale={resolvedLocale}
-        heading={t("notFound")}
-        description={t("notFoundDesc")}
-        retryLabel={t("backToCatalog")}
-      />
-    );
+    notFound();
   }
 
   // ---- Data projections ----
@@ -277,31 +268,23 @@ export default async function ProductDetailPage({ params }: Props) {
   const pt = await getTranslations({ locale, namespace: "product" });
   const productLabels: ProductInfoBlockLabels = {
     brand: pt("brand"),
-    vatIncluded: pt("vatIncluded"),
     handmade: pt("handmade"),
     delivery: pt("delivery"),
     giftWrap: pt("giftWrap"),
-    materialsHeading: pt("materialsHeading"),
-    materialsText: pt("materialsText"),
-    materialsItem1: pt("materialsItem1"),
-    materialsItem2: pt("materialsItem2"),
-    materialsItem3: pt("materialsItem3"),
-    materialsCare: pt("materialsCare"),
     shippingHeading: pt("shippingHeading"),
     shippingText: pt("shippingText"),
     shippingItem1: pt("shippingItem1"),
     shippingItem2: pt("shippingItem2"),
     shippingItem3: pt("shippingItem3"),
-    shippingItem4: pt("shippingItem4"),
+    returnsHeading: pt("returnsHeading"),
+    returnsText: pt("returnsText"),
     materialNames: {
-      turquoise: pt("turquoise"),
-      leather: pt("leather"),
-      silver: pt("silver"),
-      "gold-plated": pt("gold-plated"),
-      Turquoise: pt("turquoise"),
-      Leather: pt("leather"),
-      Silver: pt("silver"),
-      "Gold-plated": pt("gold-plated"),
+      Azure: pt("azure"),
+      Dune: pt("dune"),
+      Luna: pt("luna"),
+      Silk: pt("silk"),
+      Amethyst: pt("amethyst"),
+      Lagoon: pt("lagoon"),
     },
     variantSelector: {
       selectAllOptions: pt("selectAllOptions"),
@@ -322,14 +305,12 @@ export default async function ProductDetailPage({ params }: Props) {
       deliveryPromise: pt("deliveryPromise"),
       adding: pt("adding"),
       materialNames: {
-        turquoise: pt("turquoise"),
-        leather: pt("leather"),
-        silver: pt("silver"),
-        "gold-plated": pt("gold-plated"),
-        Turquoise: pt("turquoise"),
-        Leather: pt("leather"),
-        Silver: pt("silver"),
-        "Gold-plated": pt("gold-plated"),
+        Azure: pt("azure"),
+        Dune: pt("dune"),
+        Luna: pt("luna"),
+        Silk: pt("silk"),
+        Amethyst: pt("amethyst"),
+        Lagoon: pt("lagoon"),
       },
     },
     breadcrumbCatalog: pt("breadcrumbCatalog"),
@@ -337,16 +318,17 @@ export default async function ProductDetailPage({ params }: Props) {
       heading: pt("socialHeading"),
       placeholder: pt("socialPlaceholder"),
     },
-    factsHeading: pt("factsHeading"),
+    wearHeading: pt("wearHeading"),
+    kitHeading: pt("kitHeading"),
     packagingHeading: pt("packaging.heading"),
     packagingNone: pt("packaging.none"),
     packagingFree: pt("packaging.free"),
     packagingOutOfStock: pt("packaging.outOfStock"),
+    packagingComingSoon: pt("packaging.comingSoon"),
   };
 
   // ---- Render ----
 
-  const canonicalUrl = `https://sunluk.com/${resolvedLocale}/products/${handle}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b]">
@@ -356,11 +338,13 @@ export default async function ProductDetailPage({ params }: Props) {
         description={product.description}
         imageUrl={product.thumbnail ?? product.images?.[0]?.url ?? null}
         projection={projection}
-        url={canonicalUrl}
+        locale={resolvedLocale}
+        handle={handle}
+        catalogLabel={pt("breadcrumbCatalog")}
       />
 
       <SiteHeader navLinks={getNavLinks(resolvedLocale)} />
-      <main className="flex-1">
+      <div className="flex-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 pt-4">
           <ProductBreadcrumb
             title={product.title}
@@ -395,7 +379,7 @@ export default async function ProductDetailPage({ params }: Props) {
             />
           </div>
         </section>
-      </main>
+      </div>
       <SiteFooter
         locale={resolvedLocale}
         footerGroups={getFooterGroups(resolvedLocale)}

@@ -2,7 +2,7 @@
 import { FEATURES, FEATURE_BORDER_CLASSES } from "@/lib/landing-data";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { GemIcon, LeafIcon, ShieldIcon } from "./icons";
+import { GemIcon, LeafIcon, ModulesIcon, ShieldIcon } from "./icons";
 
 export function FeaturesSection() {
   const t = useTranslations("home");
@@ -15,11 +15,10 @@ export function FeaturesSection() {
   }));
 
   return (
-    <section className="pt-10 sm:pt-16 pb-20 sm:pb-32 bg-[#f4ebe6]">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          {/* Left 2x2 grid */}
-          <motion.div 
+    <section id="about" className="bg-[#f4ebe6] pt-2.5 pb-2.5 overflow-hidden">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-10 lg:px-16">
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16">
+          <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-100px" }}
@@ -32,53 +31,59 @@ export function FeaturesSection() {
                 }
               }
             }}
-            className="grid grid-cols-2 gap-0 order-2 lg:order-1"
+            className="order-2 grid grid-cols-1 sm:grid-cols-2 lg:order-1"
           >
             {localizedFeatures.map((feature, i) => (
               <motion.div
-                key={i}
+                key={feature.title}
                 variants={{
                   hidden: { opacity: 0 },
                   show: { opacity: 1, transition: { duration: 0.6 } }
                 }}
-                className={`${FEATURE_BORDER_CLASSES[i]} p-5 sm:p-12 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-6`}
+                className={`${FEATURE_BORDER_CLASSES[i]} flex items-start gap-3 p-5 text-left sm:gap-6 sm:p-8 lg:px-0 lg:py-12`}
               >
-                <div className="w-10 h-10 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center text-[#2c211b]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#2c211b] sm:h-16 sm:w-16">
                   {feature.icon === "S" ? (
-                    <span className="font-serif text-4xl sm:text-6xl font-light leading-none">S</span>
+                    <span className="font-serif text-4xl font-light leading-none sm:text-6xl">S</span>
                   ) : feature.icon === "gem" ? (
-                    <GemIcon className="w-7 h-7 sm:w-12 sm:h-12" />
+                    <GemIcon className="h-7 w-7 sm:h-12 sm:w-12" />
                   ) : feature.icon === "leaf" ? (
-                    <LeafIcon className="w-7 h-7 sm:w-12 sm:h-12" />
+                    <LeafIcon className="h-7 w-7 sm:h-12 sm:w-12" />
+                  ) : feature.icon === "modules" ? (
+                    <ModulesIcon className="h-7 w-7 sm:h-12 sm:w-12" />
                   ) : (
-                    <ShieldIcon className="w-7 h-7 sm:w-12 sm:h-12" />
+                    <ShieldIcon className="h-7 w-7 sm:h-12 sm:w-12" />
                   )}
                 </div>
-                <div className="flex flex-col gap-1 sm:gap-1.5">
-                  <h3 className="font-serif text-sm sm:text-lg font-bold text-[#2c211b] leading-tight">{feature.title}</h3>
-                  <p className="text-xs sm:text-sm text-[#2c211b]/70 leading-tight sm:leading-relaxed">{feature.description}</p>
+                <div className="flex min-w-0 flex-col gap-1 sm:gap-1.5">
+                  <h3 className="font-serif text-sm font-bold leading-tight text-[#2c211b] sm:text-lg">
+                    {feature.title}
+                  </h3>
+                  <p className="text-xs leading-tight text-[#2c211b]/70 sm:text-sm sm:leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
-          {/* Right text content */}
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col items-start gap-6 lg:pl-8 lg:pt-12 order-1 lg:order-2"
+            className="order-1 flex flex-col items-start gap-6 lg:order-2 lg:pt-12"
           >
-            <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78]">
+            <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#2f6f78]">
               {t("features.philosophy")}
             </span>
-            <h2 className="font-serif text-4xl sm:text-5xl font-light tracking-wide leading-[1.15] text-[#2c211b]">
+            <h2 className="font-serif text-4xl font-light leading-[1.15] tracking-wide text-[#2c211b] sm:text-5xl">
               {t("features.heading")}
             </h2>
-            <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80">
+            <p className="text-base leading-relaxed text-[#2c211b]/80 sm:text-lg">
               {t("features.description")}
             </p>
-            <div className="w-20 h-0.5 bg-[#2c211b]/20 mt-2" />
+            <div className="mt-2 h-0.5 w-20 bg-[#2c211b]/20" />
           </motion.div>
         </div>
       </div>

@@ -2,30 +2,24 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocale } from "next-intl";
-import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo, ProductFact } from "./types";
+import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo } from "./types";
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
 import Image from "next/image";
-import { ProductFacts } from "./ProductFacts";
+import { Package } from "lucide-react";
 import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
   brand: string;
-  vatIncluded: string;
   handmade: string;
   delivery: string;
   giftWrap: string;
-  materialsHeading: string;
-  materialsText: string;
-  materialsItem1: string;
-  materialsItem2: string;
-  materialsItem3: string;
-  materialsCare: string;
   shippingHeading: string;
   shippingText: string;
   shippingItem1: string;
   shippingItem2: string;
   shippingItem3: string;
-  shippingItem4: string;
+  returnsHeading: string;
+  returnsText: string;
   materialNames: Record<string, string>;
   /** Labels forwarded to VariantSelector for button text, stock, qty, etc. */
   variantSelector: import("./types").VariantSelectorLabels;
@@ -33,41 +27,34 @@ export interface ProductInfoBlockLabels {
   breadcrumbCatalog: string;
   /** Social proof section labels. */
   socialProof: import("./types").SocialProofLabels;
-  /** Product facts heading. */
-  factsHeading: string;
+  wearHeading?: string;
+  kitHeading?: string;
   packagingHeading?: string;
   packagingNone?: string;
   packagingFree?: string;
   packagingOutOfStock?: string;
+  packagingComingSoon?: string;
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
   brand: "АКСЕССУАРЫ SUNLUK",
-  vatIncluded: "НДС включен",
   handmade: "Ручная работа",
   delivery: "Доставка в DE и РФ",
   giftWrap: "Упаковка в подарок",
-  materialsHeading: "МАТЕРИАЛЫ И УХОД",
-  materialsText: "Каждое изделие SUNLUK создается вручную нашими мастерами из премиальных сертифицированных материалов:",
-  materialsItem1: "Износостойкий и гипоаллергенный шнур/цепочка.",
-  materialsItem2: "Итальянская премиум фурнитура и фурнитурные карабины.",
-  materialsItem3: "Регулируемые силиконовые петли для дужек очков любого размера.",
-  materialsCare: "Рекомендация: Избегайте прямого контакта с парфюмерией, лаком для волос и водой. Протирайте мягкой салфеткой без химии.",
-  shippingHeading: "ДОСТАВКА И ВОЗВРАТ",
-  shippingText: "Мы отправляем заказы по всему миру из складов в Мюнхене (Германия) и Москве (Россия):",
-  shippingItem1: "Отправка в течение 24 часов после оплаты.",
-  shippingItem2: "Бесплатная стандартная доставка при сумме заказа от 5 000 руб или 50 EUR.",
-  shippingItem3: "Возможность экспресс-доставки курьером до двери за 2-4 рабочих дня.",
-  shippingItem4: "Простой возврат или обмен в течение 14 дней с момента получения.",
+  shippingHeading: "ДОСТАВКА",
+  shippingText: "Мы гарантируем быструю доставку нашего аксессуара для очков – где бы вы ни жили.",
+  shippingItem1: "✔️ Заказ, оформленный до 16:00, отправляется сегодня",
+  shippingItem2: "✔️ Доставка от 2 до 14 дней в зависимости от города доставки",
+  shippingItem3: "✔️ Доставка при покупке от 4999 Руб (60 Евро) по всему миру бесплатная",
+  returnsHeading: "ВОЗВРАТ",
+  returnsText: "Для вашего спокойствия мы предлагаем 30-дневную политику возврата. Если вы не удовлетворены своей покупкой, верните её в течение 30 дней для полного возврата средств или замены.",
   materialNames: {
-    turquoise: "Бирюза",
-    leather: "Кожа",
-    silver: "Сталь",
-    "gold-plated": "Золото",
-    Turquoise: "Бирюза",
-    Leather: "Кожа",
-    Silver: "Сталь",
-    "Gold-plated": "Золото",
+    Azure: "Лазурь",
+    Dune: "Дюна",
+    Luna: "Луна",
+    Silk: "Шелк",
+    Amethyst: "Аметист",
+    Lagoon: "Лагуна",
   },
   variantSelector: {
     selectAllOptions: "Выберите все параметры",
@@ -88,14 +75,12 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     deliveryPromise: "Бесплатная доставка",
     adding: "Добавление...",
     materialNames: {
-      turquoise: "Бирюза",
-      leather: "Кожа",
-      silver: "Сталь",
-      "gold-plated": "Золото",
-      Turquoise: "Бирюза",
-      Leather: "Кожа",
-      Silver: "Сталь",
-      "Gold-plated": "Золото",
+      Azure: "Лазурь",
+      Dune: "Дюна",
+      Luna: "Луна",
+      Silk: "Шелк",
+      Amethyst: "Аметист",
+      Lagoon: "Лагуна",
     },
   },
   breadcrumbCatalog: "КАТАЛОГ",
@@ -103,11 +88,13 @@ export const DEFAULT_LABELS: ProductInfoBlockLabels = {
     heading: "ПОКУПАТЕЛИ ГОВОРЯТ",
     placeholder: "Отзывы скоро появятся. Станьте первым!",
   },
-  factsHeading: "ХАРАКТЕРИСТИКИ",
+  wearHeading: "НОСИТЕ ТАК, КАК УДОБНО",
+  kitHeading: "КОМПЛЕКТ",
   packagingHeading: "УПАКОВКА",
   packagingNone: "Без упаковки",
   packagingFree: "Бесплатно",
   packagingOutOfStock: "Нет в наличии",
+  packagingComingSoon: "Скоро в наличии",
 };
 
 interface ProductInfoBlockProps {
@@ -177,6 +164,7 @@ function AccordionItem({
 /*  ProductInfoBlock main component                                    */
 /* ------------------------------------------------------------------ */
 
+
 export function ProductInfoBlock({
   product,
   price,
@@ -190,38 +178,30 @@ export function ProductInfoBlock({
     if (locale === "en") {
       return {
         brand: "SUNLUK ACCESSORIES",
-        vatIncluded: "VAT included",
         handmade: "Handmade",
         delivery: "Delivery to DE & Worldwide",
         giftWrap: "Gift wrapping available",
-        materialsHeading: "MATERIALS & CARE",
-        materialsText: "Each SUNLUK piece is handcrafted by our artisans using premium certified materials:",
-        materialsItem1: "Durable and hypoallergenic cord/chain.",
-        materialsItem2: "Premium Italian hardware and clasps.",
-        materialsItem3: "Adjustable silicone loops for any eyewear temple size.",
-        materialsCare: "Care: Avoid direct contact with perfume, hairspray, and water. Wipe gently with a soft, chemical-free cloth.",
-        shippingHeading: "SHIPPING & RETURNS",
-        shippingText: "We ship worldwide from our warehouses in Munich (Germany) and Moscow (Russia):",
-        shippingItem1: "Orders shipped within 24 hours of payment.",
-        shippingItem2: "Free standard shipping on orders over 5,000 RUB or 50 EUR.",
-        shippingItem3: "Express courier delivery to your door in 2–4 business days.",
-        shippingItem4: "Easy returns or exchanges within 14 days of receipt.",
+        shippingHeading: "SHIPPING",
+        shippingText: "We guarantee fast delivery of our eyewear accessory — wherever you live.",
+        shippingItem1: "✔️ Orders placed before 4:00 PM ship the same day",
+        shippingItem2: "✔️ Delivery takes 2 to 14 days depending on the destination city",
+        shippingItem3: "✔️ Free worldwide delivery on orders over 4,999 RUB (60 EUR)",
+        returnsHeading: "RETURNS",
+        returnsText: "For your peace of mind, we offer a 30-day return policy. If you are not satisfied with your purchase, return it within 30 days for a full refund or replacement.",
         materialNames: {
-          turquoise: "Turquoise",
-          leather: "Leather",
-          silver: "Silver",
-          "gold-plated": "Gold-plated",
-          Turquoise: "Turquoise",
-          Leather: "Leather",
-          Silver: "Silver",
-          "Gold-plated": "Gold-plated",
+          Azure: "Azure",
+          Dune: "Dune",
+          Luna: "Luna",
+          Silk: "Silk",
+          Amethyst: "Amethyst",
+          Lagoon: "Lagoon",
         },
         variantSelector: {
           selectAllOptions: "Select all options",
           unavailable: "Unavailable",
           outOfStock: "Out of stock",
-          preOrder: "Pre-order",
           invalidQuantity: "Enter quantity",
+          preOrder: "Pre-order",
           addToCart: "Add to cart",
           quantity: "Quantity",
           decreaseQuantity: "Decrease quantity",
@@ -235,14 +215,12 @@ export function ProductInfoBlock({
           deliveryPromise: "Free delivery",
           adding: "Adding…",
           materialNames: {
-            turquoise: "Turquoise",
-            leather: "Leather",
-            silver: "Silver",
-            "gold-plated": "Gold-plated",
-            Turquoise: "Turquoise",
-            Leather: "Leather",
-            Silver: "Silver",
-            "Gold-plated": "Gold-plated",
+            Azure: "Azure",
+            Dune: "Dune",
+            Luna: "Luna",
+            Silk: "Silk",
+            Amethyst: "Amethyst",
+            Lagoon: "Lagoon",
           },
         },
         breadcrumbCatalog: "CATALOG",
@@ -250,30 +228,26 @@ export function ProductInfoBlock({
           heading: "WHAT OUR CUSTOMERS SAY",
           placeholder: "Reviews coming soon. Be the first!",
         },
-        factsHeading: "SPECIFICATIONS",
+        wearHeading: "WEAR IT YOUR WAY",
+        kitHeading: "WHAT'S INCLUDED",
         packagingHeading: "PACKAGING",
         packagingNone: "No packaging",
         packagingFree: "Free",
         packagingOutOfStock: "Out of stock",
+        packagingComingSoon: "Coming soon",
       };
     }
     return DEFAULT_LABELS;
   }, [propLabels, locale]);
+
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [resolvedVariant, setResolvedVariant] = useState<ProductVariant | null>(null);
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
   const [selectionValid, setSelectionValid] = useState(false);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
-  const [selectedPackaging, setSelectedPackaging] = useState<string>(() => {
-    // Find first available packaging option
-    const firstAvailable = packagingProducts?.find((p) => {
-      const variant = p.variants?.[0];
-      if (!variant) return false;
-      return projectAvailability(variant).available;
-    });
-    return firstAvailable?.handle || "";
-  });
+  // ponytail: default to the free branded pouch (brand-pouch) — gift-box is disabled, colored pouches are paid
+  const [selectedPackaging, setSelectedPackaging] = useState<string>("brand-pouch");
 
 
 
@@ -331,22 +305,16 @@ export function ProductInfoBlock({
   const headlinePrice: CalculatedPrice | null =
     resolvedVariant?.calculated_price ?? price;
 
-  // Derive structured facts from product data.
-  const facts: ProductFact[] = [];
-  if (resolvedVariant?.sku) {
-    facts.push({ label: "SKU", value: resolvedVariant.sku });
-  }
-  if (resolvedVariant?.title) {
-    facts.push({ label: "Variant", value: resolvedVariant.title });
-  }
-  // Add material facts from selected options.
-  for (const [optId, val] of Object.entries(selectedOptions)) {
-    const opt = product.options?.find((o) => o.id === optId);
-    if (opt) {
-      const displayVal = labels.materialNames[val] || val;
-      facts.push({ label: opt.title, value: displayVal });
-    }
-  }
+
+  const metaLocale = locale === "en" ? "en" : "ru";
+  const wearWays = product.metadata?.wear_it_your_way;
+  const wearData = wearWays && typeof wearWays === "object" && !Array.isArray(wearWays)
+    ? (wearWays as Record<string, Array<{icon: string; title: string; text: string}>>)[metaLocale]
+    : null;
+  const kitItems = product.metadata?.whats_included;
+  const kitData = kitItems && typeof kitItems === "object" && !Array.isArray(kitItems)
+    ? (kitItems as Record<string, string[]>)[metaLocale]
+    : null;
 
   return (
     <>
@@ -359,6 +327,11 @@ export function ProductInfoBlock({
           <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light tracking-wide text-[#2c211b] uppercase pb-2 border-b border-[#2c211b]/10">
             {product.title}
           </h1>
+          {product.subtitle && (
+            <p className="text-[11px] text-[#2c211b]/60 uppercase tracking-wider mt-2">
+              {product.subtitle}
+            </p>
+          )}
         </div>
 
         {/* Headline Price — variant-driven */}
@@ -367,9 +340,6 @@ export function ProductInfoBlock({
             price={headlinePrice}
             className="text-2xl sm:text-3xl font-light font-serif text-[#2c211b]"
           />
-          <span className="text-[10px] tracking-wide text-[#2c211b]/50 uppercase font-medium">
-            {labels.vatIncluded}
-          </span>
         </div>
 
         {/* Brief description */}
@@ -438,7 +408,7 @@ export function ProductInfoBlock({
         )}
 
         {/* Packaging Options */}
-        {packagingProducts && packagingProducts.length > 0 && (
+        {packagingProducts.length > 0 && (
           <div className="flex flex-col gap-3 border-t border-[#2c211b]/10 pt-5">
             <span className="text-xs font-medium tracking-widest uppercase text-[#2c211b]/60">
               {labels.packagingHeading}
@@ -448,50 +418,62 @@ export function ProductInfoBlock({
                 const variant = p.variants?.[0];
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
-                
+
                 // ponytail: shared availability projection (single source of truth)
                 const isInStock = projectAvailability(variant).available;
-                
+                // ponytail: gift-box is temporarily unavailable (not produced yet) — show as disabled with 'coming soon' label
+                const isComingSoon = p.handle === "gift-box";
+                const isSelectable = isInStock && !isComingSoon;
+
                 const amount = variant.calculated_price?.calculated_amount;
                 const currency = variant.calculated_price?.currency_code;
                 const isFree = !amount;
                 const priceText = (isFree || !amount || !currency)
                   ? labels.packagingFree
                   : `+ ${formatPriceValue(amount, currency, locale)}`;
-                
-                const displayText = isInStock 
-                  ? priceText 
-                  : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
 
-                // Fallback to our local generated images if no thumbnail is set on Medusa product
-                const imageUrl = p.thumbnail || p.images?.[0]?.url || `/images/${p.handle}.png`;
+                const displayText = isComingSoon
+                  ? labels.packagingComingSoon || (locale === "en" ? "Coming soon" : "Скоро в наличии")
+                  : isInStock
+                    ? priceText
+                    : `${priceText} (${labels.packagingOutOfStock || (locale === "en" ? "Out of stock" : "Нет в наличии")})`;
+
+                const imageUrl = p.thumbnail ?? p.images?.[0]?.url ?? null;
 
                 return (
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => isInStock && setSelectedPackaging(p.handle)}
-                    disabled={!isInStock}
+                    onClick={() => isSelectable && setSelectedPackaging(p.handle)}
+                    disabled={!isSelectable}
                     className={[
                       "relative flex items-center gap-3 w-full p-2.5 text-left border transition-all duration-300 select-none text-[#2c211b]",
-                      isInStock ? "cursor-pointer" : "cursor-not-allowed opacity-50",
+                      isSelectable ? "cursor-pointer" : "cursor-not-allowed opacity-50",
                       isSelected
                         ? "border-[#2f6f78] bg-[#2f6f78]/5 ring-1 ring-[#2f6f78]"
                         : "border-[#2c211b]/15 hover:border-[#2c211b]/40 bg-transparent",
                     ].join(" ")}
                   >
-                    <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden">
-                      <Image
-                        src={imageUrl}
-                        alt={p.title}
-                        fill
-                        className="object-cover transition-transform duration-300 hover:scale-105"
-                        sizes="80px"
-                      />
+                    <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden flex items-center justify-center">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={p.title}
+                          fill
+                          sizes="80px"
+                          unoptimized
+                          className="object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      ) : (
+                        <Package className="w-8 h-8 text-[#2c211b]/20" aria-hidden="true" />
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0 pr-6">
-                      <span className="text-[11px] uppercase tracking-wider font-semibold block truncate">
-                        {p.title} <span className="text-[#2c211b]/60 font-serif normal-case font-normal block sm:inline">({displayText})</span>
+                    <div className="flex-1 min-w-0 pr-6 flex flex-col gap-0.5">
+                      <span className="text-[11px] uppercase tracking-wider font-semibold line-clamp-2">
+                        {p.title}
+                      </span>
+                      <span className="text-[#2c211b]/60 font-serif normal-case font-normal text-[11px] truncate">
+                        {displayText}
                       </span>
                     </div>
                     {/* Selected indicator */}
@@ -536,34 +518,47 @@ export function ProductInfoBlock({
           </div>
         )}
 
-        {/* Structured Product Facts */}
-        <ProductFacts facts={facts} labels={{ heading: labels.factsHeading }} />
-
-        {/* Social Proof Placeholder */}
-
-
         {/* Collapsible Sections */}
         <div className="border-t border-[#2c211b]/10">
-          <AccordionItem title={labels.materialsHeading}>
-            <p>{labels.materialsText}</p>
-            <ul className="list-disc pl-4 space-y-1 mt-2">
-              <li>{labels.materialsItem1}</li>
-              <li>{labels.materialsItem2}</li>
-              <li>{labels.materialsItem3}</li>
-            </ul>
-            <p className="mt-2 text-[#2c211b]/50 italic">
-              {labels.materialsCare}
-            </p>
-          </AccordionItem>
+          {wearData && Array.isArray(wearData) && wearData.length > 0 && (
+            <AccordionItem title={labels.wearHeading ?? ""}>
+              <div className="space-y-4">
+                {wearData.map((way, i) => (
+                  <div key={i} className="flex gap-3">
+                    <span className="text-base flex-shrink-0">{way.icon}</span>
+                    <div>
+                      <p className="font-medium text-[#2c211b] text-xs">{way.title}</p>
+                      <p className="text-[#2c211b]/70 text-xs mt-1">{way.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AccordionItem>
+          )}
+
+          {/* What's Included */}
+          {kitData && Array.isArray(kitData) && kitData.length > 0 && (
+            <AccordionItem title={labels.kitHeading ?? ""}>
+              <ul className="space-y-1">
+                {kitData.map((item, i) => (
+                  <li key={i}>• {item}</li>
+                ))}
+              </ul>
+            </AccordionItem>
+          )}
+
 
           <AccordionItem title={labels.shippingHeading}>
             <p>{labels.shippingText}</p>
-            <ul className="list-disc pl-4 space-y-1 mt-2">
+            <ul className="space-y-1 mt-2">
               <li>{labels.shippingItem1}</li>
               <li>{labels.shippingItem2}</li>
               <li>{labels.shippingItem3}</li>
-              <li>{labels.shippingItem4}</li>
             </ul>
+          </AccordionItem>
+
+          <AccordionItem title={labels.returnsHeading}>
+            <p>{labels.returnsText}</p>
           </AccordionItem>
         </div>
       </div>
@@ -571,7 +566,7 @@ export function ProductInfoBlock({
       {/* ---------- Sticky Mobile CTA Bar ---------- */}
       <div
         className={[
-          "fixed bottom-0 left-0 right-0 z-40 bg-[#f4ebe6]/95 backdrop-blur-md border-t border-[#2c211b]/10 px-4 py-3 lg:hidden transition-transform duration-300",
+          "fixed bottom-0 left-0 right-0 z-40 bg-[#f4ebe6]/95 backdrop-blur-md border-t border-[#2c211b]/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden transition-transform duration-300",
           mobileBarVisible ? "translate-y-0" : "translate-y-full",
         ].join(" ")}
       >

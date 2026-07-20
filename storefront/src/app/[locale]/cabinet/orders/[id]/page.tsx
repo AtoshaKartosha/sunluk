@@ -133,7 +133,7 @@ export default async function OrderDetailPage({
     return (
       <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
         <SiteHeader />
-        <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-10 text-center max-w-md shadow-sm">
           <Package className="w-12 h-12 text-[#2c211b]/15 mx-auto mb-4" />
           <h1 className="text-lg font-semibold text-[#2c211b] mb-2">
@@ -148,7 +148,7 @@ export default async function OrderDetailPage({
             {t("goToCabinet")}
           </Link>
           </div>
-        </main>
+        </div>
         <SiteFooter locale={locale} />
       </div>
     );
@@ -174,7 +174,7 @@ export default async function OrderDetailPage({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
       <SiteHeader />
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
+      <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Back link */}
         <Link
           href={`/${locale}/cabinet`}
@@ -183,7 +183,7 @@ export default async function OrderDetailPage({
           <ArrowLeft className="w-4 h-4" />
           {t("backToCabinet")}
         </Link>
-
+      
         {/* Order Header */}
         <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -196,7 +196,7 @@ export default async function OrderDetailPage({
               </p>
             </div>
           </div>
-
+      
           {/* Status badges */}
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2 px-4 py-2 bg-[#f4ebe6]/60 rounded-none">
@@ -223,7 +223,7 @@ export default async function OrderDetailPage({
             </div>
           </div>
         </div>
-
+      
         {/* Order Items */}
         <section className="bg-white rounded-none border border-[#2c211b]/8 shadow-sm mb-6 overflow-hidden">
           <h2 className="px-6 sm:px-8 pt-6 pb-4 text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50">
@@ -332,7 +332,7 @@ export default async function OrderDetailPage({
             </table>
           </div>
         </section>
-
+      
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Addresses */}
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
@@ -347,7 +347,7 @@ export default async function OrderDetailPage({
             ) : (
               <p className="text-sm text-[#2c211b]/40 italic">{t("noAddress")}</p>
             )}
-
+      
             {billingAddrStr && billingAddrStr !== shippingAddrStr && (
               <>
                 <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mt-6 mb-4 flex items-center gap-2">
@@ -360,7 +360,7 @@ export default async function OrderDetailPage({
               </>
             )}
           </div>
-
+      
           {/* Totals */}
           <div className="bg-white rounded-none border border-[#2c211b]/8 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
@@ -398,7 +398,7 @@ export default async function OrderDetailPage({
             </dl>
           </div>
         </div>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );

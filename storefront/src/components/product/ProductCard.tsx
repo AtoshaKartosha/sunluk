@@ -30,7 +30,6 @@ export function ProductCard({ product, locale }: ProductCardProps) {
             src={src}
             alt={product.title}
             fill
-            unoptimized
             sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, 50vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />

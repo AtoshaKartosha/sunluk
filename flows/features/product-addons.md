@@ -11,6 +11,7 @@ Success criteria:
 - The packaging line item is linked to the parent jewelry line item via metadata.
 - In the Cart Drawer, packaging items are rendered nested under their parent jewelry items rather than as separate root items.
 - Removing the parent jewelry item from the cart automatically deletes the linked packaging item.
+- Customers can add multiple quantities of the same jewelry item with different packaging configurations (e.g., one with a free pouch, one with a paid box) and they will be kept as separate line items in the cart (preventing line-item merging).
 
 ## 2. Scope
 
@@ -46,7 +47,7 @@ flowchart TD
   ShowOptions --> Toggle[Customer selects packaging option card]
   Toggle --> ClickAdd[Click Add to Cart]
   
-  ClickAdd --> AddMain[1. Add jewelry variant to cart]
+  ClickAdd --> AddMain[1. Add jewelry variant to cart with metadata: packaging_variant_id]
   AddMain --> AddSuccess{Success?}
   AddSuccess -->|no| ShowError[Show Add to Cart error]
   AddSuccess -->|yes| CheckAddon{Is packaging variant resolved?}
@@ -115,6 +116,8 @@ Storefront projection:
 - **Cart cleanup failure**: If deleting the main item succeeds but deleting the linked packaging item fails, the storefront must handle the error gracefully and retry the deletion, or force a cart refresh.
 - **Quantity mismatch**: If the customer changes the quantity of the main item in the cart drawer, the storefront must dispatch a quantity update for the linked packaging item to keep the quantities in sync.
 - **Different currencies**: The paid packaging product must have pricing matching the cart's currency (EUR/USD/RUB). If a currency is not defined on the packaging product, it should fallback safely or hide the option.
+- **Orphaned packaging items**: If a packaging item loses its parent line item (e.g. parent deleted or sync failed), it becomes an orphan. To prevent hidden subtotals, the storefront detects these items (whose `parent_line_item_id` does not match any active item in the cart) and surfaces them as main items in the Cart Drawer, enabling the customer to see and remove them.
+ - **Metadata merge sensitivity (Medusa v2)**: Medusa compares the entire metadata object (`deepEqualObj(existingItem.metadata, newItem.metadata)`) when deciding whether to consolidate line items. Because the storefront includes both `calculated_price` (price snapshot at add time) and `packaging_variant_id` in the metadata, a mid-session price update or discount change will result in duplicate line items rather than merging, even if the variant and selected packaging options are identical.
 
 ## 8. Performance Constraints
 
@@ -141,7 +144,7 @@ Support English and Russian translations in `messages/{ru,en}.json`:
 
 ## 12. Implementation Trace
 
-Current status: Completed. PDP includes packaging options grid with live price/currency rendering and stock availability/disabling checks. Adding a main item adds the linked packaging to the cart using metadata `parent_line_item_id`. Quantity adjustments and item removal are synchronized. Implementation note: packaging products are resolved via hardcoded `PACKAGING_HANDLES` in `lib/medusa/products.ts` (`listPackagingProducts`) as a v1 simplification; the category/tag auto-discovery described in §2 is deferred until more add-on types are needed.
+Current status: Completed. PDP includes packaging options grid with live price/currency rendering and stock availability/disabling checks. Adding a main item adds the linked packaging to the cart using metadata `parent_line_item_id`. Quantity adjustments and item removal are synchronized. Both updates and removals are processed via filter-based lookup and iteration to update/delete all packaging items linked to a parent, rather than just the first, preventing orphan buildup. Packaging discovery uses the Medusa `Packaging` product category (handle `packaging`) as the single source of truth: `listPackagingProducts` queries products by `category_id`, while `listProducts` and `listRelatedProducts` exclude any product whose `categories[]` includes the Packaging category. New packaging products added in Medusa admin (assigned to the Packaging category) are picked up automatically by both flows. The Packaging category ID is resolved once and cached for the process lifetime; on resolution failure `listPackagingProducts` returns `[]` and the PDP shows the packaging selector with no options.
 
 Implementation files:
 
@@ -156,7 +159,7 @@ Implementation files:
 ## 13. Open Questions
 
 - Should we support different packaging options per individual items of the same product (e.g. buying 2 of the same chain, one in a box and one in a pouch)? 
-  *Decision*: For simplicity, packaging is selected per line item. If a user wants different packaging, they can add them as separate line items (deferred for v1, standard line item consolidation applies).
+  *Decision*: Yes. To support this, we pass the selected `packaging_variant_id` in the main product's metadata. Medusa compares the entire metadata object before merging, so different packaging variants will prevent line item merging and preserve them as separate line items.
 
 ## 14. Review Checklist
 

@@ -11,6 +11,7 @@ Success criteria:
 - Product `title` and `description` fall back to the product's default Medusa content when a requested translation is missing.
 - Locale selection does not change region, currency, price calculation, or product availability rules.
 - Admin-managed translations become visible in storefront without requiring storefront-side product duplication.
+- Every product-to-product navigation link preserves the active supported locale; opening a related product from `/en/...` stays under `/en/...`, and `/ru/...` stays under `/ru/...`.
 
 ## 2. Scope
 
@@ -21,6 +22,7 @@ In scope:
 - Rendering localized `title` and `description` on product cards and product detail views.
 - Translating catalog-page UI copy needed for the localized product experience.
 - Admin workflow for maintaining product translations in Medusa.
+- Locale-preserving product links in catalog grids and related-product sections.
 
 Out of scope:
 
@@ -74,6 +76,11 @@ flowchart TD
   DetailOk -->|yes| Translation{Translation exists for requested locale?}
   Translation -->|yes| LocalizedView[Render requested locale content]
   Translation -->|no| FallbackView[Render default product content and keep locale chrome]
+  LocalizedView --> Related[Visitor opens another product]
+  FallbackView --> Related
+  Related --> SameLocale{Destination keeps active locale?}
+  SameLocale -->|yes| LoadDetail
+  SameLocale -->|no| InvalidLink[Do not emit locale-changing product link]
   LocalizedView --> Switch[Visitor changes locale]
   FallbackView --> Switch
   Switch --> Reload[Reload same route with new locale prefix]
@@ -106,6 +113,8 @@ stateDiagram-v2
   ProductError --> LocaleSwitching: visitor changes locale
   LocaleSwitching --> CatalogLoading: locale switch from list/error route
   LocaleSwitching --> ProductLoading: same handle, new locale request
+  ProductReadyLocalized --> ProductLoading: open another product with same locale
+  ProductReadyFallback --> ProductLoading: open another product with same locale
   CatalogError --> CatalogLoading: retry
   ProductError --> ProductLoading: retry
 ```
@@ -147,6 +156,7 @@ Storefront projection:
 - Region resolved independently from locale.
 - Localized product list/detail response for the current locale.
 - Fallback rendering state when the product exists but requested translation fields are absent.
+- Every catalog card and related-product link derives its locale prefix from the active route projection; components must not default a supported `en` route back to `ru`.
 
 Admin projection:
 
@@ -161,7 +171,9 @@ Admin projection:
 | Incoming | `catalog:translation-published` | Catalog Localization | `{ productIds, locales }` | Admin saves product translations for supported locales | Unsupported locales are ignored by storefront routing until explicitly enabled |
 | Internal | `catalog:locale-selected` | None | `{ locale: "ru" | "en", medusaLocale: "ru-RU" | "en-US" }` | Route locale is supported or rewritten to default | Unsupported locale outside configured set |
 | Internal | `catalog:localized-products-requested` | None | `{ regionId, locale, medusaLocale }` | Locale and region are both known | Missing locale or unresolved region |
+| Internal | `catalog:product-navigation-requested` | None | `{ locale: "ru" | "en", handle }` | Destination link uses the active supported route locale | Link omits locale or changes a supported active locale |
 | Outgoing | `catalog:localized-content-ready` | Catalog Browsing | `{ locale, medusaLocale, fallbackProductIds? }` | Localized catalog or product detail payload is ready for rendering | Store API request failed |
+| Outgoing shared data | `catalog:locale-routing-map` | SEO Readiness | `{ locales, defaultLocale, stableProductHandles }` | Storefront routing configuration is loaded | Unsupported locale or localized handle divergence |
 
 ## 7. Edge Cases
 
@@ -171,6 +183,7 @@ Admin projection:
 - Translation exists for title but not description: field-level fallback applies only to the missing field; do not blank the field.
 - Product detail route handle is stable across locales; switching locale on a valid handle must keep the same handle.
 - Language switch occurs while using a singleton SDK with stale locale headers: forbidden implementation; requests must be request-scoped or explicitly locale-scoped to avoid cross-request leakage.
+- Visitor opens a related product from `/en/products/[handle]`: destination must remain `/en/products/[nextHandle]`; silently defaulting to `/ru/...` is forbidden.
 - Seed data contains mixed-language source titles/descriptions: until translations are populated, fallback content may remain mixed; rollout must treat this as incomplete merchandising data, not a storefront bug.
 - Admin saves translation for a locale that storefront does not support: Medusa may store it, but storefront ignores it until the locale is added to routing.
 - Store API localization request fails while base catalog would otherwise load: show retryable error; do not silently retry without locale because that would hide a backend misconfiguration.
@@ -179,6 +192,7 @@ Admin projection:
 
 - Storefront navigation uses locale-prefixed catalog URLs.
 - Language switch reloads the same catalog route under a different locale prefix.
+- Product cards and related-product links preserve the active locale prefix while changing only the product handle.
 - Store API requests include locale alongside region for every catalog/product read.
 - Admin translation edits become visible on the next storefront revalidation/request.
 - Fallback rendering may expose source-language product copy until translations are filled; merchandising operations must monitor this during rollout.
@@ -199,9 +213,13 @@ Expected implementation files for this slice:
 - `storefront/src/lib/medusa/products.ts`.
 - `storefront/src/components/product/ProductCard.tsx`.
 - `storefront/src/components/product/ProductInfoBlock.tsx`.
+- `storefront/src/components/product/ProductGrid.tsx`.
+- `storefront/src/components/product/ProductRelatedProducts.tsx`.
+- `storefront/src/components/cart/CartDrawer.tsx`.
 - `storefront/src/components/product/types.ts`.
 - `backend/apps/backend/medusa-config.ts`.
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
+- `backend/apps/backend/src/migration-scripts/update-product-cards.ts`.
 - `backend/apps/backend/src/admin/i18n/index.ts` if custom admin translation helpers are needed.
 
 Current files that inform the flow:
@@ -224,18 +242,24 @@ Current files that inform the flow:
 | Storefront integration | Missing translation falls back to source content for only the missing field | `storefront/src/lib/medusa/products.test.ts` or nearest project test equivalent | Pending implementation |
 | Backend integration | Store API returns translated `title`/`description` for populated locales and source fallback otherwise | `backend/integration-tests/http/store/product-localization.spec.ts` or nearest project test equivalent | Pending implementation |
 | Manual/admin QA | Updating a product translation in Medusa Admin is reflected in storefront after revalidation | Manual admin QA checklist for launch | Pending implementation |
+| Storefront browser smoke | RU/EN product detail renders localized title, subtitle, Wear It Your Way metadata, and included-kit metadata | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
+| Backend migration smoke | Product-card migration is rerunnable and Store API exposes all six localized launch products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Storefront browser smoke | Related-product navigation preserves `/en` and `/ru` locale prefixes | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
 
 ## 11. Implementation Plan
 
 1. Add storefront locale routing and message catalogs for `ru` and `en` using locale-prefixed routes.
 2. Replace locale-unsafe product SDK usage with request-scoped locale-aware Store API reads.
-3. Localize product list/detail pages and product card/detail components for UI copy plus localized `title`/`description` rendering.
-4. Enable Medusa locales/translations configuration and seed or enter RU/EN product translations.
-5. Add targeted tests for locale mapping, Medusa request payloads, field-level fallback, and Store API translated responses.
+3. Localize product list/detail pages and product card/detail/cart components for UI copy, localized `title`/`subtitle`/`description`, material names, and locale-keyed product metadata.
+4. Enable Medusa locales/translations configuration and seed or migrate RU/EN product translations plus locale-keyed merchandising metadata.
+5. Add targeted tests for locale mapping, Medusa request payloads, field-level fallback, Store API translated responses, and metadata rendering.
+6. Pass the active route locale through related-product/grid rendering so every product destination changes only the handle.
 
 ## 12. Implementation Trace
 
-Current status: Completed. The prefix routing middleware, i18n loaders, and message files are fully integrated and active.
+Current status: Completed. Locale routing, request-scoped Store API reads, localized merchandising content/material names, and locale-preserving related-product navigation are integrated.
+
+Flow review: APPROVED 2026-07-15. The locale-preserving navigation contract has explicit rejection behavior, concrete browser checks, named files, and no new cross-flow event.
 
 Implementation files:
 
@@ -251,18 +275,26 @@ Implementation files:
 - `storefront/src/lib/medusa/products.ts`
 - `storefront/src/components/product/ProductCard.tsx`
 - `storefront/src/components/product/ProductInfoBlock.tsx`
+- `storefront/src/components/cart/CartDrawer.tsx`
+- `storefront/src/components/product/ProductGrid.tsx`
+- `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/types.ts`
 - `backend/apps/backend/medusa-config.ts`
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`
+- `backend/apps/backend/src/migration-scripts/update-product-cards.ts`
 
 Validation:
 
-- Next.js build compiled and verified routing.
+- `npm run build --prefix storefront` completed successfully.
+- `npx tsc --noEmit` in `backend/apps/backend` completed successfully.
+- `npx medusa exec ./src/migration-scripts/update-product-cards.ts` completed successfully twice against the local database.
+- Store API returned `azure`, `dune`, `luna`, `silk`, `amethyst`, and `lagoon` with localized copy/metadata and no legacy handles.
+- Browser smoke passed for `/ru/products/azure` and `/en/products/azure`, including subtitle and both metadata accordions.
+- Browser navigation passed from `/en/products/azure` to `/en/products/dune` and from `/ru/products/azure` to `/ru/products/dune`.
 
 ## 13. Open Questions
 
 - Should the storefront remember the last chosen locale in a cookie in addition to the URL prefix, or is the URL alone sufficient for v1?
-- Do merchandising teams want localized option/material labels in the same release, or only product title/description?
 - Should launch QA block publication of products that are missing either RU or EN translation, or is source-language fallback acceptable during staged rollout?
 
 ## 14. Review Checklist
@@ -274,3 +306,4 @@ Validation:
 - [x] Locale-aware Store API reads and locale-unsafe singleton risk are named.
 - [x] Admin translation publication boundary is declared.
 - [x] Targeted tests cover both localized and fallback paths.
+- [x] Product-to-product navigation preserves the active supported locale.

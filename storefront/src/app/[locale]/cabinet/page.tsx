@@ -84,7 +84,7 @@ export default async function CabinetPage({
   return (
     <div className="min-h-screen flex flex-col bg-[#f4ebe6] text-[#2c211b] antialiased">
       <SiteHeader />
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
+      <div className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-10 sm:py-16">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
@@ -102,7 +102,7 @@ export default async function CabinetPage({
           </div>
           <LogoutButton />
         </div>
-
+      
         {/* Profile Card */}
         <section className="mb-10">
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
@@ -140,7 +140,7 @@ export default async function CabinetPage({
             </div>
           </div>
         </section>
-
+      
         {/* Orders Section */}
         <section>
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase text-[#2c211b]/50 mb-4">
@@ -236,7 +236,7 @@ export default async function CabinetPage({
             </div>
           )}
         </section>
-      </main>
+      </div>
       <SiteFooter locale={locale} />
     </div>
   );

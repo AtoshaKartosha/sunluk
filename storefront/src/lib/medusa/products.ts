@@ -1,5 +1,6 @@
 import { getMedusaClient, getMedusaClientWithLocale } from "../medusa";
 import type { ResolvedRegion } from "./regions";
+import { getPackagingName } from "./packaging-names";
 
 // ---- Types ----
 
@@ -57,6 +58,7 @@ export interface ProductListItem {
   thumbnail: string | null;
   images: ProductImage[] | null;
   variants: ProductListVariant[] | null;
+  categories?: ProductCategory[] | null;
   metadata?: Record<string, unknown> | null;
 }
 
@@ -80,6 +82,7 @@ export interface ProductListResult {
 const LIST_FIELDS = [
   "id", "title", "handle", "thumbnail", "metadata",
   "*images",
+  "*categories",
   "*variants",
   "*variants.calculated_price",
   "+variants.inventory_quantity",
@@ -107,6 +110,15 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
     );
   }
 }
+
+// ponytail: Packaging category handle is the source of truth for packaging discovery.
+const PACKAGING_CATEGORY_HANDLE = "packaging";
+
+
+function isPackagingProduct(p: { categories?: ProductCategory[] | null }): boolean {
+  return p.categories?.some((c) => c.handle === PACKAGING_CATEGORY_HANDLE) ?? false;
+}
+
 function normalizeProductOptions<T extends ProductDetail>(product: T): T {
   if (!product.options) return product;
 
@@ -121,8 +133,6 @@ function normalizeProductOptions<T extends ProductDetail>(product: T): T {
   };
 }
 
-
-const PACKAGING_HANDLES = ["velvet-pouch", "gift-box", "silk-pouch", "wooden-case"];
 
 /**
  * List published products for a resolved region.
@@ -141,6 +151,7 @@ export async function listProducts(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: LIST_FIELDS,
     limit: 100,
@@ -149,9 +160,7 @@ export async function listProducts(
     count: number;
   };
 
-  const filteredProducts = data.products.filter(
-    (p) => !PACKAGING_HANDLES.includes(p.handle)
-  );
+  const filteredProducts = data.products.filter((p) => !isPackagingProduct(p));
 
   return { products: filteredProducts, count: filteredProducts.length };
 }
@@ -174,6 +183,7 @@ export async function getProduct(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     handle,
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
@@ -205,6 +215,7 @@ export async function listRelatedProducts(
     : getMedusaClient();
 
   const data = (await sdk.store.product.list({
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: LIST_FIELDS,
     limit: limit + 6, // fetch extra in case excluded products appear
@@ -214,11 +225,7 @@ export async function listRelatedProducts(
   };
 
   return data.products
-    .filter(
-      (p) =>
-        p.handle !== excludeHandle &&
-        !PACKAGING_HANDLES.includes(p.handle)
-    )
+    .filter((p) => p.handle !== excludeHandle && !isPackagingProduct(p))
     .slice(0, limit);
 }
 
@@ -235,15 +242,24 @@ export async function listPackagingProducts(
     ? getMedusaClientWithLocale(medusaLocale)
     : getMedusaClient();
 
-  // In Medusa v2, you can pass string | string[] to handle
+  // ponytail: filter client-side by the Packaging category handle. A server-side
+  // `category_id` on product.list breaks the translation join in Medusa Store
+  // API, so the base (default-locale) `title` leaks through instead of the
+  // localized one — the cart's product join (no category filter) localizes
+  // correctly, which is why the cart shows the right names but the PDP didn't.
   const data = (await sdk.store.product.list({
-    handle: PACKAGING_HANDLES,
+    ...(medusaLocale ? { locale: medusaLocale } : {}),
     region_id: region.regionId,
     fields: DETAIL_FIELDS,
-    limit: 4,
+    limit: 100,
   })) as unknown as {
     products: ProductDetail[];
   };
 
-  return data.products.map(normalizeProductOptions);
+  const packaging = data.products.filter(isPackagingProduct);
+  const localized = packaging.map((p) => ({
+    ...p,
+    title: getPackagingName(p, medusaLocale ?? "ru-RU"),
+  }));
+  return localized.map(normalizeProductOptions);
 }

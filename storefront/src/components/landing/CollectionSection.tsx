@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Locale } from "@/i18n/routing";
 import { ProductCard, type StoreProduct } from "@/components/product";
+import Image from "next/image";
+import { useEntrance } from "./use-entrance";
 
 interface CollectionSectionProps {
   locale: Locale;
@@ -14,16 +16,16 @@ interface CollectionSectionProps {
 
 export function CollectionSection({ locale, products = [] }: CollectionSectionProps) {
   const t = useTranslations("home");
+  const animate = useEntrance();
 
   return (
-    <section id="collection" className="pt-8 sm:pt-32 pb-10 sm:pb-16 bg-[#f4ebe6]">
+    <section id="collection" className="pt-2.5 pb-2.5 bg-[#f4ebe6]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 text-center">
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={animate ? { opacity: 0 } : false}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          className="max-w-xl mx-auto text-center mb-6 sm:mb-10"
           transition={{ duration: 0.8 }}
-          className="max-w-xl mx-auto mb-8 sm:mb-20"
         >
           <span className="text-[10px] font-medium tracking-[0.3em] uppercase text-[#2f6f78] block mb-3">
             {t("collectionLabel")}
@@ -34,7 +36,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
           <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mt-4" />
         </motion.div>
         <motion.div
-          initial="hidden"
+          initial={animate ? "hidden" : false}
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={{
@@ -46,7 +48,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
               },
             },
           }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-10 sm:mb-16"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-8 mb-2.5"
         >
           {products && products.length > 0 ? (
             products.map((product) => (
@@ -71,11 +73,12 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
                 className="group flex flex-col text-left bg-transparent transition-all duration-300"
               >
                 <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-3 sm:mb-5 rounded-none relative">
-                  <div
-                    role="img"
-                    aria-label={t(`collection.products.${i}.title`)}
-                    className="w-full h-full bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-105"
-                    style={{ backgroundImage: `url('${product.image}')` }}
+                  <Image
+                    src={product.image}
+                    alt={t(`collection.products.${i}.title`)}
+                    fill
+                    sizes="(min-width:1024px) 25vw, 50vw"
+                    className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
                   />
                 </div>
                 <h3 className="font-serif text-xs sm:text-lg font-bold text-[#2c211b] mb-2">
@@ -89,12 +92,12 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
           )}
         </motion.div>
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={animate ? { opacity: 0 } : false}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="px-4 sm:px-0"
+          className="px-4 sm:px-0 mt-6 sm:mt-8"
         >
           <Link
             href={`/${locale}/products`}

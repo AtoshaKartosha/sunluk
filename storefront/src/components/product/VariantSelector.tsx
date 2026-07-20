@@ -210,13 +210,15 @@ export function VariantSelector({
               currency_code: resolved.calculated_price.currency_code,
             }
           : null,
+        packaging_variant_id: selectedPackagingVariantId,
       });
       if (selectedPackagingVariantId && updatedCart) {
         // Find the main line item we just added/updated.
         const mainLineItem = updatedCart.items?.find(
           (item) =>
             item.variant_id === resolved.id &&
-            !item.metadata?.parent_line_item_id,
+            !item.metadata?.parent_line_item_id &&
+            item.metadata?.packaging_variant_id === selectedPackagingVariantId,
         );
         if (mainLineItem) {
           await addItem(selectedPackagingVariantId, quantity, {
@@ -335,7 +337,7 @@ export function VariantSelector({
                 const v = parseInt(e.target.value, 10);
                 if (!isNaN(v)) handleQuantityChange(v);
               }}
-              className="w-16 h-9 text-center text-sm border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-16 h-9 text-center text-[16px] border border-[#2c211b]/20 text-[#2c211b] bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <button
               type="button"

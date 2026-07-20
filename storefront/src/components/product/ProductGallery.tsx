@@ -10,7 +10,7 @@ interface ProductGalleryProps {
   title: string;
 }
 
-function collectSources(
+export function collectSources(
   images: ProductImage[] | null | undefined,
   thumbnail: string | null | undefined,
 ): string[] {
@@ -24,6 +24,23 @@ function collectSources(
     }
   }
   return sources;
+}
+
+// ponytail: zoom is handled via inline CSS transitions and mouse coordinates to avoid external packages.
+export function calculateZoomPosition(
+  clientX: number,
+  clientY: number,
+  rect: { left: number; top: number; width: number; height: number },
+): { x: number; y: number } {
+  if (rect.width === 0 || rect.height === 0) {
+    return { x: 50, y: 50 };
+  }
+  const x = ((clientX - rect.left) / rect.width) * 100;
+  const y = ((clientY - rect.top) / rect.height) * 100;
+  return {
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y)),
+  };
 }
 
 /** Simple swipe detection hook. */
@@ -69,6 +86,8 @@ export function ProductGallery({
   const sources = collectSources(images, thumbnail);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
 
@@ -119,6 +138,7 @@ export function ProductGallery({
                 key={src}
                 type="button"
                 onClick={() => setActiveIndex(i)}
+                onMouseEnter={() => setActiveIndex(i)}
                 className={[
                   "relative flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-colors",
                   i === activeIndex
@@ -131,7 +151,6 @@ export function ProductGallery({
                   src={src}
                   alt=""
                   fill
-                  unoptimized
                   sizes="64px"
                   className="object-cover"
                 />
@@ -149,6 +168,13 @@ export function ProductGallery({
               !isSingle && "cursor-zoom-in",
             ].join(" ")}
             onClick={() => !isSingle && setLightboxOpen(true)}
+            onMouseEnter={() => setIsZoomed(true)}
+            onMouseLeave={() => setIsZoomed(false)}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const pos = calculateZoomPosition(e.clientX, e.clientY, rect);
+              setZoomPos(pos);
+            }}
           >
             {sources.map((src, i) => (
               <div
@@ -163,9 +189,13 @@ export function ProductGallery({
                   alt={`${title} — image ${i + 1}`}
                   fill
                   priority={i === 0}
-                  unoptimized
                   sizes="(min-width: 1024px) 42vw, 100vw"
                   className="object-cover"
+                  style={{
+                    transform: i === activeIndex && isZoomed ? "scale(1.5)" : "scale(1)",
+                    transformOrigin: i === activeIndex && isZoomed ? `${zoomPos.x}% ${zoomPos.y}%` : "center",
+                    transition: i === activeIndex ? "transform 0.15s ease-out" : undefined,
+                  }}
                 />
               </div>
             ))}
@@ -206,6 +236,7 @@ export function ProductGallery({
                   key={src}
                   type="button"
                   onClick={() => setActiveIndex(i)}
+                  onMouseEnter={() => setActiveIndex(i)}
                   className={[
                     "relative flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-colors",
                     i === activeIndex
@@ -218,7 +249,6 @@ export function ProductGallery({
                     src={src}
                     alt=""
                     fill
-                    unoptimized
                     sizes="64px"
                     className="object-cover"
                   />
@@ -259,7 +289,6 @@ export function ProductGallery({
               src={sources[activeIndex]}
               alt={`${title} — image ${activeIndex + 1}`}
               fill
-              unoptimized
               sizes="90vw"
               className="object-contain"
             />
