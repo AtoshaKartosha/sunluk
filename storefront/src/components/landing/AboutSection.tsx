@@ -27,7 +27,7 @@ export function AboutSection() {
             alt=""
             fill
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className="absolute inset-0 object-cover object-center"
+            className="absolute inset-0 object-cover object-left scale-[1.15] origin-left"
           />
           <Image
             src="/images/sunluk_slider_02.webp"
@@ -39,7 +39,7 @@ export function AboutSection() {
         </div>
       </motion.div>
       {/* Right text and button */}
-      <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
+      <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6">
         <motion.div 
           initial={animate ? { opacity: 0, x: 30 } : false}
           whileInView={{ opacity: 1, x: 0 }}
