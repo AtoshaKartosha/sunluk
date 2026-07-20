@@ -6,16 +6,10 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { GemIcon, LeafIcon, ModulesIcon, ShieldIcon } from "./icons";
 
-const SLIDER_IMAGES = [
-  "/images/product-turquoise.webp",
-  "/images/product-leather.webp",
-  "/images/product-silver.webp",
-  "/images/product-sand.webp",
-];
 
 export function FeaturesSection() {
   const t = useTranslations("home");
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [split, setSplit] = useState(50);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const handlePointerMove = useCallback((clientX: number) => {
@@ -24,7 +18,7 @@ export function FeaturesSection() {
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0) return;
     const relX = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    setActiveIdx(Math.min(SLIDER_IMAGES.length - 1, Math.floor((relX / rect.width) * SLIDER_IMAGES.length)));
+    setSplit((relX / rect.width) * 100);
   }, []);
 
   // Map features with translated titles/descriptions but keep icons
@@ -112,18 +106,21 @@ export function FeaturesSection() {
               onMouseMove={(e) => handlePointerMove(e.clientX)}
               onTouchMove={(e) => e.touches[0] && handlePointerMove(e.touches[0].clientX)}
             >
-              {SLIDER_IMAGES.map((src, i) => (
-                <Image
-                  key={src}
-                  src={src}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 25vw, 100vw"
-                  className={`absolute inset-0 object-cover object-center transition-opacity duration-300 ease-out ${
-                    i === activeIdx ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
+              <Image
+                src="/images/product-leather.webp"
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 25vw, 100vw"
+                className="absolute inset-0 object-cover object-center"
+              />
+              <Image
+                src="/images/product-turquoise.webp"
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 25vw, 100vw"
+                className="absolute inset-0 object-cover object-center"
+                style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
+              />
             </div>
           </motion.div>
         </div>
