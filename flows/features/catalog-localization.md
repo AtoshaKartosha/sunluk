@@ -173,6 +173,7 @@ Admin projection:
 | Internal | `catalog:localized-products-requested` | None | `{ regionId, locale, medusaLocale }` | Locale and region are both known | Missing locale or unresolved region |
 | Internal | `catalog:product-navigation-requested` | None | `{ locale: "ru" | "en", handle }` | Destination link uses the active supported route locale | Link omits locale or changes a supported active locale |
 | Outgoing | `catalog:localized-content-ready` | Catalog Browsing | `{ locale, medusaLocale, fallbackProductIds? }` | Localized catalog or product detail payload is ready for rendering | Store API request failed |
+| Outgoing shared data | `catalog:locale-routing-map` | SEO Readiness | `{ locales, defaultLocale, stableProductHandles }` | Storefront routing configuration is loaded | Unsupported locale or localized handle divergence |
 
 ## 7. Edge Cases
 

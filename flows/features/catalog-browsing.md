@@ -146,6 +146,7 @@ Storefront projection:
 | Internal | `catalog:product-opened` | None | `{ productHandle, regionId }` | Region known and product handle exists | Missing region or product not sellable |
 | Internal | `catalog:variant-projected` | None | `{ productId, variantId, price, currencyCode, availability, deliveryPromise }` | Variant selection resolves to a sellable or backorderable variant | Missing variant |
 | Outgoing | `cart:item-selected` | Cart and Checkout | `{ productId, variantId, quantity, regionId }` | Variant is valid, quantity is positive, and cart UI is enabled | Missing variant, invalid quantity, unavailable product |
+| Outgoing shared data | `catalog:indexable-route-projection` | SEO Readiness | `{ locale, path, productHandle?, product? }` | The route is public and the product, when present, is published and sellable in the resolved region | Private route, unpublished/missing product, or unresolved region |
 
 ## 7. Edge Cases
 
