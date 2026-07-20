@@ -38,14 +38,14 @@ export function EditorialSection() {
               className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
               <Image
-                src="/images/model1.webp"
+                src="/images/model1-2.webp"
                 alt={t("editorial.model1Aria")}
                 fill
                 sizes="(min-width:1024px) 25vw, 33vw"
                 className="absolute inset-0 object-cover object-center transition-[transform,opacity] duration-500 ease-out group-hover:scale-105"
               />
               <Image
-                src="/images/model1-2.webp"
+                src="/images/model1.webp"
                 alt=""
                 aria-hidden="true"
                 fill
