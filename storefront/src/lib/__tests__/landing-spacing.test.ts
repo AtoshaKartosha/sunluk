@@ -45,9 +45,9 @@ describe("Landing section spacing", () => {
 
   it("ContactsSection spacing fits original constraints", () => {
     const code = read("ContactsSection.tsx");
-    expect(code).toContain("pt-6 sm:pt-8 pb-2.5");
-    expect(code).toContain("mb-2.5");
-    expect(code).toContain("pt-2.5");
+    expect(code).toContain("px-4 py-16 sm:px-10 sm:py-20 lg:px-16 lg:py-24");
+    expect(code).toContain("mt-12 grid max-w-6xl grid-cols-1 gap-10 md:mt-14");
+    expect(code).toContain("mt-5 text-base leading-relaxed");
     expect(code).not.toContain("py-10");
     expect(code).not.toContain("sm:py-16");
     expect(code).not.toContain("mb-10");
