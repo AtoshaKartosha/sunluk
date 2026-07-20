@@ -1,4 +1,5 @@
 "use client";
+import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -7,23 +8,47 @@ import { useEntrance } from "./use-entrance";
 export function AboutSection() {
   const t = useTranslations("home");
   const animate = useEntrance();
+  const [split, setSplit] = useState(50);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  const handlePointerMove = useCallback((clientX: number) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const relX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    setSplit((relX / rect.width) * 100);
+  }, []);
 
   return (
     <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden">
       {/* Left packaging/beach image */}
       <motion.div 
+        ref={sliderRef}
+        role="img"
+        aria-label={t("features.sliderAria")}
         initial={animate ? { opacity: 0, scale: 0.95 } : false}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="relative h-64 lg:h-auto overflow-hidden bg-background"
+        className="relative h-64 lg:h-auto overflow-hidden bg-background cursor-ew-resize touch-none select-none"
+        onMouseMove={(e) => handlePointerMove(e.clientX)}
+        onTouchMove={(e) => e.touches[0] && handlePointerMove(e.touches[0].clientX)}
       >
         <Image
-          src="/images/about-packaging.webp"
-          alt={t("about.imageAria")}
+          src="/images/product-leather.webp"
+          alt=""
           fill
-          sizes="(min-width:1024px) 50vw, 100vw"
-          className="object-cover object-center"
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="absolute inset-0 object-cover object-center"
+        />
+        <Image
+          src="/images/product-turquoise.webp"
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="absolute inset-0 object-cover object-center"
+          style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
         />
       </motion.div>
       {/* Right text and button */}
