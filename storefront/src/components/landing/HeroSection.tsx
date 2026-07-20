@@ -56,6 +56,7 @@ export function HeroSection() {
             {slides.map((src, index) => {
               const getTranslateClass = () => {
                 if (index === 0) return "translate-y-[10%]";
+                if (index === 2) return "translate-y-[8%]";
                 if (index === 3) return "translate-y-[15%]";
                 return "";
               };
