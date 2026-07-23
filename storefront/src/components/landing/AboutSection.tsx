@@ -1,4 +1,5 @@
 "use client";
+
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -9,25 +10,36 @@ export function AboutSection() {
   const animate = useEntrance();
 
   return (
-    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden">
+    <section className="relative min-h-[500px] grid grid-cols-1 lg:grid-cols-2 bg-background overflow-hidden pt-6 sm:pt-10">
       {/* Left packaging/beach image */}
       <motion.div 
+        role="img"
+        aria-label={t("features.sliderAria")}
         initial={animate ? { opacity: 0, scale: 0.95 } : false}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1 }}
-        className="relative h-64 lg:h-auto overflow-hidden bg-background"
+        className="group relative h-64 lg:h-auto overflow-hidden bg-background rounded-none cursor-pointer"
       >
-        <Image
-          src="/images/about-packaging.webp"
-          alt={t("about.imageAria")}
-          fill
-          sizes="(min-width:1024px) 50vw, 100vw"
-          className="object-cover object-center"
-        />
+        <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105">
+          <Image
+            src="/images/sunluk_slider_01.webp"
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="absolute inset-0 object-cover object-left scale-[1.15] origin-left"
+          />
+          <Image
+            src="/images/sunluk_slider_02.webp"
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+          />
+        </div>
       </motion.div>
       {/* Right text and button */}
-      <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6 lg:border-l lg:border-[#2c211b]/5">
+      <div className="bg-background py-2.5 px-8 sm:px-16 lg:px-24 flex flex-col justify-center items-start gap-6">
         <motion.div 
           initial={animate ? { opacity: 0, x: 30 } : false}
           whileInView={{ opacity: 1, x: 0 }}

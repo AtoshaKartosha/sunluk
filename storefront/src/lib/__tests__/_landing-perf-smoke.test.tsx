@@ -40,17 +40,14 @@ describe("Landing perf smoke", () => {
     document.body.innerHTML = "";
   });
 
-  it("HeroSection: one source, loop, preload metadata, poster", () => {
+  it("HeroSection: renders background image slider", () => {
     render(<HeroSection />);
-    const video = screen.getByLabelText(
-      "SUNLUK eyewear accessory editorial video",
-    ) as HTMLVideoElement;
-    const sources = video.querySelectorAll("source");
-    expect(video.loop).toBe(true);
-    expect(video.preload).toBe("metadata");
-    expect(video.poster).toContain("hero.webp");
-    expect(sources).toHaveLength(1);
-    expect(sources[0]).toHaveAttribute("src", "/videos/hero-live-frame.mp4");
+    const img = screen.getByAltText(
+      "SUNLUK hero slide 1",
+    ) as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.getAttribute("src")).toContain("sunluk_main.webp");
+    expect(img.getAttribute("sizes")).toBe("(min-width: 768px) 52vw, 100vw");
   });
 
   it("EditorialSection: 6 imgs (3 alt + 3 decorative), all sized", () => {
@@ -63,12 +60,16 @@ describe("Landing perf smoke", () => {
     imgs.forEach((i) => expect(i.getAttribute("sizes")).toBeTruthy());
   });
 
-  it("AboutSection: 1 img with alt + sizes", () => {
+  it("AboutSection: image slider container with role img and aria-label", () => {
     const { container } = render(<AboutSection />);
+    const slider = container.querySelector('[role="img"]');
+    expect(slider).toBeTruthy();
+    expect(slider?.getAttribute("aria-label")).toBeTruthy();
     const imgs = container.querySelectorAll("img");
-    expect(imgs.length).toBe(1);
-    expect(imgs[0].getAttribute("alt")).toBeTruthy();
-    expect(imgs[0].getAttribute("sizes")).toBeTruthy();
+    expect(imgs.length).toBe(2);
+    imgs.forEach((img) => {
+      expect(img.getAttribute("sizes")).toBeTruthy();
+    });
   });
 
   it("NewsletterSection: 1 bg img alt+sizes, svg aria-hidden+focusable=false", () => {

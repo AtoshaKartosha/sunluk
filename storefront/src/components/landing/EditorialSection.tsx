@@ -37,23 +37,26 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
-              <Image
-                src="/images/model1.webp"
-                alt={t("editorial.model1Aria")}
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-              />
-              <Image
-                src="/images/model1-2.webp"
-                alt=""
-                aria-hidden="true"
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-              />
+              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105">
+                <Image
+                  src="/images/model1-2.webp"
+                  alt={t("editorial.model1Aria")}
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center"
+                />
+                <Image
+                  src="/images/model1.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
+
             {/* Model 2 */}
             <motion.div 
               variants={{
@@ -62,23 +65,26 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
-              <Image
-                src="/images/model2.webp"
-                alt={t("editorial.model2Aria")}
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-              />
-              <Image
-                src="/images/model2-2.webp"
-                alt=""
-                aria-hidden="true"
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-              />
+              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105">
+                <Image
+                  src="/images/model2.webp"
+                  alt={t("editorial.model2Aria")}
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center"
+                />
+                <Image
+                  src="/images/model2-2.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
+
             {/* Model 3 */}
             <motion.div 
               variants={{
@@ -87,24 +93,27 @@ export function EditorialSection() {
               }}
               className="group relative aspect-[3/4] overflow-hidden bg-background rounded-none shadow-sm"
             >
-              <Image
-                src="/images/model3.webp"
-                alt={t("editorial.model3Aria")}
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 object-cover object-center transition-[opacity,filter,transform] duration-300 ease-out group-hover:scale-[1.02] group-hover:opacity-0 group-hover:blur-[2px]"
-              />
-              <Image
-                src="/images/model3-2.webp"
-                alt=""
-                aria-hidden="true"
-                fill
-                sizes="(min-width:1024px) 25vw, 33vw"
-                className="absolute inset-0 scale-[1.02] object-cover object-center opacity-0 blur-[2px] transition-[opacity,filter,transform] duration-400 ease-out group-hover:delay-150 group-hover:scale-105 group-hover:opacity-100 group-hover:blur-none"
-              />
+              <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-105">
+                <Image
+                  src="/images/model3.webp"
+                  alt={t("editorial.model3Aria")}
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center"
+                />
+                <Image
+                  src="/images/model3-2.webp"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  sizes="(min-width:1024px) 25vw, 33vw"
+                  className="absolute inset-0 object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </motion.div>
           </motion.div>
+
           {/* Text Editorial block without container wrapper */}
           <motion.div 
             initial={animate ? { opacity: 0 } : false}

@@ -347,14 +347,6 @@
       {
         "type": "paragraph",
         "text": "Document version dated 8 July 2026"
-      },
-      {
-        "type": "heading",
-        "text": "Legal Details"
-      },
-      {
-        "type": "paragraph",
-        "text": "Individual Entrepreneur Irina Stepanovna Florintsa\nTaxpayer Identification Number (INN): 772994107388\nRegistered address: 33 Melnikova Prospekt, Khimki, Moscow Region\nE-mail: Infosunluk@gmail.com\nWebsite: www.sunluk.ru"
       }
     ]
   },
@@ -553,14 +545,6 @@
       {
         "type": "paragraph",
         "text": "Document version dated 8 July 2026"
-      },
-      {
-        "type": "heading",
-        "text": "Legal Details"
-      },
-      {
-        "type": "paragraph",
-        "text": "Individual Entrepreneur Irina Stepanovna Florintsa\nTaxpayer Identification Number (INN): 772994107388\nRegistered address: 33 Melnikova Prospekt, Khimki, Moscow Region\nE-mail: Infosunluk@gmail.com\nWebsite: www.sunluk.ru"
       }
     ]
   },
@@ -667,14 +651,6 @@
       {
         "type": "paragraph",
         "text": "Document version dated 1 July 2026"
-      },
-      {
-        "type": "heading",
-        "text": "Legal Details"
-      },
-      {
-        "type": "paragraph",
-        "text": "Individual Entrepreneur Irina Stepanovna Florintsa\nTaxpayer Identification Number (INN): 772994107388\nRegistered address: 33 Melnikova Prospekt, Khimki, Moscow Region\nE-mail: Infosunluk@gmail.com\nWebsite: www.sunluk.ru"
       }
     ]
   },
@@ -758,6 +734,15 @@
       {
         "type": "paragraph",
         "text": "Document version dated 8 July 2026"
+      }
+    ]
+  },
+  "requisites": {
+    "title": "Requisites",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Individual Entrepreneur Irina Stepanovna Florintsa\nTaxpayer Identification Number (INN): 772994107388\nRegistered address: 33 Melnikova Prospekt, Khimki, Moscow Region\nE-mail: Infosunluk@gmail.com\nWebsite: www.sunluk.ru"
       }
     ]
   }

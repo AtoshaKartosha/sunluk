@@ -5,16 +5,17 @@ import { getFooterGroups } from "../landing-data";
 import { INFO_SECTION_IDS } from "../info-sections";
 
 const expectedBlockCounts = {
-  terms: 85,
-  privacy: 47,
-  purchase: 26,
+  terms: 83,
+  privacy: 45,
+  purchase: 24,
   shipping: 8,
   returns: 7,
+  requisites: 1,
 } as const;
 
 describe("Info Page Section IDs", () => {
-  it("lists all five policies in source-document order", () => {
-    expect(INFO_SECTION_IDS).toEqual(["terms", "privacy", "purchase", "shipping", "returns"]);
+  it("lists all sections in source-document order", () => {
+    expect(INFO_SECTION_IDS).toEqual(["terms", "privacy", "purchase", "shipping", "returns", "requisites"]);
     expect(new Set(INFO_SECTION_IDS).size).toBe(INFO_SECTION_IDS.length);
   });
 });
@@ -31,6 +32,7 @@ describe("Footer Links to Info Page Anchors", () => {
       { label: "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
       { label: "Правила доставки", href: "/ru/info#shipping" },
       { label: "Правила возврата товаров", href: "/ru/info#returns" },
+      { label: "Реквизиты", href: "/ru/info#requisites" },
     ]);
   });
 
@@ -48,6 +50,7 @@ describe("Footer Links to Info Page Anchors", () => {
       },
       { label: "Delivery Policy", href: "/en/info#shipping" },
       { label: "Returns Policy", href: "/en/info#returns" },
+      { label: "Requisites", href: "/en/info#requisites" },
     ]);
   });
 });
