@@ -122,6 +122,7 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
       { label: "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
       { label: "Правила доставки", href: "/ru/info#shipping" },
       { label: "Правила возврата товаров", href: "/ru/info#returns" },
+      { label: "Реквизиты", href: "/ru/info#requisites" },
     ],
   },
   {
@@ -177,6 +178,7 @@ export function getFooterGroups(locale: Locale): FooterGroupData[] {
           { label: "Terms for Placing Orders and Purchasing Goods", href: "/en/info#purchase" },
           { label: "Delivery Policy", href: "/en/info#shipping" },
           { label: "Returns Policy", href: "/en/info#returns" },
+          { label: "Requisites", href: "/en/info#requisites" },
         ],
       },
       {
