@@ -44,41 +44,7 @@ class RegionalFulfillmentProviderService extends AbstractFulfillmentProviderServ
   }
 
   async canCalculate(data: CreateShippingOptionDTO): Promise<boolean> {
-    let currencyCode: string | undefined;
-
-    if (data.rules && Array.isArray(data.rules)) {
-      const currencyRule = data.rules.find((r) => r.attribute === "currency_code");
-      if (currencyRule) {
-        if (typeof currencyRule.value === "string") {
-          currencyCode = currencyRule.value;
-        } else if (Array.isArray(currencyRule.value) && currencyRule.value.length > 0) {
-          const firstVal = currencyRule.value[0];
-          if (typeof firstVal === "string") {
-            currencyCode = firstVal;
-          }
-        }
-      }
-    }
-
-    if (!currencyCode) {
-      const dataUnknown = data as unknown;
-      if (dataUnknown && typeof dataUnknown === "object") {
-        if ("currency_code" in dataUnknown && typeof dataUnknown.currency_code === "string") {
-          currencyCode = dataUnknown.currency_code;
-        } else if ("context" in dataUnknown && dataUnknown.context && typeof dataUnknown.context === "object" && "currency_code" in dataUnknown.context && typeof dataUnknown.context.currency_code === "string") {
-          currencyCode = dataUnknown.context.currency_code;
-        } else if ("optionData" in dataUnknown && dataUnknown.optionData && typeof dataUnknown.optionData === "object" && "currency_code" in dataUnknown.optionData && typeof dataUnknown.optionData.currency_code === "string") {
-          currencyCode = dataUnknown.optionData.currency_code;
-        }
-      }
-    }
-
-    if (!currencyCode) {
-      return false;
-    }
-
-    const code = currencyCode.toLowerCase();
-    return code === "rub" || code === "eur";
+    return true;
   }
 
   async calculatePrice(

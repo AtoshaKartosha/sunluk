@@ -30,30 +30,9 @@ describe("RegionalFulfillmentProviderService", () => {
   });
 
   describe("canCalculate", () => {
-    it("should return true when currency is rub in rules", async () => {
-      const canCalc = await service.canCalculate({
-        rules: [{ attribute: "currency_code", value: "rub", operator: "eq" }]
-      } as unknown as Parameters<typeof service.canCalculate>[0]);
-      expect(canCalc).toBe(true);
-    });
-
-    it("should return true when currency is eur in context", async () => {
-      const canCalc = await service.canCalculate({
-        context: { currency_code: "eur" }
-      } as unknown as Parameters<typeof service.canCalculate>[0]);
-      expect(canCalc).toBe(true);
-    });
-
-    it("should return false when currency is unsupported (e.g. usd)", async () => {
-      const canCalc = await service.canCalculate({
-        context: { currency_code: "usd" }
-      } as unknown as Parameters<typeof service.canCalculate>[0]);
-      expect(canCalc).toBe(false);
-    });
-
-    it("should return false when currency is missing", async () => {
+    it("should return true unconditionally for creation data without runtime currency", async () => {
       const canCalc = await service.canCalculate({} as unknown as Parameters<typeof service.canCalculate>[0]);
-      expect(canCalc).toBe(false);
+      expect(canCalc).toBe(true);
     });
   });
 
