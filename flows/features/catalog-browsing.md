@@ -213,6 +213,7 @@ Current files that inform the flow:
 
 - `backend/apps/backend/Dockerfile` copies the tracked `backend/apps/backend/static/` media into the production runtime image.
 - `docker-compose.prod.yml` supplies the public backend base URL used to build absolute product-media URLs.
+
 ## 10. Targeted Tests
 
 | Layer | Behavior | File | Status |
@@ -227,8 +228,8 @@ Current files that inform the flow:
 | Storefront UI/integration | Product detail renders breadcrumb and related products when catalog context is available | To add with product detail implementation | Pending implementation |
 | Storefront browser smoke | Product detail renders localized subtitle plus Wear It Your Way and included-kit metadata accordions | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
 | Storefront browser smoke | Related-product continuation preserves `/en` and `/ru` while changing the handle | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
-| Backend/Store API smoke | Every recovered media URL returns HTTP 200 and each seeded handle exposes the recovered thumbnail/gallery order | Production Store API plus `/static/*` responses | Pending recovery |
-| Storefront browser smoke | Product cards and detail galleries render the correct recovered hero for every product with authoritative media | `/ru/products` and each mapped `/ru/products/[handle]` | Pending recovery |
+| Backend/Store API smoke | Every recovered media URL returns HTTP 200 and each seeded handle exposes the recovered thumbnail/gallery order | Production Store API plus `/static/*` responses | Passed 2026-07-27 |
+| Storefront browser smoke | Product cards and detail galleries render the correct recovered hero for every product with authoritative media | `/ru/products` and each mapped `/ru/products/[handle]` | Passed 2026-07-27 |
 
 ## 11. Implementation Plan
 
@@ -242,7 +243,7 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: base product-list-to-product-detail slice and PDP merchandising blocks (metadata accordions, locale-preserving Related products, JsonLd) fully implemented.
+Current status: base product-list-to-product-detail slice, PDP merchandising blocks, and durable recovery of all authoritative product media are implemented.
 
 Current implementation files:
 
@@ -257,12 +258,23 @@ Current implementation files:
 - `storefront/src/components/product/index.ts`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/ProductJsonLd.tsx`
+- `backend/apps/backend/static/` (24 recovered immutable media files used by the current catalog)
+- `backend/apps/backend/Dockerfile` (runtime media copy)
+- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (durable public URL and ordered product mapping)
+- `docker-compose.prod.yml` (`MEDUSA_BACKEND_URL` production base)
 
 Validation:
 
 - `npm run build --prefix storefront` completed successfully.
 - Browser smoke passed for `/ru/products/azure` and `/en/products/azure`, including localized subtitle and both metadata accordions.
 - Browser navigation passed from `/en/products/azure` to `/en/products/dune` and from `/ru/products/azure` to `/ru/products/dune`.
+- `npm run build --prefix backend` completed successfully.
+- `docker build -f backend/apps/backend/Dockerfile -t sunluk-backend:media-restore .` completed successfully; all 24 mapped bytes were present in `/app/static`.
+- Isolated clean-database migration and seed completed successfully: 12 products, 11 products with authoritative media, 23 image rows plus the separate Lagoon thumbnail.
+- Local runtime smoke returned `200 image/webp` for the recovered static route.
+- Production asset audit returned HTTP 200 with image content types for all 24 recovered files.
+- Production Store API audit matched exact thumbnail/gallery ordering for all 11 mapped handles; `wooden-case` remained intentionally unmapped.
+- Browser smoke loaded the exact recovered hero and all gallery images for all 11 mapped product pages with non-zero natural dimensions.
 
 Notes:
 
@@ -270,6 +282,7 @@ Notes:
 - `/products` resolves the configured/default region and lists Medusa Store API products.
 - `/products/[handle]` resolves the same region, loads product detail by handle, and renders not-found for missing products.
 - Cart mutation remains deferred to `flows/features/cart-checkout.md`; variant UI resolves a valid variant but leaves the cart CTA disabled with pending copy.
+- A pre-restoration production PostgreSQL backup was created and gzip-verified at `/opt/backups/sunluk-pre-media-20260727-234439.sql.gz`.
 
 ## 13. Open Questions
 
@@ -292,3 +305,5 @@ Notes:
 - [x] Media durability across backend rebuild and clean database seed is explicit.
 
 Flow review v1 (2026-07-27): **APPROVED**. Media authority, durability, missing-source rejection, exact schemas, non-destructive production update, and Store API/browser verification are explicit; no cross-flow event or permission boundary changes.
+
+Flow-code sync (2026-07-27): **IN SYNC**. Production serves all 24 recovered bytes durably, Store API mappings match the intact local catalog plus the authoritative `silk-pouch` asset, every mapped gallery rendered successfully, and no unrelated image was assigned to `wooden-case`.
