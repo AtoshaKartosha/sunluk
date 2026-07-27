@@ -35,6 +35,7 @@ RUN addgroup -S sunluk && adduser -S sunluk -G sunluk
 WORKDIR /app
 
 COPY --from=build --chown=sunluk:sunluk /app/backend/apps/backend/.medusa/server ./
+COPY --from=build --chown=sunluk:sunluk /app/backend/apps/backend/static ./static
 COPY --from=production-deps --chown=sunluk:sunluk /app/backend/node_modules ./node_modules
 
 USER sunluk

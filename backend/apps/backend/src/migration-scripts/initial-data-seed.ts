@@ -599,9 +599,56 @@ export default async function initial_data_seed({
     }
   };
 
-  const { result: productResults } = await createProductsWorkflow(container).run({
-    input: {
-      products: [
+  const backendUrl = (process.env.MEDUSA_BACKEND_URL || "http://localhost:9000").replace(/\/+$/, "");
+  const getStaticUrl = (filename: string) => `${backendUrl}/static/${encodeURIComponent(filename)}`;
+
+  const mediaMap: Record<string, { thumbnail?: string; images: string[] }> = {
+    azure: {
+      thumbnail: "1783929099277-Turquoise.webp",
+      images: ["1783929099277-Turquoise.webp", "1783932921562-Turquoise 2.webp", "1783932921563-Turquoise 3.webp"],
+    },
+    dune: {
+      thumbnail: "1783929260183-Leather Loop.webp",
+      images: ["1783929260183-Leather Loop.webp", "1783932869580-Leather Loop 2.webp", "1783932869580-Leather Loop 3.webp"],
+    },
+    luna: {
+      thumbnail: "1783929297839-Silver Chain.webp",
+      images: ["1783929297839-Silver Chain.webp", "1783932890776-Silver Chain 2.webp", "1783932890777-Silver Chain 3.webp"],
+    },
+    silk: {
+      thumbnail: "1783929220517-Sand Chain.webp",
+      images: ["1783929220517-Sand Chain.webp", "1783932907893-Sand Chain 2.webp", "1783932907893-Sand Chain 3.webp"],
+    },
+    amethyst: {
+      thumbnail: "1783928971665-Purple.webp",
+      images: ["1783928971665-Purple.webp", "1783932944380-Purple 2.webp", "1783932944380-Purple 3.webp"],
+    },
+    lagoon: {
+      thumbnail: "1783933291725-Sun Chain.webp",
+      images: ["1783933291729-Sun Chain 2.webp", "1783933291730-Sun Chain 3.webp", "1783933291730-Sun Chain 4.webp"],
+    },
+    "velvet-pouch": {
+      thumbnail: "1784536571321-Brand pouch.webp",
+      images: ["1784536571321-Brand pouch.webp"],
+    },
+    "cotton-pouch-turquoise": {
+      thumbnail: "1784536554689-Brand pouch (Turquoise).webp",
+      images: ["1784536554689-Brand pouch (Turquoise).webp"],
+    },
+    "cotton-pouch-brown": {
+      thumbnail: "1784536542288-Brand pouch (Brown).webp",
+      images: ["1784536542288-Brand pouch (Brown).webp"],
+    },
+    "gift-box": {
+      images: ["1782832052287-gift-box.png"],
+    },
+    "silk-pouch": {
+      thumbnail: "1782832083854-silk-pouch.png",
+      images: ["1782832083854-silk-pouch.png"],
+    },
+  };
+
+  const rawProducts = [
         {
           title: "Лазурь",
           subtitle: "Цепочка для очков • Колье • Держатель для очков",
@@ -1128,7 +1175,20 @@ export default async function initial_data_seed({
           ],
           sales_channels: [{ id: defaultSalesChannel.id }],
         },
-      ],
+  ];
+  
+  const productsData = rawProducts.map((p) => {
+    const media = mediaMap[p.handle];
+    return {
+      ...p,
+      thumbnail: media?.thumbnail ? getStaticUrl(media.thumbnail) : undefined,
+      images: media?.images ? media.images.map((img) => ({ url: getStaticUrl(img) })) : [],
+    };
+  });
+
+  const { result: productResults } = await createProductsWorkflow(container).run({
+    input: {
+      products: productsData,
     },
   });
   logger.info("Finished seeding product data.");

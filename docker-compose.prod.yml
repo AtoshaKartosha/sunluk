@@ -28,6 +28,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-medusa}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-medusa}?sslmode=disable
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-https://api.sunluk.ru}
       JWT_SECRET: ${JWT_SECRET}
       COOKIE_SECRET: ${COOKIE_SECRET}
       STORE_CORS: ${STORE_CORS}
