@@ -38,6 +38,10 @@ const modules: InputConfigModules = [
     options: {
       providers: [
         {
+          resolve: "@medusajs/medusa/fulfillment-manual",
+          id: "manual",
+        },
+        {
           resolve: "./src/modules/regional-fulfillment",
           id: "regional-fulfillment",
         },
