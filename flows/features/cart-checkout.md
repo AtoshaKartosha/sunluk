@@ -161,6 +161,7 @@ Storefront projection:
 - A product discount moves the cart below or above its regional threshold: Medusa calls the calculated provider with the current discounted merchandise total and refreshes `shipping_total`; storefront replaces its projection with the returned cart.
 - No shipping method selected yet: storefront displays the pending-delivery label even when the cart qualifies for free shipping.
 - Unsupported region/currency or a shipping option outside its configured service zone: the regional provider does not offer a fallback tariff and payment remains blocked until Medusa returns an enabled option.
+- Calculated shipping option creation has no runtime currency context: `canCalculate` reports provider capability; `calculatePrice` validates the actual checkout currency and rejects missing or unsupported values.
 - Seed/setup runs more than once: it must not create duplicate regional calculated shipping options.
 - Shipping option disappears after address entry: require reselection from current Medusa options.
 - Payment provider initialization fails: keep checkout in payment state and allow retry/provider switch.
@@ -183,10 +184,10 @@ Storefront projection:
 
 Expected implementation files for the regional delivery rule:
 
-- `backend/apps/backend/src/modules/regional-fulfillment/service.ts` implements the deterministic calculated-price thresholds from the current cart context.
+- `backend/apps/backend/src/modules/regional-fulfillment/service.ts` advertises calculated-price capability at option creation, then implements deterministic thresholds from the runtime cart context.
 - `backend/apps/backend/src/modules/regional-fulfillment/index.ts` registers the fulfillment provider service.
-- `backend/apps/backend/medusa-config.ts` enables the regional fulfillment provider.
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` creates or reuses regional service zones and calculated standard shipping options.
+- `backend/apps/backend/medusa-config.ts` enables both the manual provider used by flat options and the regional calculated provider.
+- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` creates the initial service zones, options, and links on a clean database; production configuration changes use Medusa Admin/API instead of rerunning the one-shot seed.
 - `backend/apps/backend/integration-tests/http/shipping.spec.ts` covers both regional boundaries and post-discount threshold transitions.
 - `storefront/src/app/[locale]/checkout/page.tsx` displays the selected shipping method's Medusa-returned `shipping_total` and never duplicates regional thresholds.
 - `storefront/messages/ru.json` and `storefront/messages/en.json` describe free delivery from 4,999 RUB / 60 EUR.
@@ -202,6 +203,7 @@ Expected implementation files for the regional delivery rule:
 | Storefront integration | Cart displays Medusa-returned totals after line item updates | To add with cart implementation | Pending implementation |
 | Storefront integration | Checkout completion blocks until address, shipping, and payment are accepted | To add with checkout implementation | Pending implementation |
 | Storefront integration | Duplicate completion submit does not create duplicate user-visible order flow | To add with checkout implementation | Pending implementation |
+| Backend unit | Calculated provider advertises capability without checkout currency; runtime pricing still rejects missing or unsupported currency | `backend/apps/backend/src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` | Implemented |
 | Backend integration | Russia/RUB discounted total 4,998 returns 800 RUB shipping; 4,999 returns zero | `backend/apps/backend/integration-tests/http/shipping.spec.ts` | Pending implementation |
 | Backend integration | Europe/EUR discounted total 59.99 returns 10 EUR shipping; 60 returns zero | `backend/apps/backend/integration-tests/http/shipping.spec.ts` | Pending implementation |
 | Backend integration | Product discounts and cart mutations crossing either threshold recalculate the selected method through the provider | `backend/apps/backend/integration-tests/http/shipping.spec.ts` | Pending implementation |
@@ -217,22 +219,23 @@ Expected implementation files for the regional delivery rule:
 
 ## 12. Implementation Trace
 
-Current status: Completed. Existing cart id persistence, cart mutations, and totals come from Medusa through `lib/medusa/cart.ts`. The delivery change preserves Medusa as the sole pricing authority and evaluates merchandise totals after product discounts.
+Current status: Completed. Existing cart id persistence, cart mutations, and totals come from Medusa through `lib/medusa/cart.ts`. The delivery change preserves Medusa as the sole pricing authority, registers both required fulfillment providers, and evaluates merchandise totals after product discounts.
 
 Implementation files:
 - `storefront/src/components/cart/CartContext.tsx`, `storefront/src/components/cart/CartDrawer.tsx`
 - `storefront/src/lib/medusa/cart.ts`
 - `storefront/src/app/[locale]/checkout/page.tsx`, `storefront/src/app/[locale]/checkout/success/page.tsx`
-- `backend/apps/backend/src/modules/regional-fulfillment/service.ts` (calculated delivery logic)
+- `backend/apps/backend/src/modules/regional-fulfillment/service.ts` (calculated delivery capability and pricing logic)
 - `backend/apps/backend/src/modules/regional-fulfillment/index.ts` (fulfillment provider definition)
-- `backend/apps/backend/medusa-config.ts` (module registration)
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (idempotent service zones, options, and links setup)
+- `backend/apps/backend/medusa-config.ts` (manual and regional provider registration)
+- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (one-shot clean-database service zones, options, and links setup)
 - `storefront/messages/ru.json`, `storefront/messages/en.json` (threshold localized copy & VAT clean cut)
 - `storefront/src/components/product/ProductInfoBlock.tsx` (VAT label render removal)
 - `storefront/src/app/[locale]/products/[handle]/page.tsx` (VAT label prop removal)
 
 Validation commands & results:
-- Backend unit tests: `npm exec -- jest --silent --runInBand --forceExit src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` (20/20 tests passed)
+- Backend unit tests: `npm exec -- jest --silent --runInBand --forceExit src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` from `backend/apps/backend` (17/17 tests passed)
+- Production seed smoke: `docker exec sunluk-backend npx medusa exec ./src/migration-scripts/initial-data-seed.js` (completed on a clean PostgreSQL volume; regional and manual shipping options created)
 - Storefront unit tests: `npm run test -- src/lib/__tests__/checkout-shipping.test.tsx` (3/3 tests passed)
 - Storefront production compilation: `npm run build --prefix storefront` (completed successfully)
 - Backend production compilation: `npm run build --prefix backend` (completed successfully)
@@ -255,3 +258,5 @@ Validation commands & results:
 - [x] Missing shipping options, unselected shipping, threshold crossings, unsupported regions/currencies, and repeated setup are explicit.
 
 Flow review v2 (2026-07-13): **APPROVED**. No blockers; regional thresholds, post-discount authority, provider boundary, failure paths, schemas, and targeted tests are explicit.
+
+Flow review v3 (2026-07-27): **APPROVED**. Provider capability at option creation, runtime currency rejection, manual-provider registration, and the clean-database seed boundary are explicit; no new event, authority, permission, or cross-flow blocker was introduced.

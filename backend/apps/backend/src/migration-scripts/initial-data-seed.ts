@@ -481,7 +481,7 @@ export default async function initial_data_seed({
     if (!exists) {
       manualOptionsToCreate.push({
         name: option.name,
-        price_type: "flat",
+        price_type: "calculated",
         provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
         service_zone_id: russiaServiceZone.id,
         shipping_profile_id: shippingProfile.id,
@@ -490,10 +490,6 @@ export default async function initial_data_seed({
           description: "Бесплатная доставка",
           code: option.code,
         },
-        prices: [
-          { currency_code: "rub", amount: 0 },
-          { region_id: russiaRegion.id, amount: 0 },
-        ],
         rules: [
           { attribute: "enabled_in_store", value: "true", operator: "eq" },
           { attribute: "is_return", value: "false", operator: "eq" },
