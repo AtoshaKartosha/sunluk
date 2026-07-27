@@ -37,7 +37,7 @@ export interface ProductInfoBlockLabels {
 }
 
 export const DEFAULT_LABELS: ProductInfoBlockLabels = {
-  brand: "АКСЕССУАРЫ SUNLUK",
+  brand: "АКСЕССУАРЫ САНЛУК",
   handmade: "Ручная работа",
   delivery: "Доставка в DE и РФ",
   giftWrap: "Упаковка в подарок",
@@ -147,7 +147,7 @@ function AccordionItem({
         className="w-full flex items-center justify-between text-left font-serif text-xs font-medium tracking-widest uppercase text-[#2c211b] hover:text-[#2f6f78] transition-colors focus:outline-none"
       >
         <span>{title}</span>
-        <span className="text-sm font-light text-[#2c211b]/60 leading-none">
+        <span className="text-base font-normal text-[#2c211b]/80 leading-none">
           {isOpen ? "—" : "+"}
         </span>
       </button>

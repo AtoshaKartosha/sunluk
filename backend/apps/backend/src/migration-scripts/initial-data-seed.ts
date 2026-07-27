@@ -400,6 +400,27 @@ export default async function initial_data_seed({
   const hasEuropeManualExpress = typedExistingOptions.some(
     (so) => so.provider_id === "manual_manual" && so.service_zone_id === europeServiceZone.id && so.name === "Express Shipping"
   );
+  const russiaDeliveryOptions = [
+    { name: "Почта России", code: "russian-post" },
+    { name: "СДЭК", code: "cdek" },
+    { name: "Курьером по Москве", code: "moscow-courier" },
+  ] as const;
+  const obsoleteRussiaOptions = typedExistingOptions.filter(
+    (shippingOption) =>
+      shippingOption.service_zone_id === russiaServiceZone.id &&
+      (shippingOption.provider_id === "manual_manual" ||
+        (shippingOption.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID &&
+          !russiaDeliveryOptions.some(({ name }) => name === shippingOption.name)))
+  );
+  if (obsoleteRussiaOptions.length > 0) {
+    const obsoleteIds = obsoleteRussiaOptions.map((option) => option.id);
+    await deleteShippingOptionsWorkflow(container).run({
+      input: { ids: obsoleteIds },
+    });
+    typedExistingOptions = typedExistingOptions.filter(
+      (option) => !obsoleteIds.includes(option.id)
+    );
+  }
 
   const manualOptionsToCreate: CreateShippingOptionsWorkflowInput = [];
   if (!hasEuropeManualStandard) {
@@ -450,62 +471,67 @@ export default async function initial_data_seed({
     });
   }
 
+  for (const option of russiaDeliveryOptions) {
+    const exists = typedExistingOptions.some(
+      (shippingOption) =>
+        shippingOption.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID &&
+        shippingOption.service_zone_id === russiaServiceZone.id &&
+        shippingOption.name === option.name
+    );
+    if (!exists) {
+      manualOptionsToCreate.push({
+        name: option.name,
+        price_type: "flat",
+        provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+        service_zone_id: russiaServiceZone.id,
+        shipping_profile_id: shippingProfile.id,
+        type: {
+          label: option.name,
+          description: "Бесплатная доставка",
+          code: option.code,
+        },
+        prices: [
+          { currency_code: "rub", amount: 0 },
+          { region_id: russiaRegion.id, amount: 0 },
+        ],
+        rules: [
+          { attribute: "enabled_in_store", value: "true", operator: "eq" },
+          { attribute: "is_return", value: "false", operator: "eq" },
+        ],
+      });
+    }
+  }
+
   if (manualOptionsToCreate.length > 0) {
     await createShippingOptionsWorkflow(container).run({
       input: manualOptionsToCreate,
     });
   }
 
-  // Seed regional calculated shipping options
+
   const hasEuropeCalculated = typedExistingOptions.some(
-    (so) => so.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID && so.service_zone_id === europeServiceZone.id
+    (shippingOption) =>
+      shippingOption.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID &&
+      shippingOption.service_zone_id === europeServiceZone.id
   );
-  const hasRussiaCalculated = typedExistingOptions.some(
-    (so) => so.provider_id === REGIONAL_FULFILLMENT_PROVIDER_ID && so.service_zone_id === russiaServiceZone.id
-  );
-
-  const calculatedOptionsToCreate: CreateShippingOptionsWorkflowInput = [];
   if (!hasEuropeCalculated) {
-    calculatedOptionsToCreate.push({
-      name: "Standard Shipping (Calculated)",
-      price_type: "calculated",
-      provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
-      service_zone_id: europeServiceZone.id,
-      shipping_profile_id: shippingProfile.id,
-      type: {
-        label: "Standard",
-        description: "Calculated delivery based on total",
-        code: "standard-calculated-europe",
-      },
-      rules: [
-        { attribute: "enabled_in_store", value: "true", operator: "eq" },
-        { attribute: "is_return", value: "false", operator: "eq" },
-      ],
-    });
-  }
-
-  if (!hasRussiaCalculated) {
-    calculatedOptionsToCreate.push({
-      name: "Standard Shipping (Calculated)",
-      price_type: "calculated",
-      provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
-      service_zone_id: russiaServiceZone.id,
-      shipping_profile_id: shippingProfile.id,
-      type: {
-        label: "Standard",
-        description: "Calculated delivery based on total",
-        code: "standard-calculated-russia",
-      },
-      rules: [
-        { attribute: "enabled_in_store", value: "true", operator: "eq" },
-        { attribute: "is_return", value: "false", operator: "eq" },
-      ],
-    });
-  }
-
-  if (calculatedOptionsToCreate.length > 0) {
     await createShippingOptionsWorkflow(container).run({
-      input: calculatedOptionsToCreate,
+      input: [{
+        name: "Standard Shipping (Calculated)",
+        price_type: "calculated",
+        provider_id: REGIONAL_FULFILLMENT_PROVIDER_ID,
+        service_zone_id: europeServiceZone.id,
+        shipping_profile_id: shippingProfile.id,
+        type: {
+          label: "Standard",
+          description: "Calculated delivery based on total",
+          code: "standard-calculated-europe",
+        },
+        rules: [
+          { attribute: "enabled_in_store", value: "true", operator: "eq" },
+          { attribute: "is_return", value: "false", operator: "eq" },
+        ],
+      }],
     });
   }
   logger.info("Finished seeding fulfillment data.");

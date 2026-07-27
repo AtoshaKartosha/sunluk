@@ -59,7 +59,7 @@ export function LocaleSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-20 bg-[#f4ebe6] border border-[#2c211b]/10 shadow-lg z-50 py-1 animate-fade-in">
+        <div className="absolute right-1/2 translate-x-1/2 md:translate-x-0 md:right-0 bottom-full mb-1 md:top-full md:bottom-auto md:mt-1 w-20 bg-[#f4ebe6] border border-[#2c211b]/10 shadow-lg z-50 py-1 animate-fade-in">
           {Object.entries(LOCALE_LABELS).map(([code, label]) => {
             const isSelected = code === currentLocale;
             return (

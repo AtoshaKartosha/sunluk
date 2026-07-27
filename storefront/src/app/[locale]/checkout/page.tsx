@@ -1028,11 +1028,13 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <span className="text-sm font-semibold text-[#2c211b]">
-                          {formatPrice(
-                            option.amount ?? option.calculated_amount,
-                            option.currency_code,
-                            locale,
-                          )}
+                          {(option.amount ?? option.calculated_amount) === 0
+                            ? t("summary.shippingFree")
+                            : formatPrice(
+                                option.amount ?? option.calculated_amount,
+                                option.currency_code,
+                                locale,
+                              )}
                         </span>
                       </label>
                     ))}

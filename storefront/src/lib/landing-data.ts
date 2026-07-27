@@ -73,7 +73,7 @@ export const FEATURES: FeatureData[] = [
   {
     icon: "S",
     title: "S-элемент",
-    description: "Фирменная деталь SUNLUK",
+    description: "Фирменная деталь САНЛУК",
   },
   {
     icon: "modules",
@@ -97,9 +97,9 @@ export const FEATURES: FeatureData[] = [
  * top-left, top-right, bottom-left, bottom-right.
  */
 export const FEATURE_BORDER_CLASSES = [
-  "lg:border-r border-b border-[#2c211b]/15",
-  "border-b border-[#2c211b]/15",
-  "lg:border-r border-[#2c211b]/15",
+  "",
+  "",
+  "",
   "",
 ] as const;
 
@@ -207,6 +207,6 @@ export function getCopyright(locale: Locale): string {
     case "en":
       return "© 2026 SUNLUK. All rights reserved.";
     default:
-      return "© 2026 SUNLUK. Все права защищены.";
+      return "© 2026 САНЛУК. Все права защищены.";
   }
 }

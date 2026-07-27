@@ -129,7 +129,7 @@ export default function LoginPage() {
             href={`/${locale}`}
             className="inline-block font-serif text-2xl font-bold tracking-widest text-foreground"
           >
-            SUNLUK
+            {locale === "ru" ? "САНЛУК" : "SUNLUK"}
           </Link>
           <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {t_auth("brandSubtitle")}

@@ -141,7 +141,7 @@ export default function RegisterPage() {
             href={`/${locale}`}
             className="inline-block text-2xl font-bold tracking-[0.3em] text-[#2c211b]"
           >
-            SUNLUK
+            {locale === "ru" ? "САНЛУК" : "SUNLUK"}
           </Link>
           <h1 className="mt-8 text-2xl font-semibold text-[#2c211b]">
             {t("title")}

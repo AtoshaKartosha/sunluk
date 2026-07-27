@@ -44,9 +44,11 @@ export function SiteFooter({
               <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Telegram">
                 <SendIcon className="w-5 h-5" />
               </a>
-              <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Max">
-                <img src="/images/max.svg" alt="" className="w-5 h-5 opacity-70" />
-              </a>
+              {activeLocale === "ru" && (
+                <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Max">
+                  <img src="/images/max.svg" alt="" className="w-5 h-5 opacity-70" />
+                </a>
+              )}
             </div>
           </div>
 
