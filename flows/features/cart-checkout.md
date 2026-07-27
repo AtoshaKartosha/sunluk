@@ -236,6 +236,7 @@ Implementation files:
 Validation commands & results:
 - Backend unit tests: `npm exec -- jest --silent --runInBand --forceExit src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` from `backend/apps/backend` (17/17 tests passed)
 - Production seed smoke: `docker exec sunluk-backend npx medusa exec ./src/migration-scripts/initial-data-seed.js` (completed on a clean PostgreSQL volume; regional and manual shipping options created)
+- Production shipping smoke through Medusa Store API: a 3,999 RUB cart selected calculated delivery at 800 RUB; an exact 4,999 RUB cart selected calculated delivery at 0 RUB.
 - Storefront unit tests: `npm run test -- src/lib/__tests__/checkout-shipping.test.tsx` (3/3 tests passed)
 - Storefront production compilation: `npm run build --prefix storefront` (completed successfully)
 - Backend production compilation: `npm run build --prefix backend` (completed successfully)
@@ -260,3 +261,5 @@ Validation commands & results:
 Flow review v2 (2026-07-13): **APPROVED**. No blockers; regional thresholds, post-discount authority, provider boundary, failure paths, schemas, and targeted tests are explicit.
 
 Flow review v3 (2026-07-27): **APPROVED**. Provider capability at option creation, runtime currency rejection, manual-provider registration, and the clean-database seed boundary are explicit; no new event, authority, permission, or cross-flow blocker was introduced.
+
+Flow-code sync (2026-07-27): **IN SYNC**. The seeded Russia options use the regional calculated provider, production Store API boundary checks match the declared 4,999 RUB threshold, and no storefront-owned shipping calculation was introduced.
