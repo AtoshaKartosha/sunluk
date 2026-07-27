@@ -9,12 +9,23 @@ WORKDIR /app
 # Copy workspace manifests first for better layer caching.
 COPY backend/package.json backend/package-lock.json backend/
 COPY backend/apps/backend/package.json backend/apps/backend/
-RUN cd backend && npm ci --workspace=@dtc/backend
+# ponytail: Medusa optional peer graph; remove when upstream locks resolve under npm 10
+RUN cd backend && npm ci --workspace=@dtc/backend --legacy-peer-deps
 
 COPY backend/ backend/
 
 WORKDIR /app/backend/apps/backend
 RUN npx medusa build
+
+# --------------- production-deps ---------------
+FROM node:20-alpine AS production-deps
+
+WORKDIR /app
+
+COPY backend/package.json backend/package-lock.json backend/
+COPY backend/apps/backend/package.json backend/apps/backend/
+# ponytail: Medusa optional peer graph; remove when upstream locks resolve under npm 10
+RUN cd backend && npm ci --omit=dev --workspace=@dtc/backend --legacy-peer-deps
 
 # --------------- production ---------------
 FROM node:20-alpine AS production
@@ -24,8 +35,7 @@ RUN addgroup -S sunluk && adduser -S sunluk -G sunluk
 WORKDIR /app
 
 COPY --from=build --chown=sunluk:sunluk /app/backend/apps/backend/.medusa/server ./
-
-RUN npm install --omit=dev
+COPY --from=production-deps --chown=sunluk:sunluk /app/backend/node_modules ./node_modules
 
 USER sunluk
 
