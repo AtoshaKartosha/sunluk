@@ -10,6 +10,7 @@ Success criteria:
 - Product cards and product detail pages render localized content prepared by `flows/features/catalog-localization.md`.
 - Product detail headline price, stock, and delivery promise reflect the currently selected variant as a single source of truth.
 - Product detail navigation, gallery, and mobile purchase controls keep the purchase path clear on desktop and mobile.
+- Every recovered product-media URL resolves to durable bytes after backend rebuilds and clean database seeding; gallery order matches the last intact local catalog.
 - Variant selection produces a concrete `{ productId, variantId, quantity, regionId }` handoff.
 - Missing region, unavailable product, or invalid variant selection is rejected before cart mutation.
 
@@ -22,6 +23,7 @@ In scope:
 - Rendering localized catalog content supplied by `flows/features/catalog-localization.md`.
 - Variant display, product-gallery interaction, and local variant selection on product detail.
 - Product detail merchandising blocks: breadcrumb, localized merchandising metadata accordions, stock/delivery messaging, social-proof placeholder, and related products.
+- Recovery and durable projection of the product media that existed in the last intact local Medusa catalog.
 - Quantity selection and cart handoff when the cart flow is implemented.
 
 Out of scope:
@@ -62,9 +64,12 @@ flowchart TD
   List --> Detail[Open product detail by handle]
   Detail --> DetailLoad{Product found for region?}
   DetailLoad -->|no| NotFound[Show not found]
-  DetailLoad -->|yes| ProductView[Show product detail]
+  DetailLoad -->|yes| Media{At least one valid product-media source?}
+  Media -->|yes| ProductView[Show product detail with ordered gallery]
+  Media -->|no| Placeholder[Show product without inventing or misassigning media]
   ProductView --> Gallery[Browse gallery, open lightbox, switch media]
-  ProductView --> Variant{Valid variant selected?}
+  Placeholder --> Variant{Valid variant selected?}
+  ProductView --> Variant
   Variant -->|no| DisableAdd[Keep add-to-cart disabled and explain missing choice]
   Variant -->|yes| MerchState[Update price, stock, delivery, and CTA from selected variant]
   MerchState --> Quantity{Quantity valid?}
@@ -86,6 +91,7 @@ stateDiagram-v2
   ProductViewing --> ProductNotFound: handle missing, unpublished, or not sellable in region
   ProductViewing --> GalleryReady: gallery sources resolved
   GalleryReady --> LightboxOpen: visitor opens hero image
+  ProductViewing --> MediaUnavailable: no verified media mapping or bytes fail to resolve
   LightboxOpen --> GalleryReady: visitor closes lightbox
   ProductViewing --> VariantIncomplete: product loaded but required options missing
   VariantIncomplete --> VariantSelected: all options resolve to variant
@@ -108,6 +114,9 @@ flowchart LR
   ProductQuery --> SDK
   SDK --> Backend[Medusa backend]
   Backend --> Catalog[(Products, variants, prices, regions, sales channel)]
+  Backend --> Media[(Ordered image URLs and thumbnails)]
+  Media --> Assets[Versioned backend static assets]
+  Assets --> UI
   Catalog --> Backend
   Backend --> UI
   UI --> Selection[Local variant and quantity selection]
@@ -124,8 +133,9 @@ flowchart LR
 
 Authoritative state:
 
-- Products, categories, variants, prices, regions, inventory and sales channel membership live in Medusa.
-- Seed data currently creates Europe region, default sales channel, product categories, products, variants, prices, stock location, and shipping options in `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
+- Products, categories, variants, prices, regions, inventory, sales channel membership, ordered image URLs, and thumbnails live in Medusa.
+- Recovered immutable product-media bytes live in the tracked backend static directory and are copied into the production image; seed data recreates their Medusa URL/order mapping on a clean database.
+- Seed data currently creates Europe and Russia regions, the storefront sales channel, product categories, products, variants, prices, stock location, shipping options, and recovered product media in `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
 
 Storefront projection:
 
@@ -163,6 +173,10 @@ Storefront projection:
 - Gallery has one image only: hide non-functional gallery controls and lightbox rail affordances.
 - Requested locale has partial or missing translations: render the fallback content produced by catalog-localization and keep catalog pricing/variant behavior unchanged.
 - Related-product navigation from a supported locale must preserve that locale prefix; changing the product handle must not silently change `/en` to `/ru`.
+- A stored media URL points at an ephemeral/deleted container path: production verification fails; do not publish the broken URL.
+- The recovered thumbnail also appears in `images`: preserve the database mapping; storefront source collection de-duplicates the repeated URL.
+- No source database row or matching byte proves an image belongs to a product: do not guess or reuse another product's media.
+- A newly seeded product has no historically recoverable media (currently `wooden-case`): keep the existing placeholder until an authoritative asset is supplied.
 
 ## 8. Side Effects
 
@@ -172,6 +186,7 @@ Storefront projection:
 - Selected variant changes update the headline price, stock label, delivery promise, sticky/mobile CTA, and metadata projection from the same variant-derived source.
 - Product detail renders breadcrumb context and related-product continuation without mutating catalog/cart state; related-product destinations preserve the active locale.
 - `cart:item-selected` begins cart mutation in the cart flow once the cart UI is wired; current product-screen slice may render disabled/pending add-to-cart if cart flow is not yet implemented.
+- Clean database seeding restores the recovered thumbnail and ordered gallery mapping, while backend rebuilds retain the tracked immutable bytes.
 
 ## 9. Schemas Touched
 
@@ -196,6 +211,8 @@ Current files that inform the flow:
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
 - `backend/apps/backend/medusa-config.ts`.
 
+- `backend/apps/backend/Dockerfile` copies the tracked `backend/apps/backend/static/` media into the production runtime image.
+- `docker-compose.prod.yml` supplies the public backend base URL used to build absolute product-media URLs.
 ## 10. Targeted Tests
 
 | Layer | Behavior | File | Status |
@@ -210,6 +227,8 @@ Current files that inform the flow:
 | Storefront UI/integration | Product detail renders breadcrumb and related products when catalog context is available | To add with product detail implementation | Pending implementation |
 | Storefront browser smoke | Product detail renders localized subtitle plus Wear It Your Way and included-kit metadata accordions | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
 | Storefront browser smoke | Related-product continuation preserves `/en` and `/ru` while changing the handle | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
+| Backend/Store API smoke | Every recovered media URL returns HTTP 200 and each seeded handle exposes the recovered thumbnail/gallery order | Production Store API plus `/static/*` responses | Pending recovery |
+| Storefront browser smoke | Product cards and detail galleries render the correct recovered hero for every product with authoritative media | `/ru/products` and each mapped `/ru/products/[handle]` | Pending recovery |
 
 ## 11. Implementation Plan
 
@@ -218,6 +237,8 @@ Current files that inform the flow:
 3. Add sticky mobile purchase controls driven by the selected variant projection.
 4. Add related products with active-locale destinations and social-proof placeholder blocks without coupling PDP to checkout state.
 5. Add localized metadata/JSON-LD and targeted tests for variant-driven PDP behavior.
+6. Copy tracked recovered media into the backend runtime image and seed absolute, ordered product thumbnail/gallery URLs from one public backend base URL.
+7. Update the live production catalog without resetting commerce data, then verify every mapped asset through Store API and browser rendering.
 
 ## 12. Implementation Trace
 
@@ -256,6 +277,7 @@ Notes:
 - Should region selection later be explicit, inferred, or both? v0 defers selector UI.
 - Localized product attributes beyond title/description are implemented through `flows/features/catalog-localization.md`: material names use message catalogs and merchandising metadata carries explicit `ru`/`en` values.
 - Should unavailable products be hidden or shown with disabled purchase actions? v0 follows Store API product visibility and disables impossible variant/cart actions.
+- `wooden-case` was created after the last intact local catalog and has no recoverable source row or matching asset; retain its placeholder rather than assigning an unrelated image.
 
 ## 14. Review Checklist
 
@@ -266,3 +288,7 @@ Notes:
 - [x] Product list -> detail route is explicit for the current implementation slice.
 - [x] v0 region fallback is explicit and does not silently mask unsupported configured regions.
 - [x] Localized product content dependency is explicit via `catalog:localized-content-ready`.
+- [x] Missing or unverified media never triggers guessed cross-product assignment.
+- [x] Media durability across backend rebuild and clean database seed is explicit.
+
+Flow review v1 (2026-07-27): **APPROVED**. Media authority, durability, missing-source rejection, exact schemas, non-destructive production update, and Store API/browser verification are explicit; no cross-flow event or permission boundary changes.
