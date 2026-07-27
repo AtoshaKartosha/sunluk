@@ -2,7 +2,7 @@ import Link from "next/link";
 import { InstagramIcon, SendIcon } from "./icons";
 import { getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 
 export function SiteFooter({
@@ -14,7 +14,6 @@ export function SiteFooter({
   copyright?: string;
   locale?: string;
 }) {
-  const t = useTranslations("footer");
   const defaultLocale = useLocale() as Locale;
   const activeLocale = (locale as Locale) || defaultLocale;
   const groups = footerGroups ?? getFooterGroups(activeLocale);

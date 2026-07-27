@@ -83,7 +83,7 @@ export async function getCart(medusaLocale?: string) {
       fields: CART_FIELDS,
     });
     // Cart is completed (order placed) — clear it locally.
-    if ((cart as Record<string, unknown>).completed_at) {
+    if (cart.completed_at) {
       clearCartId();
       return null;
     }

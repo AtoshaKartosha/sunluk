@@ -98,7 +98,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 if (isCurrent()) {
                   setCart(synced as unknown as StoreCart | null);
                 }
-              } catch (error) {
+              } catch {
                 // ponytail: fallback to un-synced cart on update failure
                 if (isCurrent()) {
                   setCart(restored as unknown as StoreCart | null);
@@ -115,7 +115,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      } catch (err) {
+      } catch {
         if (isCurrent()) {
           setCart(null);
         }
@@ -174,7 +174,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return fresh as unknown as T;
       }
     },
-    [ensureRegion],
+    [ensureRegion, medusaLocale],
   );
   const itemCount = useMemo(
     () => {
@@ -224,7 +224,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setMutating(false);
       }
     },
-    [cart, ensureRegion, runWithRecovery],
+    [cart, ensureRegion, runWithRecovery, medusaLocale],
   );
   const updateItem = useCallback(
     async (lineItemId: string, quantity: number) => {

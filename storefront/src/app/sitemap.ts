@@ -54,6 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: now,
           changeFrequency: "weekly",
           priority: 0.7,
+          alternates: staticAlternates(`/products/${product.handle}`),
         });
       }
     } catch {

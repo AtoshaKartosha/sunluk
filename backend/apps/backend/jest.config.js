@@ -1,6 +1,11 @@
 const { loadEnv } = require("@medusajs/utils");
 loadEnv("test", process.cwd());
 
+const testType = process.env.TEST_TYPE ||
+  (process.env.npm_lifecycle_event === "test:integration:http" ? "integration:http" :
+   process.env.npm_lifecycle_event === "test:integration:modules" ? "integration:modules" :
+   "unit");
+
 module.exports = {
   transform: {
     "^.+\\.[jt]s$": [
@@ -18,10 +23,10 @@ module.exports = {
   setupFiles: ["./integration-tests/setup.js"],
 };
 
-if (process.env.TEST_TYPE === "integration:http") {
+if (testType === "integration:http") {
   module.exports.testMatch = ["**/integration-tests/http/*.spec.[jt]s"];
-} else if (process.env.TEST_TYPE === "integration:modules") {
+} else if (testType === "integration:modules") {
   module.exports.testMatch = ["**/src/modules/*/__tests__/**/*.[jt]s"];
-} else if (process.env.TEST_TYPE === "unit") {
+} else if (testType === "unit") {
   module.exports.testMatch = ["**/src/**/__tests__/**/*.unit.spec.[jt]s"];
 }

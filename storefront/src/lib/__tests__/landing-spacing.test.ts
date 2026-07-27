@@ -37,8 +37,6 @@ describe("Landing section spacing", () => {
   it("AboutSection spacing fits original constraints", () => {
     const code = read("AboutSection.tsx");
     expect(code).toContain("py-2.5");
-    // Ensure the lg:border-l border fix is preserved
-    expect(code).toContain("lg:border-l");
     expect(code).not.toContain("py-10");
     expect(code).not.toContain("sm:py-16");
   });

@@ -154,19 +154,19 @@ export default async function OrderDetailPage({
     );
   }
 
-  const currencyCode = (order as Record<string, unknown>).currency_code as string | null;
-  const items = ((order as Record<string, unknown>).items as OrderItem[]) ?? [];
-  const shippingAddress = (order as Record<string, unknown>).shipping_address as Address | null;
-  const billingAddress = (order as Record<string, unknown>).billing_address as Address | null;
-  const shippingTotal = ((order as Record<string, unknown>).shipping_total as number) ?? 0;
-  const taxTotal = ((order as Record<string, unknown>).tax_total as number) ?? 0;
-  const discountTotal = ((order as Record<string, unknown>).discount_total as number) ?? 0;
-  const total = ((order as Record<string, unknown>).total as number) ?? 0;
-  const itemTotal = ((order as Record<string, unknown>).item_total as number) ?? 0;
-  const displayId = ((order as Record<string, unknown>).display_id as number) ?? 0;
-  const orderStatus = ((order as Record<string, unknown>).status as string) ?? "pending";
-  const paymentStatus = ((order as Record<string, unknown>).payment_status as string) ?? "pending";
-  const createdAt = ((order as Record<string, unknown>).created_at as string) ?? null;
+  const currencyCode = order.currency_code;
+  const items = (order.items as OrderItem[]) ?? [];
+  const shippingAddress = order.shipping_address as Address | null;
+  const billingAddress = order.billing_address as Address | null;
+  const shippingTotal = order.shipping_total ?? 0;
+  const taxTotal = order.tax_total ?? 0;
+  const discountTotal = order.discount_total ?? 0;
+  const total = order.total ?? 0;
+  const itemTotal = order.item_total ?? 0;
+  const displayId = order.display_id ?? 0;
+  const orderStatus = order.status ?? "pending";
+  const paymentStatus = order.payment_status ?? "pending";
+  const createdAt = (order.created_at as string | Date | null)?.toString() ?? null;
 
   const shippingAddrStr = formatAddress(shippingAddress);
   const billingAddrStr = formatAddress(billingAddress);
