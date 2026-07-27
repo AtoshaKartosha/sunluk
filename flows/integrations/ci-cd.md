@@ -255,9 +255,9 @@ Removed from v0:
 | Temporary redirect | HTTP and HTTPS `.com` requests return 307 to `.ru`, preserving path/query | External `curl` requests | Passed |
 | Canonical alias | HTTP and HTTPS `www.sunluk.ru` requests return 308 to `sunluk.ru`, preserving path/query | External `curl` requests | Passed |
 | Redirect safety | `.ru` does not redirect back to `.com`; unknown hosts are not routed | External `curl` requests | Passed |
-| Dokploy panel DNS | `deploy.sunluk.ru` resolves to the VPS | Authoritative and public DNS lookup | Pending |
-| Dokploy panel HTTPS | Trusted TLS serves the Dokploy login through `deploy.sunluk.ru` | External browser/curl request | Pending |
-| Direct panel port | `IP:3000` refuses connections after HTTPS passes while domain access remains healthy | External curl plus HTTPS recheck | Pending |
+| Dokploy panel DNS | `deploy.sunluk.ru` resolves to the VPS | Authoritative and public DNS lookup | Passed |
+| Dokploy panel HTTPS | Trusted TLS serves the Dokploy login through `deploy.sunluk.ru` | External browser/curl request | Passed |
+| Direct panel port | `IP:3000` refuses connections after HTTPS passes while domain access remains healthy | External curl plus HTTPS recheck | Passed |
 
 ## 11. Implementation Plan
 
@@ -329,10 +329,12 @@ Domain routing update (2026-07-27):
 
 Dokploy panel hardening update (2026-07-27):
 
-- Status: Pending DNS propagation.
-- Intended runtime file: `/etc/dokploy/traefik/dynamic/dokploy-panel-domain.yml`.
-- Intended domain: `https://deploy.sunluk.ru`.
-- Port `3000` must remain published until trusted HTTPS is verified.
+- Status: Complete.
+- Runtime file: `/etc/dokploy/traefik/dynamic/dokploy-panel-domain.yml`.
+- Domain: `https://deploy.sunluk.ru`.
+- DNS check: `deploy.sunluk.ru` resolved publicly to `201.24.118.185`.
+- HTTPS check: the Dokploy panel returned HTTP 200 with trusted TLS, and the operator confirmed successful login.
+- Hardening check: Docker Swarm port `3000` publication was removed; `IP:3000` timed out while domain HTTPS continued to return HTTP 200.
 
 ## 13. Open Questions
 

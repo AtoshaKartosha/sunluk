@@ -95,6 +95,13 @@ Current v0 storefront routing:
 - Until the storefront is deployed, `https://sunluk.ru` terminates TLS and returns Traefik's 418 no-op response.
 - The pre-deploy routing lives on the VPS at `/etc/dokploy/traefik/dynamic/sunluk-domains.yml`; the storefront's Dokploy domain must replace the `.ru` no-op router during first deployment.
 
+Dokploy panel access:
+
+- The control panel is available at `https://deploy.sunluk.ru`.
+- Direct public access through `http://201.24.118.185:3000` is disabled after HTTPS verification.
+- The Traefik route lives at `/etc/dokploy/traefik/dynamic/dokploy-panel-domain.yml`.
+- After the initial plaintext setup, change the Dokploy administrator password through the HTTPS panel.
+
 ## First Deploy
 
 1. Complete all steps above (Dokploy install, GitHub provider, project, application, environment variables, domains).
