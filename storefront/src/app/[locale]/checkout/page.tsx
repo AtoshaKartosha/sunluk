@@ -561,7 +561,7 @@ export default function CheckoutPage() {
         if (result.type === "order" && result.order) {
           clearCartId();
           clearCart();
-          router.push(`/${locale}/checkout/success?order_id=${result.order.id}`);
+          router.push(`/${locale}/checkout/success?order_number=${result.order.display_id}`);
         } else {
           const errMsg =
             (result as { error?: { message?: string } }).error?.message ??

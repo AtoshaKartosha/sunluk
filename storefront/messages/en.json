@@ -391,15 +391,15 @@
     "success": {
       "title": "THANK YOU FOR YOUR ORDER!",
       "orderNumber": "ORDER NUMBER",
-      "confirmation": "Order confirmation and delivery details have been sent to your email.",
+      "confirmation": "Order successfully received.",
       "backToCatalog": "BACK TO CATALOG",
       "nextTitle": "WHAT'S NEXT",
-      "nextEmail": "We've sent a confirmation to your email. Check your spam folder if you don't see it.",
-      "nextProcessing": "We'll process your order and let you know once it ships.",
-      "nextSupport": "Questions about your order? Contact us and mention your order number.",
+      "nextContact": "Our manager will contact you using the provided contact details.",
+      "nextProcessing": "We will confirm order processing and agree on payment details and method.",
+      "nextSupport": "If you have any questions, feel free to contact us and mention your order number.",
       "contactCta": "CONTACT US",
       "missingTitle": "ORDER REFERENCE UNAVAILABLE",
-      "missingDesc": "We couldn't determine your order reference. If you just paid, check your email — we've sent a confirmation. If in doubt, contact us."
+      "missingDesc": "We couldn't determine your order number. Please contact us if you have any questions."
     }
   },
   "cart": {

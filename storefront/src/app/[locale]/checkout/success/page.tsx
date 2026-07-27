@@ -36,7 +36,7 @@ function CheckIcon({ className = "w-10 h-10" }: { className?: string }) {
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("order_id");
+  const orderNumber = searchParams.get("order_number");
   const locale = useLocale();
   const t = useTranslations("checkout.success");
 
@@ -63,7 +63,7 @@ function SuccessContent() {
       <SiteHeader />
 
       <div className="flex-1 flex items-center justify-center px-4 py-16 sm:py-24 lg:py-32">
-        {orderId ? (
+        {orderNumber ? (
           <div className="w-full max-w-lg mx-auto text-center my-auto">
             {/* Check icon */}
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-[#2f6f78] text-[#2f6f78] mb-8">
@@ -77,12 +77,12 @@ function SuccessContent() {
       
             <div className="w-16 h-0.5 bg-[#2f6f78] mx-auto mb-8" aria-hidden="true" />
       
-            {/* Order ID */}
+            {/* Order number */}
             <p className="text-sm tracking-widest uppercase text-[#2c211b]/60 mb-3">
               {t("orderNumber")}
             </p>
             <p className="font-mono text-lg font-medium text-[#2c211b] mb-8 tracking-tight">
-              {orderId}
+              #{orderNumber}
             </p>
       
             {/* Confirmation note */}
@@ -96,7 +96,7 @@ function SuccessContent() {
                 {t("nextTitle")}
               </p>
               <ul className="space-y-2 text-sm leading-relaxed text-[#2c211b]/60">
-                <li>{t("nextEmail")}</li>
+                <li>{t("nextContact")}</li>
                 <li>{t("nextProcessing")}</li>
                 <li>{t("nextSupport")}</li>
               </ul>
