@@ -86,6 +86,15 @@ Dokploy uses Traefik to route traffic. In the application's **Domains** tab:
 
 Dokploy generates Traefik labels automatically. You do not need to add labels to the compose file.
 
+Current v0 storefront routing:
+
+- `sunluk.ru` is the canonical storefront host.
+- `www.sunluk.ru` returns a permanent HTTP 308 to canonical `https://sunluk.ru`, preserving path and query.
+- `sunluk.com` and `www.sunluk.com` return a temporary HTTP 307 to `https://sunluk.ru`, preserving path and query.
+- The redirect is intentionally temporary because `.com` will become a separate EU storefront later.
+- Until the storefront is deployed, `https://sunluk.ru` terminates TLS and returns Traefik's 418 no-op response.
+- The pre-deploy routing lives on the VPS at `/etc/dokploy/traefik/dynamic/sunluk-domains.yml`; the storefront's Dokploy domain must replace the `.ru` no-op router during first deployment.
+
 ## First Deploy
 
 1. Complete all steps above (Dokploy install, GitHub provider, project, application, environment variables, domains).
