@@ -14,7 +14,6 @@ import {
   createSalesChannelsWorkflow,
   createShippingOptionsWorkflow,
   createStockLocationsWorkflow,
-  createStoresWorkflow,
   createTaxRegionsWorkflow,
   createTranslationsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
@@ -24,6 +23,7 @@ import {
   CreateShippingOptionsWorkflowInput,
 } from "@medusajs/medusa/core-flows";
 import { REGIONAL_FULFILLMENT_PROVIDER_ID } from "../modules/regional-fulfillment/service";
+import { normalizeStore } from "./normalize-store";
 export default async function initial_data_seed({
   container,
 }: {
@@ -73,32 +73,7 @@ export default async function initial_data_seed({
     },
   });
 
-  const {
-    result: [store],
-  } = await createStoresWorkflow(container).run({
-    input: {
-      stores: [
-        {
-          name: "Default Store",
-          supported_currencies: [
-            {
-              currency_code: "eur",
-              is_default: true,
-            },
-            {
-              currency_code: "usd",
-              is_default: false,
-            },
-            {
-              currency_code: "rub",
-              is_default: false,
-            },
-          ],
-          default_sales_channel_id: defaultSalesChannel.id,
-        },
-      ],
-    },
-  });
+  const store = await normalizeStore(container, defaultSalesChannel.id);
 
   logger.info("Seeding locales...");
   const translationModuleService = container.resolve(Modules.TRANSLATION);
