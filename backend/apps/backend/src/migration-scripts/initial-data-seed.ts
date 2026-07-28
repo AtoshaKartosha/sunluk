@@ -39,40 +39,75 @@ export default async function initial_data_seed({
   const countries = ["gb", "de", "dk", "se", "fr", "es", "it", "ru"];
 
   logger.info("Seeding store data...");
-  const {
-    result: [defaultSalesChannel],
-  } = await createSalesChannelsWorkflow(container).run({
-    input: {
-      salesChannelsData: [
-        {
-          name: "Default Sales Channel",
-          description: "Created by Medusa",
-        },
-      ],
+  const salesChannelService = container.resolve(Modules.SALES_CHANNEL);
+  const existingSalesChannels = (await salesChannelService.listSalesChannels(
+    {
+      name: "Default Sales Channel",
     },
+    {
+      order: { created_at: "ASC" },
+    }
+  )).filter((sc) => !sc.is_disabled);
+
+  let defaultSalesChannel = existingSalesChannels[0];
+  if (!defaultSalesChannel) {
+    const {
+      result: [newChannel],
+    } = await createSalesChannelsWorkflow(container).run({
+      input: {
+        salesChannelsData: [
+          {
+            name: "Default Sales Channel",
+            description: "Created by Medusa",
+          },
+        ],
+      },
+    });
+    defaultSalesChannel = newChannel;
+  }
+
+  const apiKeyService = container.resolve(Modules.API_KEY);
+  const existingApiKeys = (await apiKeyService.listApiKeys(
+    {
+      title: "Default Publishable API Key",
+      type: "publishable",
+    },
+    {
+      order: { created_at: "ASC" },
+    }
+  )).filter((k) => k.revoked_at === null);
+
+  let publishableApiKey = existingApiKeys[0];
+  if (!publishableApiKey) {
+    const {
+      result: [newKey],
+    } = await createApiKeysWorkflow(container).run({
+      input: {
+        api_keys: [
+          {
+            title: "Default Publishable API Key",
+            type: "publishable",
+            created_by: "",
+          },
+        ],
+      },
+    });
+    publishableApiKey = newKey;
+  }
+
+  const existingLinks = await link.list({
+    [Modules.API_KEY]: { publishable_key_id: publishableApiKey.id },
+    [Modules.SALES_CHANNEL]: { sales_channel_id: defaultSalesChannel.id },
   });
 
-  const {
-    result: [publishableApiKey],
-  } = await createApiKeysWorkflow(container).run({
-    input: {
-      api_keys: [
-        {
-          title: "Default Publishable API Key",
-          type: "publishable",
-          created_by: "",
-        },
-      ],
-    },
-  });
-
-  await linkSalesChannelsToApiKeyWorkflow(container).run({
-    input: {
-      id: publishableApiKey.id,
-      add: [defaultSalesChannel.id],
-    },
-  });
-
+  if (existingLinks.length === 0) {
+    await linkSalesChannelsToApiKeyWorkflow(container).run({
+      input: {
+        id: publishableApiKey.id,
+        add: [defaultSalesChannel.id],
+      },
+    });
+  }
   const store = await normalizeStore(container, defaultSalesChannel.id);
 
   logger.info("Seeding locales...");
