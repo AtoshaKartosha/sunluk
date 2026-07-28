@@ -38,6 +38,12 @@ flowchart LR
     A0[Admin authenticated]
     A1[Catalog and commerce settings managed]
   end
+
+  subgraph SiteContent["Site Content\nflows/features/site-content.md"]
+    T0[Checked-in defaults]
+    T1[Localized override persisted]
+    T2[Merged storefront projection]
+  end
   subgraph Cabinet["Customer Cabinet\nflows/features/customer-cabinet.md"]
     U0[Customer authenticated]
     U1[Cabinet dashboard viewed]
@@ -65,6 +71,8 @@ flowchart LR
   Cart -- "order:placed" --> Cabinet
   Catalog -. "catalog:indexable-route-projection" .-> SEO
   Localization -. "catalog:locale-routing-map" .-> SEO
+  T0 -. "fallback content" .-> T2
+  T1 -. "site-content:projection-selected" .-> T2
 
 ## Cross-flow contracts
 | Source | Event/data | Target | Notes |
@@ -81,6 +89,7 @@ flowchart LR
 | CI/CD | None | Commerce flows | Infrastructure-only v0; it does not emit or consume commerce domain events. |
 | Catalog Browsing | `catalog:indexable-route-projection` | SEO Readiness | Read-only shared data: `{ locale, path, productHandle?, product? }`. Only public, published storefront routes may enter search projections. |
 | Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, stableProductHandles }`. Canonical and language alternates use the configured locale prefixes. |
+| Site Content | None | Commerce flows | Presentation-only localized overrides; checked-in defaults remain available and no commerce-domain event is emitted. |
 
 ## Non-negotiables
 
@@ -88,6 +97,7 @@ flowchart LR
 - Storefront must not calculate final totals independently; it can display totals returned by Medusa.
 - Region and sales channel must be selected before price-sensitive product/cart operations.
 - Checkout must reject incomplete or stale cart state instead of silently creating incorrect orders.
+- Site-content overrides may change presentation strings only; route destinations, executable markup, and commerce state remain code/backend-owned.
 
 ## Current implementation trace
 
@@ -97,3 +107,4 @@ flowchart LR
 - Storefront entry points: `storefront/src/app/[locale]/page.tsx`, `storefront/src/app/[locale]/products/page.tsx`, `storefront/src/app/[locale]/products/[handle]/page.tsx`.
 - CI/CD automation: `flows/integrations/ci-cd.md`.
 - Storefront SEO readiness: `flows/features/seo-readiness.md`.
+- Localized site-content overrides: `flows/features/site-content.md`.
