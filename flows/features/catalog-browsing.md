@@ -246,7 +246,7 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: base product-list-to-product-detail slice, PDP merchandising blocks, and durable recovery of all authoritative product media are implemented.
+Current status: base product-list-to-product-detail slice, PDP merchandising blocks, durable recovery of all authoritative product media, and the approved `wooden-case` placeholder are implemented.
 
 Current implementation files:
 
@@ -261,9 +261,9 @@ Current implementation files:
 - `storefront/src/components/product/index.ts`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/ProductJsonLd.tsx`
-- `backend/apps/backend/static/` (24 recovered immutable media files used by the current catalog)
+- `backend/apps/backend/static/` (24 recovered immutable media files plus `wooden-case-placeholder.webp`)
 - `backend/apps/backend/Dockerfile` (runtime media copy)
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (durable public URL and ordered product mapping)
+- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (durable public URL, ordered product mapping, and `wooden-case` placeholder mapping)
 - `docker-compose.prod.yml` (`MEDUSA_BACKEND_URL` production base)
 
 Validation:
@@ -276,8 +276,12 @@ Validation:
 - Isolated clean-database migration and seed completed successfully: 12 products, 11 products with authoritative media, 23 image rows plus the separate Lagoon thumbnail.
 - Local runtime smoke returned `200 image/webp` for the recovered static route.
 - Production asset audit returned HTTP 200 with image content types for all 24 recovered files.
-- Production Store API audit matched exact thumbnail/gallery ordering for all 11 mapped handles; `wooden-case` remained intentionally unmapped.
-- Browser smoke loaded the exact recovered hero and all gallery images for all 11 mapped product pages with non-zero natural dimensions.
+- Production Store API audit matched exact thumbnail/gallery ordering for all 11 recovered-media handles.
+- Browser smoke loaded the exact recovered hero and all gallery images for all 11 recovered-media product pages with non-zero natural dimensions.
+- `npm run build --prefix backend`, the production Docker build, and the global lint gate completed successfully for the placeholder change; lint retained five pre-existing storefront image warnings and no errors.
+- The deployed placeholder returned `200 image/webp`, 10,984 bytes, and the live `wooden-case` Store API product returned the same URL as its thumbnail and sole gallery image.
+- Browser smoke for `/ru/products/wooden-case` rendered both the optimized gallery image and source asset with non-zero natural dimensions.
+- Gzip-verified production backups bracket the live update: `/opt/backups/sunluk-pre-wooden-placeholder-20260728-001528.sql.gz` and `/opt/backups/sunluk-post-wooden-placeholder-20260728-001619.sql.gz`.
 
 Notes:
 
@@ -312,3 +316,5 @@ Flow review v1 (2026-07-27): **APPROVED**. Media authority, durability, missing-
 Prior flow-code sync (2026-07-27): **IN SYNC** before the approved `wooden-case` placeholder change. Production served all 24 recovered bytes durably with no unrelated image assigned to `wooden-case`.
 
 Flow review v2 (2026-07-27): **APPROVED**. The explicit owner decision, neutral/non-photographic constraint, durable asset path, non-destructive update, replacement boundary, and API/browser checks are concrete; no blocker remains before implementation.
+
+Flow-code sync v2 (2026-07-28): **IN SYNC**. Commit `ebe5af9` is deployed; the approved 1200x1200 neutral placeholder is durable in the runtime image and clean seed, the live product references it non-destructively, and Store API plus browser rendering checks passed.
