@@ -49,7 +49,7 @@ Deferred decisions:
 |---|---|---|---|
 | Developer | Push code, inspect checks, build local images | Read production secrets or mutate VPS state without scoped deploy permission | GitHub permissions and local Docker |
 | GitHub Actions | Run package-scoped checks and call only that package's scoped Dokploy deployment webhook after a green `main` push | Read runtime application secrets, deploy the other application, or mutate PostgreSQL | Workflow permissions and GitHub webhook secrets |
-| Dokploy operator | Configure applications, disable branch auto-deploy, set env/build args, domains, networks, deploy and rollback | Delete persistent database storage as part of an app deploy | Dokploy project permissions |
+| Dokploy operator | Configure applications with public custom Git sources, scoped token deploy endpoints, env/build args, domains, and networks; deploy and rollback | Connect a native repository webhook, or delete persistent database storage as part of an app deploy | Dokploy project permissions |
 | Storefront application | Serve Next.js and call the public Store API | Run database migrations or connect directly to PostgreSQL | Storefront image/env |
 | Backend application | Serve Medusa and run backward-compatible migrations before startup | Recreate PostgreSQL or deploy storefront | Backend image/env |
 | PostgreSQL service | Persist Medusa data across application deployments | Auto-deploy on storefront/backend Git pushes | Database Compose/service configuration |
@@ -140,7 +140,7 @@ Authoritative state:
 
 - Git commit SHA is each application revision target.
 - Each package-scoped GitHub workflow conclusion is the check authority and its scoped Dokploy webhook is the only automatic deploy trigger.
-- Separate Dokploy application configuration is the deploy, environment/build-argument, route, network, and rollback authority; repository branch auto-deploy is disabled.
+- Separate Dokploy application configuration is the deploy, environment/build-argument, route, network, and rollback authority; each app uses the public repository as a custom Git source, so no native provider webhook can bypass CI.
 - The external `sunluk-production` Docker network joins the backend application and `sunluk-postgres`; `DATABASE_URL` resolves host `sunluk-postgres`.
 - The existing PostgreSQL volume/service is the production data authority and is not replaced during app deployment.
 - Dokploy/Traefik owns canonical host routing and TLS.
@@ -158,8 +158,8 @@ Projections:
 |---|---|---|---|---|
 | Incoming | `github:storefront-change` | `{ sha, paths }` | A changed path matches `storefront/**` | No matching path or failed checks |
 | Incoming | `github:backend-change` | `{ sha, paths }` | A changed path matches `backend/**` | No matching path or failed checks |
-| Outgoing | `github:storefront-deploy-webhook` | `{ sha }` | Storefront workflow passed on `main` and scoped secret exists | Failed checks, non-main ref, missing webhook secret |
-| Outgoing | `github:backend-deploy-webhook` | `{ sha }` | Backend workflow passed on `main` and scoped secret exists | Failed checks, non-main ref, missing webhook secret |
+| Outgoing | `github:storefront-deploy-webhook` | `Header x-github-event: push; JSON { ref: "refs/heads/main", head_commit: { id: sha }, commits: [{ modified: ["storefront/package.json"] }] }` | Storefront workflow passed on `main` and scoped secret exists | Failed checks, non-main ref, missing webhook secret |
+| Outgoing | `github:backend-deploy-webhook` | `Header x-github-event: push; JSON { ref: "refs/heads/main", head_commit: { id: sha }, commits: [{ modified: ["backend/package.json"] }] }` | Backend workflow passed on `main` and scoped secret exists | Failed checks, non-main ref, missing webhook secret |
 | Incoming | `dokploy:storefront-deploy` | `{ sha }` | Storefront checks and required build args are valid | Build/start/health failure |
 | Incoming | `dokploy:backend-deploy` | `{ sha }` | Backend checks, secrets, database and network are available | Build/migration/start/health failure |
 | Internal | `deploy:backend-migrated` | `{ sha, migrationResult }` | Image built and existing DB is reachable | Migration non-zero exit |
@@ -177,7 +177,7 @@ Cross-flow boundaries: None. CI/CD deploys infrastructure and emits no commerce-
 | Backend-only commit | Only backend checks call only the backend deploy webhook; storefront and PostgreSQL are not rebuilt. |
 | Commit changes both applications | Checks and webhook calls are independent; backend migration failure does not roll back a healthy storefront revision. |
 | Content override is saved in Medusa Admin | No GitHub workflow or Dokploy deployment starts. |
-| Dokploy repository auto-deploy remains enabled | Preflight fails; disable it before scoped webhooks are enabled or every push may deploy both apps. |
+| A native Dokploy repository webhook remains connected | Preflight fails; use the public repository as a custom Git source so only the post-check scoped token webhook can start deployment. |
 | A deploy webhook secret is absent or invalid | The package workflow fails its deploy step without invoking the other application. |
 | New storefront image lacks `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, publishable key, or site URL build args | Build/smoke fails before route cutover; current storefront remains available. |
 | Backend and PostgreSQL are not both attached to `sunluk-production` or `DATABASE_URL` uses the old Compose hostname | Backend deployment fails before health; operator fixes network/env without recreating DB. |
@@ -195,7 +195,7 @@ Cross-flow boundaries: None. CI/CD deploys infrastructure and emits no commerce-
 ## 8. Side Effects
 
 - GitHub Actions usage is reduced to the changed application path and successful `main` checks call a scoped deployment webhook.
-- Dokploy branch auto-deploy is disabled; each webhook builds and restarts only its selected application.
+- Each Dokploy application uses the public repository as a custom Git source with its token deployment endpoint enabled; no native provider webhook can bypass successful checks, and each scoped webhook builds and restarts only its selected application.
 - Backend deployments may apply only backward-compatible additive migrations during online rollout; storefront deployments never mutate schema.
 - The one-time split changes Dokploy application definitions, shared-network attachment, and Traefik targets.
 - A pre-cutover PostgreSQL backup consumes temporary disk/storage.
@@ -218,8 +218,8 @@ Repository:
 Dokploy/runtime configuration:
 
 - PostgreSQL database/Compose service with automatic Git deployment disabled and attachment to external network `sunluk-production`
-- Storefront application: context `storefront`, Dockerfile `storefront/Dockerfile`, branch auto-deploy disabled, port `3000`, scoped deployment webhook
-- Backend application: context repository root, Dockerfile `backend/apps/backend/Dockerfile`, branch auto-deploy disabled, port `9000`, scoped deployment webhook
+- Storefront application: public custom Git source on `main`, context `storefront`, Dockerfile `storefront/Dockerfile`, `autoDeploy: true` only to permit the token endpoint, `watchPaths: ["storefront/**"]`, no native provider webhook, port `3000`, scoped deployment webhook
+- Backend application: public custom Git source on `main`, context repository root, Dockerfile `backend/apps/backend/Dockerfile`, `autoDeploy: true` only to permit the token endpoint, `watchPaths: ["backend/**"]`, no native provider webhook, port `9000`, scoped deployment webhook
 - GitHub secrets: `DOKPLOY_STOREFRONT_WEBHOOK`, `DOKPLOY_BACKEND_WEBHOOK` only; no runtime application secret
 - Storefront build arguments: `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`
 - Backend and `sunluk-postgres` attached to external network `sunluk-production`; `DATABASE_URL` host is `sunluk-postgres`
@@ -244,8 +244,8 @@ Dokploy/runtime configuration:
 3. Build and smoke-test both production images locally.
 4. Back up production PostgreSQL and record current service/volume/network state.
 5. Create external network `sunluk-production`; attach the existing `sunluk-postgres` and the replacement backend without recreating the database.
-6. Create the backend application with branch auto-deploy disabled, scoped webhook, existing secrets, `DATABASE_URL` host `sunluk-postgres`, and backward-compatible migration-before-start behavior.
-7. Create the storefront application with branch auto-deploy disabled, scoped webhook, and existing public build args/runtime env.
+6. Create the backend application from the public custom Git source on `main`, set `autoDeploy: true` only for its token endpoint, set `watchPaths: ["backend/**"]`, preserve existing secrets, set `DATABASE_URL` host `sunluk-postgres`, and use backward-compatible migration-before-start behavior.
+7. Create the storefront application from the public custom Git source on `main`, set `autoDeploy: true` only for its token endpoint, set `watchPaths: ["storefront/**"]`, and preserve existing public build args/runtime env.
 8. Switch API and storefront routes only after replacement health checks pass.
 9. Reduce the old Compose definition to PostgreSQL, attach it to `sunluk-production`, and keep automatic deployment disabled.
 10. Add the two scoped webhook URLs as GitHub secrets; trigger each package workflow independently.
