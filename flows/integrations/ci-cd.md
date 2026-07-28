@@ -273,6 +273,7 @@ Validation commands/results:
 
 - Workflow YAML parse and scoped payload inspection passed; production Compose parses to exactly one `postgres` service on external `dokploy-network`; root Docker context preserves `backend/**` while excluding unrelated trees.
 - Local backend/storefront production image builds and container smoke passed.
+- Dokploy deployment `dVHs6HHoM9tZ5EIXGy7RU` rebuilt the backend from the root context using the new `.dockerignore` (12.69 MB context) and completed; `/health` and Store API returned 200 while PostgreSQL ID `c756e0bef76b` and storefront task `u3pckwomts0h` remained running.
 - PostgreSQL backup `/var/backups/sunluk/pre-site-content-20260728.dump` created before cutover; SHA-256 `74a244f9fcf4ae8240f45c58413fcf5f247351343df70de826769f8a2a8aca11`; same DB container ID `c756e0bef76b` remained healthy.
 - Backend CI `30381576791` and Storefront CI `30385879714` passed; their scoped Dokploy deployments completed independently.
 - Production `/health`, Store API, storefront desktop/mobile, canonical redirects, product rendering, add-to-cart, checkout, and deploy-free content update/reset smoke passed.
@@ -283,7 +284,7 @@ None blocking in repository design.
 
 Runtime prerequisite:
 
-- Runtime prerequisite satisfied for the cutover with a temporary authenticated Dokploy API key; revoke the temporary key after the final sync check.
+- Runtime prerequisite was satisfied for the cutover with temporary Dokploy API key `sunluk`; the key was revoked after final deployment/health verification and a subsequent authenticated request was rejected.
 
 ## 14. Review Checklist
 
