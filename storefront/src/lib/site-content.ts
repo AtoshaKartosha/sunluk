@@ -168,7 +168,7 @@ export async function fetchSiteContent(locale: string): Promise<SiteContentOverr
   const headers: Record<string, string> = {};
   const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
   if (publishableKey) {
-    headers["x-publishable-key"] = publishableKey;
+    headers["x-publishable-api-key"] = publishableKey;
   }
 
   const controller = new AbortController();

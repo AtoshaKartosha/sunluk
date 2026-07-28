@@ -171,7 +171,7 @@ describe("fetchSiteContent client adapter", () => {
       expect.stringContaining("/store/site-content/en"),
       expect.objectContaining({
         headers: expect.objectContaining({
-          "x-publishable-key": "pk_test123"
+          "x-publishable-api-key": "pk_test123"
         })
       })
     );
