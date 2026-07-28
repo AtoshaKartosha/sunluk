@@ -10,7 +10,7 @@ Success criteria:
 - Product cards and product detail pages render localized content prepared by `flows/features/catalog-localization.md`.
 - Product detail headline price, stock, and delivery promise reflect the currently selected variant as a single source of truth.
 - Product detail navigation, gallery, and mobile purchase controls keep the purchase path clear on desktop and mobile.
-- Every recovered product-media URL resolves to durable bytes after backend rebuilds and clean database seeding; gallery order matches the last intact local catalog.
+- Every recovered product-media URL and explicitly approved neutral placeholder resolves to durable bytes after backend rebuilds and clean database seeding; recovered gallery order matches the last intact local catalog.
 - Variant selection produces a concrete `{ productId, variantId, quantity, regionId }` handoff.
 - Missing region, unavailable product, or invalid variant selection is rejected before cart mutation.
 
@@ -23,7 +23,7 @@ In scope:
 - Rendering localized catalog content supplied by `flows/features/catalog-localization.md`.
 - Variant display, product-gallery interaction, and local variant selection on product detail.
 - Product detail merchandising blocks: breadcrumb, localized merchandising metadata accordions, stock/delivery messaging, social-proof placeholder, and related products.
-- Recovery and durable projection of the product media that existed in the last intact local Medusa catalog.
+- Recovery and durable projection of the product media that existed in the last intact local Medusa catalog, plus an explicit neutral placeholder when the product owner approves it for a product with no source asset.
 - Quantity selection and cart handoff when the cart flow is implemented.
 
 Out of scope:
@@ -176,7 +176,7 @@ Storefront projection:
 - A stored media URL points at an ephemeral/deleted container path: production verification fails; do not publish the broken URL.
 - The recovered thumbnail also appears in `images`: preserve the database mapping; storefront source collection de-duplicates the repeated URL.
 - No source database row or matching byte proves an image belongs to a product: do not guess or reuse another product's media.
-- A newly seeded product has no historically recoverable media (currently `wooden-case`): keep the existing placeholder until an authoritative asset is supplied.
+- A product has no historically recoverable media: assign no unrelated product image; a neutral, visibly non-photographic placeholder is allowed only after explicit product-owner approval and must be replaced when an authoritative asset is supplied.
 
 ## 8. Side Effects
 
@@ -230,6 +230,8 @@ Current files that inform the flow:
 | Storefront browser smoke | Related-product continuation preserves `/en` and `/ru` while changing the handle | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
 | Backend/Store API smoke | Every recovered media URL returns HTTP 200 and each seeded handle exposes the recovered thumbnail/gallery order | Production Store API plus `/static/*` responses | Passed 2026-07-27 |
 | Storefront browser smoke | Product cards and detail galleries render the correct recovered hero for every product with authoritative media | `/ru/products` and each mapped `/ru/products/[handle]` | Passed 2026-07-27 |
+| Backend/Store API smoke | The approved `wooden-case` placeholder URL returns an image and is the product's sole thumbnail/image mapping | Production Store API plus `/static/*` response | Pending implementation |
+| Storefront browser smoke | Wooden case card/detail renders the neutral placeholder without broken media | `/ru/products/wooden-case` | Pending implementation |
 
 ## 11. Implementation Plan
 
@@ -240,6 +242,7 @@ Current files that inform the flow:
 5. Add localized metadata/JSON-LD and targeted tests for variant-driven PDP behavior.
 6. Copy tracked recovered media into the backend runtime image and seed absolute, ordered product thumbnail/gallery URLs from one public backend base URL.
 7. Update the live production catalog without resetting commerce data, then verify every mapped asset through Store API and browser rendering.
+8. Add the product-owner-approved neutral `wooden-case` placeholder to durable backend assets, seed it, update the live product non-destructively, and deploy.
 
 ## 12. Implementation Trace
 
@@ -290,7 +293,7 @@ Notes:
 - Should region selection later be explicit, inferred, or both? v0 defers selector UI.
 - Localized product attributes beyond title/description are implemented through `flows/features/catalog-localization.md`: material names use message catalogs and merchandising metadata carries explicit `ru`/`en` values.
 - Should unavailable products be hidden or shown with disabled purchase actions? v0 follows Store API product visibility and disables impossible variant/cart actions.
-- `wooden-case` was created after the last intact local catalog and has no recoverable source row or matching asset; retain its placeholder rather than assigning an unrelated image.
+- Resolved 2026-07-27: the product owner selected a temporary neutral placeholder for `wooden-case`; replace it when the real product photo is supplied.
 
 ## 14. Review Checklist
 
@@ -306,4 +309,6 @@ Notes:
 
 Flow review v1 (2026-07-27): **APPROVED**. Media authority, durability, missing-source rejection, exact schemas, non-destructive production update, and Store API/browser verification are explicit; no cross-flow event or permission boundary changes.
 
-Flow-code sync (2026-07-27): **IN SYNC**. Production serves all 24 recovered bytes durably, Store API mappings match the intact local catalog plus the authoritative `silk-pouch` asset, every mapped gallery rendered successfully, and no unrelated image was assigned to `wooden-case`.
+Prior flow-code sync (2026-07-27): **IN SYNC** before the approved `wooden-case` placeholder change. Production served all 24 recovered bytes durably with no unrelated image assigned to `wooden-case`.
+
+Flow review v2 (2026-07-27): **APPROVED**. The explicit owner decision, neutral/non-photographic constraint, durable asset path, non-destructive update, replacement boundary, and API/browser checks are concrete; no blocker remains before implementation.
