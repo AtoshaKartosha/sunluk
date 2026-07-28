@@ -2,7 +2,7 @@
 # Build: docker build -f backend/apps/backend/Dockerfile -t sunluk-backend .
 
 # --------------- build ---------------
-FROM node:20-alpine AS build
+FROM mirror.gcr.io/library/node:20-alpine AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ WORKDIR /app/backend/apps/backend
 RUN npx medusa build
 
 # --------------- production-deps ---------------
-FROM node:20-alpine AS production-deps
+FROM mirror.gcr.io/library/node:20-alpine AS production-deps
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ COPY backend/apps/backend/package.json backend/apps/backend/
 RUN cd backend && npm ci --omit=dev --workspace=@dtc/backend --legacy-peer-deps
 
 # --------------- production ---------------
-FROM node:20-alpine AS production
+FROM mirror.gcr.io/library/node:20-alpine AS production
 
 RUN addgroup -S sunluk && adduser -S sunluk -G sunluk
 

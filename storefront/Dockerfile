@@ -1,5 +1,5 @@
 # --------------- build ---------------
-FROM node:20-alpine AS build
+FROM mirror.gcr.io/library/node:20-alpine AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 RUN npm run build
 
 # --------------- production ---------------
-FROM node:20-alpine AS production
+FROM mirror.gcr.io/library/node:20-alpine AS production
 
 RUN addgroup -S sunluk && adduser -S sunluk -G sunluk
 
