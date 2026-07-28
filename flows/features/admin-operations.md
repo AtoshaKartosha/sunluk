@@ -294,11 +294,11 @@ Current files that inform the flow:
 | Backend migration smoke | Launch-collection update is rerunnable, preserves mapped product IDs, and exposes six published products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
 | Backend migration smoke | Existing Purple and Sun Chain IDs become Amethyst and Lagoon; redundant unreferenced canonical duplicates are removed | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
 | Backend migration safety | A duplicate with cart/order references is archived and unpublished instead of deleted; rerun remains idempotent | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
-| Backend migration smoke | Empty Store state creates one Store with EUR default plus USD and RUB | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Pending implementation |
-| Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra Store rows, and converges identically on rerun | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Pending implementation |
-| Production safety | Store normalization leaves product/variant price, region, sales-channel, API-key, cart, and order identities/counts unchanged | Admin API snapshots plus PostgreSQL backup | Pending implementation |
-| Admin browser smoke | Product variant price editor exposes a RUB currency column through the default Medusa Admin | Production Medusa Admin | Pending implementation |
-| Backend migration smoke | Repeated seed bootstrap reuses the same default sales-channel and publishable-key IDs without increasing either count | `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` | Pending implementation |
+| Backend migration smoke | Fresh migrated state converges to one Store with EUR default plus USD and RUB | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Passed 2026-07-28 |
+| Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra active Store rows, and converges identically on rerun | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Passed locally and in production 2026-07-28 |
+| Production safety | Store normalization leaves product/variant price, region, sales-channel, API-key, cart, and order identities/counts unchanged | Admin API snapshots plus PostgreSQL backup | Passed after bootstrap reuse correction 2026-07-28 |
+| Admin browser smoke | Product variant price editor exposes a RUB currency column through the default Medusa Admin | Production Medusa Admin | Passed 2026-07-28 |
+| Backend migration smoke | Repeated seed bootstrap reuses the same default sales-channel and publishable-key IDs without increasing either count | `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` | Passed in production 2026-07-28 |
 
 ## 11. Implementation Plan
 
@@ -314,9 +314,9 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: partial. Default Medusa Admin and its Sunluk extensions remain active; the corrected one-time product-card migration reuses existing Purple and Sun Chain records for Amethyst and Lagoon and safely converges redundant duplicate states.
+Current status: partial overall Admin operations; Store normalization and RUB price editing are complete. Production has one active Store, the oldest Store ID is preserved, and repeated seed bootstrap no longer creates default sales-channel or publishable-key duplicates.
 
-Flow review: APPROVED 2026-07-15. Identity precedence, referential safety, duplicate convergence, rerun behavior, and validation paths are explicit with no unresolved blocker.
+Flow reviews: launch migration approved 2026-07-15; Store normalization v2 and seed-bootstrap correction v3 approved 2026-07-28 with no unresolved blocker.
 
 
 Validation:
@@ -325,6 +325,13 @@ Validation:
 - `npx medusa exec ./src/migration-scripts/update-product-cards.ts` completed successfully twice against the local database.
 - Store API returned all six launch products with localized copy/metadata and no legacy handles.
 - Corrected migration completed twice. `prod_01KXD77RCZR088H58YSG2BEEK3` now owns `amethyst`; `prod_01KXDBBK6V5TXA74QWR0XXH0TY` now owns `lagoon`; redundant canonical duplicates and synthetic test data were removed; the pre-existing Purple cart reference remains valid; Store API exposes no `purple`, `sun-chain`, or archived duplicate handle.
+- `npm run build --prefix backend` completed successfully; final global lint completed with no errors and five pre-existing storefront `<img>` warnings.
+- An isolated migrated PostgreSQL database converged to one Store with `eur:true,rub:false,usd:false`; two injected duplicate Stores were removed, the oldest Store ID remained, and a second run made no further change.
+- Production deployed commits `e001f33` and `8f3e7db`; the Google registry mirror bypassed the VPS Docker Hub `429` without changing application behavior.
+- Gzip-verified backups bracket the repair: `/opt/backups/sunluk-pre-store-normalize-20260728-022129.sql.gz` and `/opt/backups/sunluk-post-store-normalize-20260728-024558.sql.gz`.
+- Production Store Admin API returns one active Store, `store_01KYJX6V22YR4827X34HVRZ1CZ`, with EUR as the sole default plus non-default USD and RUB.
+- The normalization script completed twice in production. Product, variant, price, region, cart, and order fingerprints remained unchanged; after bootstrap reuse was deployed, sales-channel and API-key fingerprints and counts also remained unchanged across the next seed/deploy.
+- Production Medusa Admin displayed editable `Price RUB` with the existing `4 499,00 ₽` value alongside EUR, USD, Europe, and Russia columns; no product price was mutated for verification.
 
 ## 13. Open Questions
 
@@ -352,3 +359,5 @@ Validation:
 Flow review v2 (2026-07-28): **APPROVED**. The canonical Store selection, exact currency invariant, update-before-delete ordering, supported Medusa workflow boundary, protected commerce records, partial-failure/rerun behavior, concrete files, and production checks are explicit; no custom Admin UI or cross-flow event is introduced.
 
 Flow review v3 (2026-07-28): **APPROVED** after deployment exposed the seed boundary. Reusing exact-match bootstrap records prevents future unrelated channel/key creation, while leaving historical channel/key duplicates untouched avoids widening the repair into product/API-key link migration.
+
+Flow-code sync v2 (2026-07-28): **IN SYNC**. The shared normalization helper, seed reuse path, deployed active-Store invariant, protected-commerce checks, rerun behavior, and default Admin RUB editor match the approved v3 flow. Historical sales-channel/API-key duplicates were intentionally left untouched.
