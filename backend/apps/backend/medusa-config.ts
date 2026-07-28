@@ -48,6 +48,9 @@ const modules: InputConfigModules = [
       ],
     },
   },
+  {
+    resolve: "./src/modules/site-content",
+  },
 ]
 
 if (process.env.S3_BUCKET) {

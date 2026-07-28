@@ -18,6 +18,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import SiteHeader from "@/components/landing/SiteHeader";
 import { getNavLinks, getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { Locale } from "@/i18n/routing";
+import { fetchSiteContent } from "@/lib/site-content";
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -41,22 +42,28 @@ export default async function HomePage({ params }: HomePageProps) {
   const loc = locale as Locale;
   const medusaLocale = toMedusaLocale(loc);
 
-  let products: StoreProduct[] = [];
-  try {
-    const region = await resolveRegion(undefined, medusaLocale);
-    if (region && !("type" in region)) {
-      const result = await listProducts(region, medusaLocale);
-      products = (result.products as (import("@/lib/medusa/products").ProductListItem & { created_at?: string })[])
-        .sort(
-          (a, b) =>
-            new Date(b.created_at || "").getTime() -
-            new Date(a.created_at || "").getTime()
-        )
-        .slice(0, 4) as unknown as StoreProduct[];
-    }
-  } catch (error) {
-    console.error("Error fetching homepage products:", error);
-  }
+  const [products, overrides] = await Promise.all([
+    (async () => {
+      let prod: StoreProduct[] = [];
+      try {
+        const region = await resolveRegion(undefined, medusaLocale);
+        if (region && !("type" in region)) {
+          const result = await listProducts(region, medusaLocale);
+          prod = (result.products as (import("@/lib/medusa/products").ProductListItem & { created_at?: string })[])
+            .sort(
+              (a, b) =>
+                new Date(b.created_at || "").getTime() -
+                new Date(a.created_at || "").getTime()
+            )
+            .slice(0, 4) as unknown as StoreProduct[];
+        }
+      } catch (error) {
+        console.error("Error fetching homepage products:", error);
+      }
+      return prod;
+    })(),
+    fetchSiteContent(loc),
+  ]);
 
   const orgJsonLd = {
     "@context": "https://schema.org",
@@ -82,7 +89,7 @@ export default async function HomePage({ params }: HomePageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(siteJsonLd) }}
       />
-      <SiteHeader navLinks={getNavLinks(loc, true)} />
+      <SiteHeader navLinks={getNavLinks(loc, true, overrides)} />
       <HeroSection />
       <EditorialSection />
       <CollectionSection locale={loc} products={products} />
@@ -91,8 +98,8 @@ export default async function HomePage({ params }: HomePageProps) {
       <ContactsSection />
       <NewsletterSection />
       <SiteFooter
-        footerGroups={getFooterGroups(loc)}
-        copyright={getCopyright(loc)}
+        footerGroups={getFooterGroups(loc, overrides)}
+        copyright={getCopyright(loc, overrides)}
       />
     </div>
   );

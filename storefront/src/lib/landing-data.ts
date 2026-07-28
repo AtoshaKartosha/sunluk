@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import type { SiteContentOverrides } from "./site-content";
 
 export const BRAND = {
   name: "SUNLUK",
@@ -148,61 +149,102 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
 
 
 
-export function getNavLinks(locale: Locale, isLanding = false): NavLinkData[] {
+export function getNavLinks(
+  locale: Locale,
+  isLanding = false,
+  overrides?: SiteContentOverrides | null
+): NavLinkData[] {
   const prefix = isLanding ? "" : `/${locale}`;
+  const navOverrides = overrides?.navigation;
   switch (locale) {
     case "en":
       return [
-        { href: `${prefix}#collection`, label: "COLLECTION" },
-        { href: `${prefix}#about`, label: "DETAILS" },
-        { href: `${prefix}#contacts`, label: "CONTACTS" },
+        { href: `${prefix}#collection`, label: navOverrides?.collection ?? "COLLECTION" },
+        { href: `${prefix}#about`, label: navOverrides?.details ?? "DETAILS" },
+        { href: `${prefix}#contacts`, label: navOverrides?.contacts ?? "CONTACTS" },
       ];
     default:
       return [
-        { href: `${prefix}#collection`, label: "КОЛЛЕКЦИЯ" },
-        { href: `${prefix}#about`, label: "ДЕТАЛИ" },
-        { href: `${prefix}#contacts`, label: "КОНТАКТЫ" },
+        { href: `${prefix}#collection`, label: navOverrides?.collection ?? "КОЛЛЕКЦИЯ" },
+        { href: `${prefix}#about`, label: navOverrides?.details ?? "ДЕТАЛИ" },
+        { href: `${prefix}#contacts`, label: navOverrides?.contacts ?? "КОНТАКТЫ" },
       ];
   }
 }
 
-
-export function getFooterGroups(locale: Locale): FooterGroupData[] {
+export function getFooterGroups(
+  locale: Locale,
+  overrides?: SiteContentOverrides | null
+): FooterGroupData[] {
+  const f = overrides?.footer;
   if (locale === "en") {
     return [
       {
-        title: "CUSTOMER SERVICE",
+        title: f?.customerService ?? "CUSTOMER SERVICE",
         links: [
-          { label: "User Agreement", href: "/en/info#terms" },
-          { label: "Privacy Policy", href: "/en/info#privacy" },
-          { label: "Terms for Placing Orders and Purchasing Goods", href: "/en/info#purchase" },
-          { label: "Delivery Policy", href: "/en/info#shipping" },
-          { label: "Returns Policy", href: "/en/info#returns" },
-          { label: "Requisites", href: "/en/info#requisites" },
+          { label: f?.userAgreement ?? "User Agreement", href: "/en/info#terms" },
+          { label: f?.privacyPolicy ?? "Privacy Policy", href: "/en/info#privacy" },
+          { label: f?.purchaseTerms ?? "Terms for Placing Orders and Purchasing Goods", href: "/en/info#purchase" },
+          { label: f?.deliveryPolicy ?? "Delivery Policy", href: "/en/info#shipping" },
+          { label: f?.returnsPolicy ?? "Returns Policy", href: "/en/info#returns" },
+          { label: f?.requisites ?? "Requisites", href: "/en/info#requisites" },
         ],
       },
       {
-        title: "SHOP",
+        title: f?.shop ?? "SHOP",
         links: [
-          { label: "All Products", href: "#" },
+          { label: f?.allProducts ?? "All Products", href: "#" },
         ],
       },
       {
-        title: "QUESTIONS",
+        title: f?.questions ?? "QUESTIONS",
         links: [
-          { label: "Contact Us", href: "#" },
-          { label: "Telegram", href: "#" },
-          { label: "Instagram", href: "#" },
-          { label: "Email", href: "mailto:info@sunluk.ru" },
+          { label: f?.contactUs ?? "Contact Us", href: "#" },
+          { label: f?.telegram ?? "Telegram", href: "#" },
+          { label: f?.instagram ?? "Instagram", href: "#" },
+          { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },
         ],
       },
     ];
   }
 
-  return FOOTER_GROUPS;
+  return [
+    {
+      title: f?.customerService ?? "СЕРВИС КЛИЕНТОВ",
+      links: [
+        { label: f?.userAgreement ?? "Пользовательское соглашение", href: "/ru/info#terms" },
+        { label: f?.privacyPolicy ?? "Политика конфиденциальности", href: "/ru/info#privacy" },
+        { label: f?.purchaseTerms ?? "Условия оформления и покупки товаров", href: "/ru/info#purchase" },
+        { label: f?.deliveryPolicy ?? "Правила доставки", href: "/ru/info#shipping" },
+        { label: f?.returnsPolicy ?? "Правила возврата товаров", href: "/ru/info#returns" },
+        { label: f?.requisites ?? "Реквизиты", href: "/ru/info#requisites" },
+      ],
+    },
+    {
+      title: f?.shop ?? "МАГАЗИН",
+      links: [
+        { label: f?.allProducts ?? "Коллекция", href: "#" },
+      ],
+    },
+    {
+      title: f?.questions ?? "ВОПРОСЫ",
+      links: [
+        { label: f?.contactUs ?? "Связаться с нами", href: "#" },
+        { label: f?.telegram ?? "Telegram", href: "#" },
+        { label: f?.instagram ?? "Instagram", href: "#" },
+        { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },
+      ],
+    },
+  ];
 }
 
-export function getCopyright(locale: Locale): string {
+export function getCopyright(
+  locale: Locale,
+  overrides?: SiteContentOverrides | null
+): string {
+  if (overrides?.footer?.copyright) {
+    return overrides.footer.copyright;
+  }
   switch (locale) {
     case "en":
       return "© 2026 SUNLUK. All rights reserved.";
