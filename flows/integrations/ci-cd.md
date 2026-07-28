@@ -126,7 +126,7 @@ flowchart LR
   BEDeploy -->|compatible db:migrate then start| BE[Medusa backend container]
   DBDeploy --> DB[(Existing PostgreSQL volume)]
   SF -->|HTTPS Store API| BE
-  BE -->|external sunluk-production network; host sunluk-postgres| DB
+  BE -->|attachable dokploy-network; host sunluk-postgres| DB
   Env[Dokploy secrets/env] --> SF
   Env --> BE
   Env --> DBDeploy
@@ -141,7 +141,7 @@ Authoritative state:
 - Git commit SHA is each application revision target.
 - Each package-scoped GitHub workflow conclusion is the check authority and its scoped Dokploy webhook is the only automatic deploy trigger.
 - Separate Dokploy application configuration is the deploy, environment/build-argument, route, network, and rollback authority; each app uses the public repository as a custom Git source, so no native provider webhook can bypass CI.
-- The external `sunluk-production` Docker network joins the backend application and `sunluk-postgres`; `DATABASE_URL` resolves host `sunluk-postgres`.
+- The attachable `dokploy-network` overlay joins the backend application and `sunluk-postgres`; `DATABASE_URL` resolves host `sunluk-postgres`.
 - The existing PostgreSQL volume/service is the production data authority and is not replaced during app deployment.
 - Dokploy/Traefik owns canonical host routing and TLS.
 
@@ -180,13 +180,13 @@ Cross-flow boundaries: None. CI/CD deploys infrastructure and emits no commerce-
 | A native Dokploy repository webhook remains connected | Preflight fails; use the public repository as a custom Git source so only the post-check scoped token webhook can start deployment. |
 | A deploy webhook secret is absent or invalid | The package workflow fails its deploy step without invoking the other application. |
 | New storefront image lacks `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, publishable key, or site URL build args | Build/smoke fails before route cutover; current storefront remains available. |
-| Backend and PostgreSQL are not both attached to `sunluk-production` or `DATABASE_URL` uses the old Compose hostname | Backend deployment fails before health; operator fixes network/env without recreating DB. |
+| Backend or PostgreSQL is not attached to `dokploy-network`, or `DATABASE_URL` uses the old Compose hostname | Backend deployment fails before health; operator fixes network/env without recreating DB. |
 | Additive backend migration fails | New backend is not considered healthy; operator inspects compatibility and keeps/restores the previous compatible service. Database rollback is not guessed. |
 | A proposed migration renames/drops a live column or otherwise breaks the old backend | Online rollout is forbidden; use an explicit maintenance/expand-contract rollout instead. |
 | Dokploy auto-removes Compose orphans | One-time cutover changes the old Compose only after new apps are healthy; PostgreSQL remains declared and its named volume remains attached. |
 | New app initially conflicts with old container name or route | Use distinct temporary app/container identity and switch the Traefik route only after health passes. |
 | Two pushes arrive close together | Each Dokploy app serializes or supersedes only its own webhook-triggered deployments; database remains independent. |
-| VPS restarts | PostgreSQL and backend rejoin `sunluk-production`; both applications restart through their own policies. |
+| VPS restarts | PostgreSQL and backend rejoin the persisted `dokploy-network`; both applications restart through their own policies. |
 | Local Docker cannot start | Production rollout is blocked until production images are built and smoke-tested elsewhere; no unchecked image is deployed. |
 | `.com` request contains path/query | Temporary 307 preserves both when redirecting to `https://sunluk.ru`. |
 | `www.sunluk.ru` request contains path/query | Permanent 308 preserves both on canonical `https://sunluk.ru`. |
@@ -211,31 +211,32 @@ Repository:
 - `docker-compose.prod.yml` (PostgreSQL-only service after successful cutover)
 - `storefront/Dockerfile` (review; modify only if a verified build defect exists)
 - `backend/apps/backend/Dockerfile` (review; modify only if a verified build defect exists)
+- `.dockerignore` (exclude root build-context Git metadata, dependency trees, and unrelated runtime/build artifacts from the backend image build)
 - `docs/ci-cd.md`
 - `flows/integrations/ci-cd.md`
 - `flows/ARCHITECTURE.md`
 
 Dokploy/runtime configuration:
 
-- PostgreSQL database/Compose service with automatic Git deployment disabled and attachment to external network `sunluk-production`
+- PostgreSQL database/Compose service with automatic Git deployment disabled and attachment to the existing attachable overlay `dokploy-network`
 - Storefront application: public custom Git source on `main`, context `storefront`, Dockerfile `storefront/Dockerfile`, `autoDeploy: true` only to permit the token endpoint, `watchPaths: ["storefront/**"]`, no native provider webhook, port `3000`, scoped deployment webhook
-- Backend application: public custom Git source on `main`, context repository root, Dockerfile `backend/apps/backend/Dockerfile`, `autoDeploy: true` only to permit the token endpoint, `watchPaths: ["backend/**"]`, no native provider webhook, port `9000`, scoped deployment webhook
+- Backend application: public custom Git source on `main`, context repository root, Dockerfile `backend/apps/backend/Dockerfile`, `autoDeploy: true` only to permit the token endpoint, `watchPaths: ["backend/**"]`, command `npx medusa db:migrate --skip-scripts --all-or-nothing && npm run start`, no native provider webhook, port `9000`, scoped deployment webhook
 - GitHub secrets: `DOKPLOY_STOREFRONT_WEBHOOK`, `DOKPLOY_BACKEND_WEBHOOK` only; no runtime application secret
 - Storefront build arguments: `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`
-- Backend and `sunluk-postgres` attached to external network `sunluk-production`; `DATABASE_URL` host is `sunluk-postgres`
+- Backend and `sunluk-postgres` attached to `dokploy-network`; `DATABASE_URL` host is `sunluk-postgres`
 - Existing runtime env values and `sunluk.ru` plus API/Admin domain routes
 
 ## 10. Targeted Tests
 
 | Layer | Behavior | File/command | Status |
 |---|---|---|---|
-| Workflow syntax | Both package-scoped workflows parse, use correct native path triggers, and gate scoped webhook calls on green `main` checks | YAML parse/static inspection | Planned |
-| Storefront image | Production image builds with required public build args and serves the current page | `docker build -f storefront/Dockerfile --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.sunluk.ru --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<public-key> --build-arg NEXT_PUBLIC_SITE_URL=https://sunluk.ru -t sunluk-storefront:<sha> storefront` + container/browser smoke | Planned |
-| Backend image | Production image builds and `/health` responds against an isolated test DB | `docker build -f backend/apps/backend/Dockerfile -t sunluk-backend:<sha> .` + container health smoke | Planned |
-| Data persistence | Existing DB has a backup and volume/container survive app cutover | VPS backup + volume/container identity check | Planned |
-| Independent deploy | Storefront rollout leaves backend/DB unchanged; backend rollout leaves storefront/DB unchanged | Dokploy deployment histories/container inspection | Planned |
-| Public routes | Canonical storefront, API health, redirects, TLS, cart/product reads remain healthy | Production browser/HTTP smoke | Planned |
-| Visual regression | Post-deploy desktop/mobile pages match captured baseline apart from dynamic product data | Before/after browser screenshots and DOM smoke | Planned |
+| Workflow syntax | Both package-scoped workflows parse, use correct native path triggers, and gate scoped webhook calls on green `main` checks | YAML parse/static inspection | Passed |
+| Storefront image | Production image builds with required public build args and serves the current page | `docker build -f storefront/Dockerfile --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.sunluk.ru --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<public-key> --build-arg NEXT_PUBLIC_SITE_URL=https://sunluk.ru -t sunluk-storefront:<sha> storefront` + container/browser smoke | Passed locally and in production |
+| Backend image | Production image builds and `/health` responds against an isolated test DB | `docker build -f backend/apps/backend/Dockerfile -t sunluk-backend:<sha> .` + container health smoke | Passed locally and in production |
+| Data persistence | Existing DB has a backup and volume/container survive app cutover | VPS backup + volume/container identity check | Passed: same `sunluk-postgres` container/volume remained healthy |
+| Independent deploy | Storefront rollout leaves backend/DB unchanged; backend rollout leaves storefront/DB unchanged | Dokploy deployment histories/container inspection | Passed: scoped backend and storefront rollouts preserved the other app and DB task IDs |
+| Public routes | Canonical storefront, API health, redirects, TLS, cart/product reads remain healthy | Production browser/HTTP smoke | Passed: storefront/API, `.com`/`www` path+query redirects, product and cart smoke |
+| Visual regression | Post-deploy desktop/mobile pages match captured baseline apart from dynamic product data | Before/after browser screenshots and DOM smoke | Passed: desktop and 390px mobile browser smoke/screenshots |
 
 ## 11. Implementation Plan
 
@@ -243,24 +244,38 @@ Dokploy/runtime configuration:
 2. Preserve Dockerfiles; change only proven build defects and pass all required storefront build arguments.
 3. Build and smoke-test both production images locally.
 4. Back up production PostgreSQL and record current service/volume/network state.
-5. Create external network `sunluk-production`; attach the existing `sunluk-postgres` and the replacement backend without recreating the database.
-6. Create the backend application from the public custom Git source on `main`, set `autoDeploy: true` only for its token endpoint, set `watchPaths: ["backend/**"]`, preserve existing secrets, set `DATABASE_URL` host `sunluk-postgres`, and use backward-compatible migration-before-start behavior.
+5. Reuse the existing attachable overlay `dokploy-network`; attach `sunluk-postgres` and the replacement backend without recreating the database.
+6. Create the backend application from the public custom Git source on `main`, set `autoDeploy: true` only for its token endpoint, set `watchPaths: ["backend/**"]`, preserve existing secrets, set `DATABASE_URL` host `sunluk-postgres`, and run `db:migrate --skip-scripts --all-or-nothing` before startup.
 7. Create the storefront application from the public custom Git source on `main`, set `autoDeploy: true` only for its token endpoint, set `watchPaths: ["storefront/**"]`, and preserve existing public build args/runtime env.
 8. Switch API and storefront routes only after replacement health checks pass.
-9. Reduce the old Compose definition to PostgreSQL, attach it to `sunluk-production`, and keep automatic deployment disabled.
+9. Reduce the old Compose definition to PostgreSQL, attach it to `dokploy-network`, and keep automatic deployment disabled.
 10. Add the two scoped webhook URLs as GitHub secrets; trigger each package workflow independently.
 11. Verify independent histories, production commerce health, redirects, and visual equivalence.
 12. Fill the implementation trace and run `sync-flows`.
 
 ## 12. Implementation Trace
 
-Status: Revised design; implementation pending.
+Status: Implemented and production-verified on 2026-07-28.
 
-Code/config files: pending implementation.
+Code/config files:
 
-Runtime changes: pending implementation.
+- Added `.github/workflows/storefront-ci.yml` and `.github/workflows/backend-ci.yml`; removed `.github/workflows/ci.yml`.
+- Reduced `docker-compose.prod.yml` to the persistent PostgreSQL service; added root `.dockerignore` and `storefront/.dockerignore`; updated `docs/ci-cd.md`.
 
-Validation commands/results: pending implementation.
+Runtime changes:
+
+- Preserved `sunluk-postgres` and its named volume; attached it to existing `dokploy-network` with alias `sunluk-postgres`; automatic Compose deployment is disabled.
+- Created independent Dokploy applications `sunluk-storefront-app-ss7xb9` and `sunluk-backend-app-2yls4j`, each with package `watchPaths`, scoped token endpoint, own route, health check, and environment/build arguments.
+- Backend runs `npx medusa db:migrate --skip-scripts --all-or-nothing && npm run start`; storefront and backend own `sunluk.ru` and `api.sunluk.ru` respectively; legacy application containers/routes were stopped after cutover.
+- Added scoped GitHub secrets `DOKPLOY_STOREFRONT_WEBHOOK` and `DOKPLOY_BACKEND_WEBHOOK`.
+
+Validation commands/results:
+
+- Workflow YAML parse and scoped payload inspection passed; production Compose parses to exactly one `postgres` service on external `dokploy-network`; root Docker context preserves `backend/**` while excluding unrelated trees.
+- Local backend/storefront production image builds and container smoke passed.
+- PostgreSQL backup `/var/backups/sunluk/pre-site-content-20260728.dump` created before cutover; SHA-256 `74a244f9fcf4ae8240f45c58413fcf5f247351343df70de826769f8a2a8aca11`; same DB container ID `c756e0bef76b` remained healthy.
+- Backend CI `30381576791` and Storefront CI `30385879714` passed; their scoped Dokploy deployments completed independently.
+- Production `/health`, Store API, storefront desktop/mobile, canonical redirects, product rendering, add-to-cart, checkout, and deploy-free content update/reset smoke passed.
 
 ## 13. Open Questions
 
@@ -268,7 +283,7 @@ None blocking in repository design.
 
 Runtime prerequisite:
 
-- Production deployment requires an authenticated Dokploy operator session or equivalent API access. Repository work and local image verification can complete without it; the production cutover cannot.
+- Runtime prerequisite satisfied for the cutover with a temporary authenticated Dokploy API key; revoke the temporary key after the final sync check.
 
 ## 14. Review Checklist
 

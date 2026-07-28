@@ -29,19 +29,12 @@ Runtime secrets live in Dokploy, never in GitHub Actions. GitHub only stores the
 
 ## Network Configuration
 
-An external Docker network named `sunluk-production` must be created on the VPS to allow independent containers to communicate:
-
-```bash
-docker network create sunluk-production
-```
-
-All independent applications (storefront, backend) and the PostgreSQL service must be attached to this network.
-
+All independent applications (storefront, backend) and the PostgreSQL service must be attached to the existing external Docker network named `dokploy-network`. There is no need to create a new network; the applications should simply reuse the pre-configured `dokploy-network` overlay network on the VPS to communicate.
 ## PostgreSQL Configuration
 
 PostgreSQL runs as a long-lived database service named `sunluk-postgres`.
 - **Automatic Git deployment must be disabled** to prevent accidental database restarts or recreation.
-- It attaches to the `sunluk-production` external network.
+- It attaches to the existing `dokploy-network` external network (with alias `sunluk-postgres`).
 - The `postgres_data` Docker volume preserves all database data and must never be deleted.
 
 ## Backend Application
@@ -50,12 +43,12 @@ PostgreSQL runs as a long-lived database service named `sunluk-postgres`.
 - **Dockerfile**: `backend/apps/backend/Dockerfile`.
 - **Branch Auto-Deploy**: Enabled via public custom Git source on `main` branch with `autoDeploy: true` (only to expose the refresh-token webhook endpoint, no native provider webhook integration) and `watchPaths` set to `backend/**`.
 - **Deploy Trigger**: Triggered solely via `DOKPLOY_BACKEND_WEBHOOK` using a synthetic GitHub push event webhook payload.
-- **Network**: Attached to the external `sunluk-production` network.
+- **Network**: Attached to the existing `dokploy-network` network.
 - **Environment Variables**:
   - `DATABASE_URL`: `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@sunluk-postgres:5432/${POSTGRES_DB}?sslmode=disable`
   - `MEDUSA_BACKEND_URL`: URL of the backend API (e.g. `https://api.sunluk.ru`).
   - `JWT_SECRET`, `COOKIE_SECRET`, `STORE_CORS`, `ADMIN_CORS`, `AUTH_CORS`.
-- **Additive Migrations**: Backend startup command runs migrations before starting: `sh -c "npx medusa db:migrate && npm run start"`. Online backend deployments permit only backward-compatible additive migrations (e.g., adding a table or column). Destructive schema changes (renaming/dropping tables/columns) are forbidden during online rollouts and require a planned maintenance window.
+- **Additive Migrations**: Backend startup command runs migrations before starting: `npx medusa db:migrate --skip-scripts --all-or-nothing && npm run start`. The `--skip-scripts` and `--all-or-nothing` flags ensure migrations execute safely without running custom scripts and roll back completely if they fail. Online backend deployments permit only backward-compatible additive migrations (e.g., adding a table or column). Destructive schema changes (renaming/dropping tables/columns) are forbidden during online rollouts and require a planned maintenance window.
 
 ## Storefront Application
 
@@ -63,7 +56,7 @@ PostgreSQL runs as a long-lived database service named `sunluk-postgres`.
 - **Dockerfile**: `storefront/Dockerfile`.
 - **Branch Auto-Deploy**: Enabled via public custom Git source on `main` branch with `autoDeploy: true` (only to expose the refresh-token webhook endpoint, no native provider webhook integration) and `watchPaths` set to `storefront/**`.
 - **Deploy Trigger**: Triggered solely via `DOKPLOY_STOREFRONT_WEBHOOK` using a synthetic GitHub push event webhook payload.
-- **Network**: Attached to the external `sunluk-production` network.
+- **Network**: Attached to the existing `dokploy-network` network.
 - **Required Build Arguments**:
   These public environment variables must be passed as build arguments in Dokploy so Next.js can embed them at build time:
   - `NEXT_PUBLIC_MEDUSA_BACKEND_URL`: The public API endpoint (e.g., `https://api.sunluk.ru`).
@@ -91,8 +84,8 @@ Current v0 storefront routing:
 To transition from the monolithic docker-compose setup to the independent Dokploy applications without data loss or downtime:
 
 1. **Backup PostgreSQL**: Run a manual backup of the database before making any changes.
-2. **Create External Network**: Create the `sunluk-production` Docker network on the VPS if not already present.
-3. **Attach Database Container**: Attach the existing `sunluk-postgres` container to the `sunluk-production` network.
+2. **Verify External Network**: Ensure the existing `dokploy-network` Docker network is present on the VPS.
+3. **Attach Database Container**: Attach the existing `sunluk-postgres` container to the `dokploy-network` network with alias `sunluk-postgres`.
 4. **Create Backend App**: Define the new backend application in Dokploy using `backend/apps/backend/Dockerfile` with `DATABASE_URL` pointed to `sunluk-postgres`.
 5. **Create Storefront App**: Define the new storefront application in Dokploy using `storefront/Dockerfile`, providing the required build arguments (`NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`).
 6. **Configure Auto-Deploy**: Configure public custom Git source on `main` branch with `autoDeploy: true` (to expose the refresh-token webhook endpoint, no native provider webhook) and set the respective `watchPaths` (`storefront/**` or `backend/**`) to prevent arbitrary rebuilds.

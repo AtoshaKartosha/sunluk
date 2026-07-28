@@ -1,0 +1,14 @@
+.git
+.env*
+*.log
+storefront
+docs
+flows
+**/node_modules
+**/.medusa
+**/dist
+**/.cache
+.github
+artifacts
+**/.next
+**/coverage

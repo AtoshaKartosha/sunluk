@@ -218,12 +218,12 @@ Flow documents:
 
 | Layer | Behavior | File/command | Status |
 |---|---|---|---|
-| Backend unit | Validator accepts supported partial documents and rejects forbidden locale/shape/depth/size | `backend/apps/backend/src/modules/site-content/__tests__/validation.unit.spec.ts` | Planned |
-| Backend build | Module, API routes, default Medusa Admin authentication, migration, and Admin page compile | `npm run build --prefix backend` | Planned |
-| Storefront unit | Valid partial override deep-merges; malformed/unavailable response returns defaults; navigation/footer routes remain code-owned | `npm run test --prefix storefront -- site-content.test.ts` | Planned |
-| Storefront build | Server/client boundaries and localized pages compile | `npm run build --prefix storefront` | Planned |
-| Manual UI | Save and reset one harmless text override in Admin; observe update and fallback without deploy | Production browser smoke | Planned |
-| Regression | Cart/product/checkout smoke still reads commerce data from Medusa | Production browser smoke | Planned |
+| Backend unit | Validator accepts supported partial documents and rejects forbidden locale/shape/depth/size | `backend/apps/backend/src/modules/site-content/__tests__/validation.unit.spec.ts` | Passed: 17 tests |
+| Backend build | Module, API routes, default Medusa Admin authentication, migration, and Admin page compile | `npm run build --prefix backend` | Passed locally and in Backend CI run `30381576791` |
+| Storefront unit | Valid partial override deep-merges; malformed/unavailable response returns defaults; exact Medusa publishable-key header is sent; navigation/footer routes remain code-owned | `npm run test --prefix storefront -- --run site-content.test.ts` | Passed: 14 tests |
+| Storefront build | Server/client boundaries and localized pages compile | `npm run build --prefix storefront` | Passed locally and in Storefront CI run `30385879714` |
+| Manual UI | Save and reset one harmless text override in Admin; observe update and fallback without deploy | Production authenticated Admin API, editor-bundle, and browser smoke | Passed: PUT/GET/DELETE returned 200; public projection and browser changed, then baseline was restored |
+| Regression | Cart/product/checkout smoke still reads commerce data from Medusa | Production browser smoke | Passed: product/price/CTA rendered; add-to-cart produced `Cart(2)` and checkout total |
 
 ## 11. Implementation Plan
 
@@ -238,13 +238,24 @@ Flow documents:
 
 ## 12. Implementation Trace
 
-Status: Approved design; implementation pending.
+Status: Implemented and production-verified on 2026-07-28.
 
-Code files: pending implementation.
+Code files:
 
-Test files: pending implementation.
+- Backend: `backend/apps/backend/medusa-config.ts`; `backend/apps/backend/src/modules/site-content/{index.ts,service.ts,validation.ts,models/site-content.ts,migrations/Migration20260728120000.ts}`; Store/Admin routes; Admin `site-content/page.tsx`; Admin i18n/type registration.
+- Storefront: `storefront/src/lib/site-content.ts`; `storefront/src/i18n/request.ts`; `storefront/src/lib/landing-data.ts`; `storefront/src/app/[locale]/page.tsx`.
 
-Validation commands/results: pending implementation.
+Test files:
+
+- `backend/apps/backend/src/modules/site-content/__tests__/validation.unit.spec.ts`
+- `storefront/src/lib/__tests__/site-content.test.ts`
+
+Validation commands/results:
+
+- Backend validation: 17/17 passed; backend lint/build and Backend CI run `30381576791` passed.
+- Storefront adapter: 14/14 passed; full storefront suite previously passed 88/88; Storefront CI run `30385879714` passed.
+- Production: authenticated temporary Admin PUT/GET/DELETE all returned 200; public Store API returned the saved override; browser displayed `DEPLOY-FREE TEST.` after the 60-second cache window without a container restart; reset restored `CHANGE YOURSELF.`; probe row and temporary admin were removed.
+- Production Admin UI login, `Site Content` editor load, and JSON save passed; the UI PUT returned 200 and the browser rendered `UI DEPLOY-FREE TEST.` without deployment. Reset DELETE returned 200 and temporary content/admin records were removed; product page and cart smoke passed.
 
 ## 13. Open Questions
 
