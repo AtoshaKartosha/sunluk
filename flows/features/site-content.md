@@ -144,6 +144,7 @@ type JsonStringTree = { [key: string]: string | JsonStringTree };
 ```
 
 - Store API response: `{ site_content: { locale, overrides, updated_at } | null }`.
+- Storefront Store API requests send the configured publishable key in Medusa's exact `x-publishable-api-key` header.
 - Admin GET uses the same projection.
 - The storefront accepts only `ru` and `en`, plain objects, string leaves, bounded nesting, and allowlisted top-level keys.
 - Local content wins whenever a remote field is absent or invalid; arrays and HTML are not part of the contract.
@@ -155,7 +156,7 @@ type JsonStringTree = { [key: string]: string | JsonStringTree };
 | Incoming | `site-content:admin-read` | `{ locale }` | Authenticated admin; supported locale | `unauthorized`, `unsupported_locale` |
 | Incoming | `site-content:replace` | `{ locale, overrides }` | Authenticated admin; valid bounded document | `unauthorized`, `unsupported_locale`, `invalid_shape`, `payload_too_large` |
 | Incoming | `site-content:reset` | `{ locale }` | Authenticated admin; supported locale | `unauthorized`, `unsupported_locale` |
-| Incoming | `site-content:store-read` | `{ locale }` | Supported locale | `unsupported_locale` |
+| Incoming | `site-content:store-read` | `{ locale, "x-publishable-api-key": key }` | Supported locale; valid Medusa publishable key | `unsupported_locale`, `invalid_publishable_key` |
 | Internal | `site-content:projection-selected` | `{ locale, source: "persisted" | "default" }` | Storefront adapter completes or times out | None; default is always available |
 
 Cross-flow boundaries: None. Site content is presentation-only and emits no commerce or deployment events.
@@ -172,6 +173,7 @@ Cross-flow boundaries: None. Site content is presentation-only and emits no comm
 | PUT is retried with the same body | The resulting document is identical; no duplicate locale row is created. |
 | DELETE is repeated or no row exists | Reset succeeds idempotently and storefront uses defaults. |
 | Backend is offline, slow, or returns malformed JSON | Storefront stops waiting at the configured timeout, logs once per failed request path, and renders local defaults. |
+| Publishable key is absent, invalid, or sent under a non-Medusa header name | Store API returns 400; storefront falls back to checked-in defaults and does not persist or mutate content. |
 | Locale has only a partial override | Only valid provided leaves replace defaults; all omitted leaves remain current local content. |
 | Stored data predates a newly added local message key | The new local key remains visible because merging starts from local defaults. |
 | Override contains HTML/script-like text | React renders it as text; no `dangerouslySetInnerHTML` path is introduced. |
