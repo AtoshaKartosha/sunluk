@@ -13,6 +13,7 @@ Success criteria:
 - Storefront does not bypass admin-configured Medusa state.
 - A trusted one-time migration reuses existing `purple` and `sun-chain` product identities for Amethyst and Lagoon, removing only redundant unreferenced duplicates.
 - Store initialization and repair converge to one Medusa Store whose supported currencies are `EUR` (default), `USD`, and `RUB`, so managers can edit RUB variant prices in the default Admin price grid.
+- Re-running the initial seed reuses the oldest default sales channel and oldest default publishable API key instead of creating new bootstrap records; historical duplicates outside the Store invariant are left untouched unless separately proven safe to remove.
 
 ## 2. Scope
 
@@ -25,6 +26,7 @@ In scope:
 - Order visibility and operational follow-up after checkout.
 - Idempotent operator-run catalog migrations that preserve commerce references while correcting product identity.
 - Idempotent store normalization that reuses the oldest Medusa Store, repairs its supported currencies, and removes only duplicate Store rows through Medusa's store workflows.
+- Idempotent reuse of the seed's default sales channel and default publishable API key; deletion or consolidation of historical channel/key duplicates is excluded.
 
 Out of scope:
 
@@ -83,6 +85,16 @@ flowchart TD
   RemapLegacy --> NotifyCatalog
   UpdateCanonical --> NotifyCatalog
   CreateCanonical --> NotifyCatalog
+  SeedBootstrap[Initial seed starts] --> ChannelExists{Default Sales Channel exists?}
+  ChannelExists -->|yes| ReuseChannel[Reuse oldest matching channel]
+  ChannelExists -->|no| CreateChannel[Create one default channel]
+  ReuseChannel --> KeyExists{Default Publishable API Key exists?}
+  CreateChannel --> KeyExists
+  KeyExists -->|yes| ReuseKey[Reuse oldest matching key]
+  KeyExists -->|no| CreateKey[Create one default key]
+  ReuseKey --> LinkDefaults[Idempotently link key and channel]
+  CreateKey --> LinkDefaults
+  LinkDefaults --> StoreMigration
   StoreMigration[Trusted operator runs store normalization] --> StoreExists{Any Store exists?}
   StoreExists -->|no| CreateStore[Create one Store with EUR, USD, RUB]
   StoreExists -->|yes| SelectStore[Select oldest Store as canonical Admin Store]
@@ -134,6 +146,13 @@ stateDiagram-v2
   CanonicalUpdated --> [*]
   CanonicalCreated --> [*]
   LegacyRemapped --> [*]
+  [*] --> SeedBootstrapResolving: initial seed queries default channel and key
+  SeedBootstrapResolving --> BootstrapRecordsReused: both records exist
+  SeedBootstrapResolving --> BootstrapRecordCreating: channel or key is missing
+  BootstrapRecordCreating --> BootstrapRecordsReady: missing record created once
+  BootstrapRecordsReused --> BootstrapRecordsReady
+  BootstrapRecordsReady --> StoreNormalizationResolving: key/channel link is ensured
+  SeedBootstrapResolving --> StoreNormalizationRejected: query, create, or link fails
   [*] --> StoreNormalizationResolving: trusted operator executes normalization
   StoreNormalizationResolving --> StoreCreating: no Store exists
   StoreNormalizationResolving --> CanonicalStoreUpdating: oldest Store exists
@@ -208,6 +227,7 @@ Storefront projection:
 | Internal | `admin:translation-saved` | None | `{ productIds, locales }` | Admin role can edit translations and locale configuration is valid | Forbidden, invalid locale, missing source product, conflicting translation state |
 | Internal | `admin:catalog-migration-run` | None | `{ mappings: [{ oldHandle, newHandle }], dryRun?: false }` | Trusted operator runs the reviewed script in Medusa execution context | Missing prerequisites, unsafe duplicate references, or unresolved handle collision |
 | Internal | `admin:store-normalized` | None | `{ storeId, currencyCodes: ["eur", "usd", "rub"], removedDuplicateStoreIds }` | Trusted operator or seed runs through Medusa workflows and the exact postcondition passes | Store query/update/delete failure or postcondition mismatch |
+| Internal | `admin:seed-bootstrap-reused` | None | `{ salesChannelId, publishableApiKeyId }` | Existing oldest matching records are reused or a missing record is created once, then their link is ensured | Query, create, or link failure |
 | Internal | `admin:order-updated` | None | `{ orderId, operation }` | Admin role can perform operation and order is in a legal state | Forbidden, stale order state, invalid transition |
 
 ## 7. Edge Cases
@@ -232,6 +252,9 @@ Storefront projection:
 - Duplicate deletion partially fails: postcondition fails and the script exits non-zero; a rerun safely retries remaining duplicates without creating another Store.
 - Repeated seed or normalization run: reuse the sole Store and perform no duplicate creation or unrelated mutation.
 - Existing RUB prices and region configuration: preserve them byte-for-byte; normalization changes Store records and their supported-currency rows only.
+- Default sales channel or default publishable API key already exists: reuse the oldest exact-name/type match and do not create another.
+- Either bootstrap record is absent: create only the missing record, link the pair idempotently, and continue.
+- Historical duplicate sales channels or API keys: leave them untouched because they may carry product or publishable-key links not represented by the Store row; this repair must not widen into catalog-channel cleanup.
 
 ## 8. Side Effects
 
@@ -240,6 +263,7 @@ Storefront projection:
 - Orders created by checkout become visible in Medusa Admin.
 - Catalog correction preserves the legacy product/variant identity where possible, deletes only unreferenced duplicates, and hides referenced duplicates from Store API visibility.
 - Store normalization updates or creates one canonical Store, removes duplicate Store rows through Medusa's supported workflow, and intentionally leaves products, variants, prices, regions, sales channels, API keys, carts, and orders unchanged.
+- Seed bootstrap reuses existing default sales-channel and publishable-key records and creates only a missing prerequisite; historical duplicates remain untouched.
 - Future provider integrations may create side effects with payment, storage, search, monitoring, or fulfillment systems; those require dedicated integration flows before implementation.
 
 ## 9. Schemas Touched
@@ -274,6 +298,7 @@ Current files that inform the flow:
 | Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra Store rows, and converges identically on rerun | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Pending implementation |
 | Production safety | Store normalization leaves product/variant price, region, sales-channel, API-key, cart, and order identities/counts unchanged | Admin API snapshots plus PostgreSQL backup | Pending implementation |
 | Admin browser smoke | Product variant price editor exposes a RUB currency column through the default Medusa Admin | Production Medusa Admin | Pending implementation |
+| Backend migration smoke | Repeated seed bootstrap reuses the same default sales-channel and publishable-key IDs without increasing either count | `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` | Pending implementation |
 
 ## 11. Implementation Plan
 
@@ -285,6 +310,7 @@ Current files that inform the flow:
 6. Replace unconditional Store creation in the seed with the shared idempotent normalization function.
 7. Back up production, run normalization once, rerun it to prove convergence, and compare protected commerce snapshots before and after.
 8. Verify the default Admin product price editor exposes RUB; do not add custom UI or mutate a product price solely for the check.
+9. Reuse the oldest exact-match default sales channel and default publishable API key before Store normalization; do not consolidate historical channel/key duplicates in this fix.
 
 ## 12. Implementation Trace
 
@@ -321,5 +347,8 @@ Validation:
 - [x] Catalog migration identity precedence and duplicate deletion/archive rules are explicit.
 - [x] Store normalization preserves the active Store identity, names exact allowed mutations, and rejects postcondition drift.
 - [x] Empty, duplicate, partial-failure, rerun, and protected-commerce-data paths are explicit.
+- [x] Seed bootstrap names the exact channel/key reuse rule and explicitly excludes unsafe historical channel/key cleanup.
 
 Flow review v2 (2026-07-28): **APPROVED**. The canonical Store selection, exact currency invariant, update-before-delete ordering, supported Medusa workflow boundary, protected commerce records, partial-failure/rerun behavior, concrete files, and production checks are explicit; no custom Admin UI or cross-flow event is introduced.
+
+Flow review v3 (2026-07-28): **APPROVED** after deployment exposed the seed boundary. Reusing exact-match bootstrap records prevents future unrelated channel/key creation, while leaving historical channel/key duplicates untouched avoids widening the repair into product/API-key link migration.
