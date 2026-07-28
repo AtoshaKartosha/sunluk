@@ -646,6 +646,10 @@ export default async function initial_data_seed({
       thumbnail: "1782832083854-silk-pouch.png",
       images: ["1782832083854-silk-pouch.png"],
     },
+    "wooden-case": {
+      thumbnail: "wooden-case-placeholder.webp",
+      images: ["wooden-case-placeholder.webp"],
+    },
   };
 
   const rawProducts = [
