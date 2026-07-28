@@ -48,8 +48,8 @@ PostgreSQL runs as a long-lived database service named `sunluk-postgres`.
 
 - **Context**: Repository root.
 - **Dockerfile**: `backend/apps/backend/Dockerfile`.
-- **Branch Auto-Deploy**: Disabled.
-- **Deploy Trigger**: Triggered solely via `DOKPLOY_BACKEND_WEBHOOK`.
+- **Branch Auto-Deploy**: Enabled via public custom Git source on `main` branch with `autoDeploy: true` (only to expose the refresh-token webhook endpoint, no native provider webhook integration) and `watchPaths` set to `backend/**`.
+- **Deploy Trigger**: Triggered solely via `DOKPLOY_BACKEND_WEBHOOK` using a synthetic GitHub push event webhook payload.
 - **Network**: Attached to the external `sunluk-production` network.
 - **Environment Variables**:
   - `DATABASE_URL`: `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@sunluk-postgres:5432/${POSTGRES_DB}?sslmode=disable`
@@ -61,8 +61,8 @@ PostgreSQL runs as a long-lived database service named `sunluk-postgres`.
 
 - **Context**: `storefront` directory.
 - **Dockerfile**: `storefront/Dockerfile`.
-- **Branch Auto-Deploy**: Disabled.
-- **Deploy Trigger**: Triggered solely via `DOKPLOY_STOREFRONT_WEBHOOK`.
+- **Branch Auto-Deploy**: Enabled via public custom Git source on `main` branch with `autoDeploy: true` (only to expose the refresh-token webhook endpoint, no native provider webhook integration) and `watchPaths` set to `storefront/**`.
+- **Deploy Trigger**: Triggered solely via `DOKPLOY_STOREFRONT_WEBHOOK` using a synthetic GitHub push event webhook payload.
 - **Network**: Attached to the external `sunluk-production` network.
 - **Required Build Arguments**:
   These public environment variables must be passed as build arguments in Dokploy so Next.js can embed them at build time:
@@ -95,7 +95,7 @@ To transition from the monolithic docker-compose setup to the independent Dokplo
 3. **Attach Database Container**: Attach the existing `sunluk-postgres` container to the `sunluk-production` network.
 4. **Create Backend App**: Define the new backend application in Dokploy using `backend/apps/backend/Dockerfile` with `DATABASE_URL` pointed to `sunluk-postgres`.
 5. **Create Storefront App**: Define the new storefront application in Dokploy using `storefront/Dockerfile`, providing the required build arguments (`NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL`).
-6. **Disable Auto-Deploy**: Disable automatic Git deployments for both applications in Dokploy.
+6. **Configure Auto-Deploy**: Configure public custom Git source on `main` branch with `autoDeploy: true` (to expose the refresh-token webhook endpoint, no native provider webhook) and set the respective `watchPaths` (`storefront/**` or `backend/**`) to prevent arbitrary rebuilds.
 7. **Smoke Test New Containers**: Deploy the applications and verify they start successfully and pass health checks on their internal ports.
 8. **Switch Public Routes**: Update Traefik/Dokploy domain routing to route public domains to the new storefront and backend containers.
 9. **Reduce Old Compose**: Only after both replacement applications are verified healthy and routing production traffic, reduce the old `docker-compose.prod.yml` to define only the PostgreSQL database service. Keeping automatic Git deployment disabled for the compose project ensures the database is not modified.

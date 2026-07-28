@@ -56,4 +56,4 @@ jobs:
             echo "Error: DOKPLOY_BACKEND_WEBHOOK secret is missing."
             exit 1
           fi
-          curl -f -L -s -S "$DOKPLOY_BACKEND_WEBHOOK" && echo "Webhook triggered successfully."
+          curl -X POST -H "Content-Type: application/json" -H "x-github-event: push" -d "{\"ref\":\"refs/heads/main\",\"head_commit\":{\"id\":\"$GITHUB_SHA\"},\"commits\":[{\"modified\":[\"backend/package.json\"]}]}" -f -L -s -S "$DOKPLOY_BACKEND_WEBHOOK" && echo "Webhook triggered successfully."
