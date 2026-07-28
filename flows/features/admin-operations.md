@@ -12,6 +12,7 @@ Success criteria:
 - Orders created by checkout become visible and actionable in admin order management.
 - Storefront does not bypass admin-configured Medusa state.
 - A trusted one-time migration reuses existing `purple` and `sun-chain` product identities for Amethyst and Lagoon, removing only redundant unreferenced duplicates.
+- Store initialization and repair converge to one Medusa Store whose supported currencies are `EUR` (default), `USD`, and `RUB`, so managers can edit RUB variant prices in the default Admin price grid.
 
 ## 2. Scope
 
@@ -23,6 +24,7 @@ In scope:
 - Region, shipping, payment, and promotion configuration.
 - Order visibility and operational follow-up after checkout.
 - Idempotent operator-run catalog migrations that preserve commerce references while correcting product identity.
+- Idempotent store normalization that reuses the oldest Medusa Store, repairs its supported currencies, and removes only duplicate Store rows through Medusa's store workflows.
 
 Out of scope:
 
@@ -81,6 +83,17 @@ flowchart TD
   RemapLegacy --> NotifyCatalog
   UpdateCanonical --> NotifyCatalog
   CreateCanonical --> NotifyCatalog
+  StoreMigration[Trusted operator runs store normalization] --> StoreExists{Any Store exists?}
+  StoreExists -->|no| CreateStore[Create one Store with EUR, USD, RUB]
+  StoreExists -->|yes| SelectStore[Select oldest Store as canonical Admin Store]
+  SelectStore --> UpdateCurrencies[Set EUR default plus USD and RUB]
+  UpdateCurrencies --> ExtraStores{Duplicate Store rows remain?}
+  ExtraStores -->|yes| DeleteStores[Delete duplicate Store rows through Medusa workflow]
+  ExtraStores -->|no| VerifyStore[Verify exact Store invariant]
+  DeleteStores --> VerifyStore
+  CreateStore --> VerifyStore
+  VerifyStore -->|one Store and exact currencies| StoreReady[RUB price editing available]
+  VerifyStore -->|postcondition fails| StoreRejected[Abort without catalog mutation]
 ```
 
 ### State machine
@@ -121,6 +134,18 @@ stateDiagram-v2
   CanonicalUpdated --> [*]
   CanonicalCreated --> [*]
   LegacyRemapped --> [*]
+  [*] --> StoreNormalizationResolving: trusted operator executes normalization
+  StoreNormalizationResolving --> StoreCreating: no Store exists
+  StoreNormalizationResolving --> CanonicalStoreUpdating: oldest Store exists
+  CanonicalStoreUpdating --> DuplicateStoresDeleting: supported currencies updated and duplicates exist
+  CanonicalStoreUpdating --> StoreNormalized: supported currencies updated and no duplicates exist
+  DuplicateStoresDeleting --> StoreNormalized: Medusa delete workflow succeeds
+  StoreCreating --> StoreNormalized: one Store created with exact currencies
+  StoreNormalizationResolving --> StoreNormalizationRejected: Store query or update fails
+  CanonicalStoreUpdating --> StoreNormalizationRejected: currency update fails before duplicate deletion
+  DuplicateStoresDeleting --> StoreNormalizationRejected: deletion or postcondition fails
+  StoreNormalizationRejected --> [*]
+  StoreNormalized --> [*]
 ```
 
 ### Data/event flow
@@ -141,6 +166,12 @@ flowchart LR
   CatalogEvent --> Localization[Catalog Localization]
   TranslationEvent --> Localization
   SettingsEvent --> Cart[Cart and Checkout]
+  Operator[Trusted operator] --> NormalizeScript[Idempotent store normalization]
+  NormalizeScript --> StoreWorkflows[Medusa store workflows]
+  StoreWorkflows --> DB
+  DB --> ActiveStore[Oldest and only Store]
+  ActiveStore --> SupportedCurrencies[EUR default, USD, RUB]
+  SupportedCurrencies --> AdminUI
 ```
 
 ## 5. State and Projections
@@ -150,12 +181,14 @@ Authoritative state:
 - Admin users, products, categories, variants, prices, price lists, regions, tax regions, sales channels, stock locations, inventory, shipping options, payment providers, promotions, customers, carts, orders, fulfillments, returns/refunds are Medusa-owned.
 - PostgreSQL is the durable store configured through Medusa.
 - During launch-collection correction, the legacy product IDs (`purple`, `sun-chain`) are authoritative predecessors for Amethyst and Lagoon because reusing them preserves cart/order references.
+- Medusa Admin's active-store projection is the first Store returned by the Admin Store API; normalization therefore preserves the oldest Store ID and makes it the sole Store.
 
 Admin projection:
 
 - Medusa Admin dashboard views over backend state.
 - Forms for editing commerce records.
 - Order management screens.
+- The product variant price grid derives currency columns from the active Store's `supported_currencies`; after normalization it exposes EUR, USD, and RUB without a custom Admin extension.
 
 Storefront projection:
 
@@ -174,6 +207,7 @@ Storefront projection:
 | Internal | `admin:catalog-saved` | None | `{ entityType, entityIds }` | Admin role can edit entity and validation passes | Forbidden, invalid schema, conflicting state |
 | Internal | `admin:translation-saved` | None | `{ productIds, locales }` | Admin role can edit translations and locale configuration is valid | Forbidden, invalid locale, missing source product, conflicting translation state |
 | Internal | `admin:catalog-migration-run` | None | `{ mappings: [{ oldHandle, newHandle }], dryRun?: false }` | Trusted operator runs the reviewed script in Medusa execution context | Missing prerequisites, unsafe duplicate references, or unresolved handle collision |
+| Internal | `admin:store-normalized` | None | `{ storeId, currencyCodes: ["eur", "usd", "rub"], removedDuplicateStoreIds }` | Trusted operator or seed runs through Medusa workflows and the exact postcondition passes | Store query/update/delete failure or postcondition mismatch |
 | Internal | `admin:order-updated` | None | `{ orderId, operation }` | Admin role can perform operation and order is in a legal state | Forbidden, stale order state, invalid transition |
 
 ## 7. Edge Cases
@@ -192,6 +226,12 @@ Storefront projection:
 - Only the canonical handle exists: update it idempotently; do not create another product.
 - Neither handle exists: create the canonical product once.
 - Re-running after any completed or partial branch converges to one published canonical product and never recreates a redundant duplicate.
+- No Store exists: create exactly one Store with EUR default plus USD and RUB.
+- Multiple Stores exist: preserve the oldest Store ID and its default sales-channel reference, update its supported currencies first, then delete only the extra Store rows through `deleteStoresWorkflow`.
+- Currency update fails: do not start duplicate deletion; existing products, variants, prices, regions, sales channels, API keys, carts, and orders remain untouched.
+- Duplicate deletion partially fails: postcondition fails and the script exits non-zero; a rerun safely retries remaining duplicates without creating another Store.
+- Repeated seed or normalization run: reuse the sole Store and perform no duplicate creation or unrelated mutation.
+- Existing RUB prices and region configuration: preserve them byte-for-byte; normalization changes Store records and their supported-currency rows only.
 
 ## 8. Side Effects
 
@@ -199,6 +239,7 @@ Storefront projection:
 - Storefront catalog, localization, and checkout projections change after the next Store API read/revalidation.
 - Orders created by checkout become visible in Medusa Admin.
 - Catalog correction preserves the legacy product/variant identity where possible, deletes only unreferenced duplicates, and hides referenced duplicates from Store API visibility.
+- Store normalization updates or creates one canonical Store, removes duplicate Store rows through Medusa's supported workflow, and intentionally leaves products, variants, prices, regions, sales channels, API keys, carts, and orders unchanged.
 - Future provider integrations may create side effects with payment, storage, search, monitoring, or fulfillment systems; those require dedicated integration flows before implementation.
 
 ## 9. Schemas Touched
@@ -216,6 +257,7 @@ Current files that inform the flow:
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` seeds initial admin-managed commerce data.
 - `backend/apps/backend/medusa-config.ts` configures Medusa backend environment and HTTP boundaries.
 - `backend/apps/backend/src/migration-scripts/update-product-cards.ts` performs the one-time, idempotent launch-collection catalog migration through Medusa execution context.
+- `backend/apps/backend/src/migration-scripts/normalize-store.ts` owns the reusable idempotent Store invariant and the operator-run production repair.
 - The launch correction maps `purple` to `amethyst` and `sun-chain` to `lagoon`; the seed continues to create only canonical handles on fresh databases.
 
 ## 10. Targeted Tests
@@ -228,6 +270,10 @@ Current files that inform the flow:
 | Backend migration smoke | Launch-collection update is rerunnable, preserves mapped product IDs, and exposes six published products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
 | Backend migration smoke | Existing Purple and Sun Chain IDs become Amethyst and Lagoon; redundant unreferenced canonical duplicates are removed | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
 | Backend migration safety | A duplicate with cart/order references is archived and unpublished instead of deleted; rerun remains idempotent | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration smoke | Empty Store state creates one Store with EUR default plus USD and RUB | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Pending implementation |
+| Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra Store rows, and converges identically on rerun | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Pending implementation |
+| Production safety | Store normalization leaves product/variant price, region, sales-channel, API-key, cart, and order identities/counts unchanged | Admin API snapshots plus PostgreSQL backup | Pending implementation |
+| Admin browser smoke | Product variant price editor exposes a RUB currency column through the default Medusa Admin | Production Medusa Admin | Pending implementation |
 
 ## 11. Implementation Plan
 
@@ -236,6 +282,9 @@ Current files that inform the flow:
 3. Keep product/cart/order/payment logic in Medusa modules, workflows, subscribers, and providers.
 4. Add backend integration tests for every custom admin mutation before exposing it to storefront flows.
 5. Correct the launch migration mappings to `purple` -> `amethyst` and `sun-chain` -> `lagoon`, preserving legacy IDs and converging duplicate states safely.
+6. Replace unconditional Store creation in the seed with the shared idempotent normalization function.
+7. Back up production, run normalization once, rerun it to prove convergence, and compare protected commerce snapshots before and after.
+8. Verify the default Admin product price editor exposes RUB; do not add custom UI or mutate a product price solely for the check.
 
 ## 12. Implementation Trace
 
@@ -258,6 +307,7 @@ Validation:
 - Which payment providers are required for launch per market?
 - Should publication be blocked when either RU or EN translation is missing, or is source-language fallback acceptable during rollout?
 - Should fulfillment, refunds, returns, and order transfer each receive dedicated flows before implementation?
+- Resolved 2026-07-28: the Store currency contract is EUR default plus USD and RUB; the oldest Store is preserved because Medusa Admin projects the first Store as active.
 
 ## 14. Review Checklist
 
@@ -269,3 +319,7 @@ Validation:
 - [x] Unsupported storefront locales remain ignored until routing explicitly enables them.
 - [x] Custom provider/integration decisions are open questions, not silently assumed.
 - [x] Catalog migration identity precedence and duplicate deletion/archive rules are explicit.
+- [x] Store normalization preserves the active Store identity, names exact allowed mutations, and rejects postcondition drift.
+- [x] Empty, duplicate, partial-failure, rerun, and protected-commerce-data paths are explicit.
+
+Flow review v2 (2026-07-28): **APPROVED**. The canonical Store selection, exact currency invariant, update-before-delete ordering, supported Medusa workflow boundary, protected commerce records, partial-failure/rerun behavior, concrete files, and production checks are explicit; no custom Admin UI or cross-flow event is introduced.
