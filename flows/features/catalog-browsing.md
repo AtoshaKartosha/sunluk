@@ -274,10 +274,10 @@ Current files that inform the flow:
 | Storefront unit | Product picture resolver prefers WebP, falls back to same-stem PNG, and preserves query strings | `storefront/src/lib/__tests__/product-image.test.tsx` | Passed 2026-08-11 |
 | Storefront UI/integration | Touch navigation never zooms; mouse zoom resets whenever gallery media changes | `storefront/src/lib/__tests__/product-gallery.test.ts` | Passed 2026-08-11 |
 | Storefront UI/integration | Zero-stock Dune and Silk cards remain visible as unavailable and cannot enter cart | `storefront/src/lib/__tests__/product-availability.test.tsx` | Passed 2026-08-11 |
-| Backend script smoke | `update-launch-inventory.ts` changes only Dune and Silk to zero and is convergent on rerun | `npx medusa exec ./src/scripts/update-launch-inventory.ts` from `backend/apps/backend` against an isolated database, twice | Pending deployment |
-| Backend migration smoke | `medusa db:migrate` completes without discovering or executing manual catalog seed/update scripts; the focused updater runs only when explicitly invoked | Production-built backend runtime followed by Store API inventory verification | Built-image path audit passed; production command pending |
+| Backend script smoke | `update-launch-inventory.ts` changes only Dune and Silk to zero and is convergent on rerun | `npx medusa exec ./src/scripts/update-launch-inventory.ts` from `backend/apps/backend` against an isolated database, twice | Passed in production: 2 levels updated, then 0 |
+| Backend migration smoke | `medusa db:migrate` completes without discovering or executing manual catalog seed/update scripts; the focused updater runs only when explicitly invoked | Production-built backend runtime followed by Store API inventory verification | Passed in production 2026-08-11 |
 | Storefront asset audit | Every current storefront and backend product/packaging media stem has both WebP and PNG bytes before deployment | `storefront/src/lib/__tests__/product-media-assets.test.ts` | Passed 2026-08-11 |
-| Storefront rendering | Shared product-picture path renders listing, PDP gallery, packaging, cart, checkout, and cabinet order images; no-WebP capability selects PNG | `product-image.test.tsx`, `product-media-assets.test.ts`, and named ProductImage callsites | Passed; live transactional-route smoke pending deployment |
+| Storefront rendering | Shared product-picture path renders listing, PDP gallery, packaging, cart, checkout, and cabinet order images; no-WebP capability selects PNG | `product-image.test.tsx`, `product-media-assets.test.ts`, and named ProductImage callsites | Passed; live catalog/PDP passed, transactional cart/checkout not submitted |
 | Storefront smoke | Hero, editorial, and about CTAs route to locale products; breadcrumb reads `КОЛЛЕКЦИЯ` / `COLLECTION`; card title is Medium and price is normal weight | Chrome landing smoke plus focused component assertions | Passed 2026-08-11 |
 
 ## 11. Implementation Plan
@@ -300,7 +300,7 @@ Current files that inform the flow:
 
 ## 12. Implementation Trace
 
-Current status: base catalog/PDP/media recovery and the 2026-08-11 release code are implemented. Manual data scripts now build under `/app/src/scripts/` while `/app/src/migration-scripts/` is empty; deploying the correction, rerunning schema migration, and explicitly applying Dune/Silk inventory remain.
+Current status: complete for the 2026-08-11 release. Manual data scripts build under `/app/src/scripts/` while `/app/src/migration-scripts/` is empty; production schema migration completed without replaying catalog data, and the explicit Dune/Silk inventory updater converged on its second run.
 
 Current implementation files:
 
@@ -356,9 +356,10 @@ Validation:
 - 2026-08-11 `npm run build:storefront` and `npm run build:backend` completed successfully.
 - 2026-08-11 `npm run lint` completed with zero errors and zero warnings.
 - Chrome production-build smoke at 375x667 passed for RU/EN hero layout and punctuation, all four localized `/products` CTAs, canonical Instagram URL, mobile menu outside/inside/Escape behavior, and four loaded WebP-preferred/PNG-fallback landing product pictures.
-- Live catalog/PDP/cart/checkout browser smoke could not run locally because PostgreSQL 16 binaries are absent and the checked-in local publishable key is not valid for production. The corresponding ordering, availability, gallery, cart, and phone contracts passed the full component suite; repeat live routes after deployment.
-- Production data command pending deployment: `npx medusa exec ./src/scripts/update-launch-inventory.js` from the built backend runtime, followed by Store API/PDP checks for visible unavailable Dune/Silk.
-- Migration-safe backend image audit listed all five manual commands under `/app/src/scripts/` and an empty `/app/src/migration-scripts/`; backend lint, 34 unit tests, build, and Docker build passed.
+- Production catalog and PDP smoke passed for RU collection plus RU Dune and EN Silk unavailable projections; cart/checkout mutation was intentionally not submitted against live commerce.
+- Production data command `npx medusa exec ./src/scripts/update-launch-inventory.js` updated two Dune/Silk inventory levels on the first run and zero on the second.
+- Production `npx medusa db:migrate` completed with every module up to date and only Medusa's own `create-super-admin-role.js` pending; no Sunluk manual data script was discovered. The migration-safe image audit listed all five manual commands under `/app/src/scripts/` and an empty `/app/src/migration-scripts/`.
+- Live `https://sunluk.ru/ru/products` exposed six canonical cards with Dune/Silk sold out; RU Dune and EN Silk PDPs disabled purchase controls, loaded visible media, and produced no browser console errors or HTTP responses at/above 400.
 
 Notes:
 
