@@ -54,17 +54,17 @@ const noHiddenContent = (html: string) => {
 
 describe("Landing reduced-motion safety", () => {
   it("hero content stays visible when reduced motion is on", () => {
-    const { container } = render(<HeroSection />);
+    const { container } = render(<HeroSection locale="ru" />);
     expect(noHiddenContent(container.innerHTML)).toBe(true);
   });
 
   it("editorial models stay visible when reduced motion is on", () => {
-    const { container } = render(<EditorialSection />);
+    const { container } = render(<EditorialSection locale="ru" />);
     expect(noHiddenContent(container.innerHTML)).toBe(true);
   });
 
   it("about image/text stay visible when reduced motion is on", () => {
-    const { container } = render(<AboutSection />);
+    const { container } = render(<AboutSection locale="ru" />);
     expect(noHiddenContent(container.innerHTML)).toBe(true);
   });
 

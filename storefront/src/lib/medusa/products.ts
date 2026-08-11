@@ -114,6 +114,31 @@ function ensureRegion(region: ResolvedRegion): asserts region is { regionId: str
 // ponytail: Packaging category handle is the source of truth for packaging discovery.
 const PACKAGING_CATEGORY_HANDLE = "packaging";
 
+const CANONICAL_PRODUCT_ORDER: Record<string, number | undefined> = {
+  lagoon: 0,
+  azure: 1,
+  amethyst: 2,
+  luna: 3,
+  dune: 4,
+  silk: 5,
+};
+
+/** Sort launch products first, then any other products by their stable handle. */
+export function orderProducts<T extends { handle: string }>(products: T[]): T[] {
+  return [...products].sort((a, b) => {
+    const aOrder = CANONICAL_PRODUCT_ORDER[a.handle];
+    const bOrder = CANONICAL_PRODUCT_ORDER[b.handle];
+
+    if (aOrder !== undefined || bOrder !== undefined) {
+      if (aOrder === undefined) return 1;
+      if (bOrder === undefined) return -1;
+      return aOrder - bOrder;
+    }
+
+    return a.handle < b.handle ? -1 : a.handle > b.handle ? 1 : 0;
+  });
+}
+
 
 function isPackagingProduct(p: { categories?: ProductCategory[] | null }): boolean {
   return p.categories?.some((c) => c.handle === PACKAGING_CATEGORY_HANDLE) ?? false;
@@ -160,9 +185,11 @@ export async function listProducts(
     count: number;
   };
 
-  const filteredProducts = data.products.filter((p) => !isPackagingProduct(p));
+  const products = orderProducts(
+    data.products.filter((p) => !isPackagingProduct(p)),
+  );
 
-  return { products: filteredProducts, count: filteredProducts.length };
+  return { products, count: products.length };
 }
 
 /**
@@ -224,9 +251,9 @@ export async function listRelatedProducts(
     count: number;
   };
 
-  return data.products
-    .filter((p) => p.handle !== excludeHandle && !isPackagingProduct(p))
-    .slice(0, limit);
+  return orderProducts(
+    data.products.filter((p) => p.handle !== excludeHandle && !isPackagingProduct(p)),
+  ).slice(0, limit);
 }
 
 /**

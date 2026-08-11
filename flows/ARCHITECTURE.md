@@ -30,8 +30,8 @@ flowchart LR
   end
 
   subgraph Addons["Product Add-ons\nflows/features/product-addons.md"]
-    O0[Add-on product fetched]
-    O1[Add-on product added to cart]
+    O0[Packaging options resolved]
+    O1[cart:line-item-add-requested emitted]
   end
 
   subgraph Admin["Admin Operations\nflows/features/admin-operations.md"]
@@ -60,19 +60,25 @@ flowchart LR
     S1[Metadata and sitemap projected]
     S2[Search crawler response]
   end
+  subgraph Navigation["Storefront Navigation\nflows/features/storefront-navigation.md"]
+    N0[Mobile menu closed]
+    N1[Mobile menu open]
+  end
+
   Admin -- "catalog:published" --> Catalog
   Admin -- "catalog:published" --> Localization
   Admin -- "catalog:translation-published" --> Localization
   Localization -- "catalog:localized-content-ready" --> Catalog
   Admin -- "commerce:settings-updated" --> Cart
   Catalog -- "cart:item-selected" --> Addons
-  Addons -- "cart:line-items-added" --> Cart
+  Addons -- "cart:line-item-add-requested" --> Cart
   Cart -- "order:placed" --> Admin
   Cart -- "order:placed" --> Cabinet
   Catalog -. "catalog:indexable-route-projection" .-> SEO
   Localization -. "catalog:locale-routing-map" .-> SEO
   T0 -. "fallback content" .-> T2
   T1 -. "site-content:projection-selected" .-> T2
+```
 
 ## Cross-flow contracts
 | Source | Event/data | Target | Notes |
@@ -82,14 +88,15 @@ flowchart LR
 | Admin Operations | `catalog:translation-published` | Catalog Localization | Payload: `{ productIds, locales }`. Admin saves localized product content in Medusa for supported storefront locales. |
 | Catalog Localization | `catalog:localized-content-ready` | Catalog Browsing | Payload: `{ locale, medusaLocale, fallbackProductIds? }`. Catalog UI renders localized product content or explicit source fallback. |
 | Admin Operations | `commerce:settings-updated` | Cart and Checkout | Payload: `{ regionIds?, shippingOptionIds?, paymentProviderIds?, priceListIds? }`. Cart and checkout revalidate through Medusa before mutation/completion. |
-| Catalog Browsing | `cart:item-selected` | Product Add-ons | Payload: `{ variantId, quantity, packagingVariantId? }`. Selection of variant and chosen packaging on PDP. |
-| Product Add-ons | `cart:line-items-added` | Cart and Checkout | Payload: `{ mainLineItem, packagingLineItem? }`. Line items successfully created and linked in Cart. |
+| Catalog Browsing | `cart:item-selected` | Product Add-ons | Payload: `{ productId, variantId, quantity, regionId }`. Catalog resolves the available main variant; Product Add-ons resolves the preselected or visitor-selected packaging variant. |
+| Product Add-ons | `cart:line-item-add-requested` | Cart and Checkout | Payload: `{ variantId, quantity, metadata? }`. Product Add-ons calls once for the main line and, after resolving its returned parent id, optionally again for linked packaging; Cart owns each Medusa mutation and authoritative response. |
 | Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |
 | Cart and Checkout | `order:placed` | Admin Operations | Payload: `{ orderId, cartId, customerId? }`; order appears in Medusa admin/order management. |
 | CI/CD | None | Commerce flows | Infrastructure-only v0; it does not emit or consume commerce domain events. |
-| Catalog Browsing | `catalog:indexable-route-projection` | SEO Readiness | Read-only shared data: `{ locale, path, productHandle?, product? }`. Only public, published storefront routes may enter search projections. |
-| Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, stableProductHandles }`. Canonical and language alternates use the configured locale prefixes. |
+| Catalog Browsing | `catalog:indexable-route-projection` | SEO Readiness | Read-only shared data: `{ locale, path, productHandle?, product? }`. Public, published, sales-channel-visible products remain indexable when zero stock; availability is projected separately. |
+| Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, localeMarketDefaults, stableProductHandles }`. Canonical/language alternates use configured prefixes; v0 locale market defaults affect catalog region resolution only when no explicit country is supplied. |
 | Site Content | None | Commerce flows | Presentation-only localized overrides; checked-in defaults remain available and no commerce-domain event is emitted. |
+| Storefront Navigation | None | Commerce flows | Local presentation/navigation state only; locale-prefixed destinations remain code-owned and no commerce-domain event is emitted. |
 
 ## Non-negotiables
 
@@ -108,3 +115,5 @@ flowchart LR
 - CI/CD automation: `flows/integrations/ci-cd.md`.
 - Storefront SEO readiness: `flows/features/seo-readiness.md`.
 - Localized site-content overrides: `flows/features/site-content.md`.
+- Mobile menu navigation behavior: `flows/features/storefront-navigation.md`.
+- 2026-08-11 release: Catalog emits `cart:item-selected` to Product Add-ons, Product Add-ons emits one or two `cart:line-item-add-requested` calls to Cart, visible zero-stock products remain indexable, and Storefront Navigation has no commerce boundary. Final storefront suite (128 tests), storefront/backend builds, global lint with zero warnings, production robots smoke, and mobile Chrome smoke passed for locally reachable routes.

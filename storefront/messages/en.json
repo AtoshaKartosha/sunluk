@@ -28,8 +28,8 @@
       }
     },
     "hero": {
-      "title1": "CHANGE YOURSELF.",
-      "title2": "EXPRESS YOURSELF.",
+      "title1": "CHANGE YOURSELF",
+      "title2": "EXPRESS YOURSELF",
       "subtitle1": "Eyewear accessories",
       "subtitle2": "that become part of your style.",
       "cta": "VIEW COLLECTION"
@@ -92,7 +92,7 @@
     }
   },
   "catalog": {
-    "breadcrumb": "CATALOG",
+    "breadcrumb": "COLLECTION",
     "heading": "ALL PRODUCTS",
     "pageTitle": "SUNLUK — All Products",
     "pageDescription": "SUNLUK eyewear accessories catalog: cases, cords, cloths and kits. Choose your accessory.",
@@ -343,7 +343,8 @@
       "phoneOptional": "Phone (optional)",
       "validation": {
         "required": "Required field",
-        "email": "Enter a valid email address"
+        "email": "Enter a valid email address",
+        "phone": "Enter a valid phone number"
       }
     },
     "shipping": {
@@ -415,7 +416,8 @@
     "shipping": "Shipping",
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
-    "remove": "Remove"
+    "remove": "Remove",
+    "continueShopping": "ADD 1 MORE ACCESSORY"
   },
   "badge": {
     "in_stock": "Back in stock",

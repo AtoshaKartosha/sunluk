@@ -6,6 +6,7 @@ import {
   buildRouteMetadata,
   safeJsonLd,
 } from "../seo";
+import robots from "../../app/robots";
 
 describe("siteOrigin", () => {
   const original = process.env.NEXT_PUBLIC_SITE_URL;
@@ -26,6 +27,15 @@ describe("siteOrigin", () => {
   it("uses NEXT_PUBLIC_SITE_URL and trims trailing slashes", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com///";
     expect(siteOrigin()).toBe("https://example.com");
+  });
+});
+
+describe("robots", () => {
+  it("allows crawling while exposing the absolute sitemap", () => {
+    expect(robots()).toEqual({
+      rules: { userAgent: "*", allow: "/" },
+      sitemap: "https://sunluk.com/sitemap.xml",
+    });
   });
 });
 

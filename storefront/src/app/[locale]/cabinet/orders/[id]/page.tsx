@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, CheckCircle, AlertCircle, XCircle, Truck } from "lucide-react";
 import { getCustomer, getCustomerOrder } from "@/lib/medusa/customer-server";
 import { getTranslations } from "next-intl/server";
@@ -264,7 +264,7 @@ export default async function OrderDetailPage({
                           <td className="px-6 sm:px-8 py-4">
                             <div className="flex items-center gap-4">
                               {mainItem.thumbnail ? (
-                                <Image
+                                <ProductImage
                                   src={mainItem.thumbnail}
                                   alt={mainItem.title || "Product thumbnail"}
                                   width={48}

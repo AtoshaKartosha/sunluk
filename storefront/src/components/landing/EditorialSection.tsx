@@ -1,11 +1,17 @@
 "use client";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import type { Locale } from "@/i18n/routing";
 import { ArrowRightIcon } from "./icons";
 import Image from "next/image";
+import Link from "next/link";
 import { useEntrance } from "./use-entrance";
 
-export function EditorialSection() {
+interface EditorialSectionProps {
+  locale: Locale;
+}
+
+export function EditorialSection({ locale }: EditorialSectionProps) {
   const t = useTranslations("home");
   const animate = useEntrance();
 
@@ -130,13 +136,13 @@ export function EditorialSection() {
                 {t("editorial.description")}
               </p>
             </div>
-            <a 
-              href="#collection" 
+            <Link
+              href={`/${locale}/products`}
               className="inline-flex items-center text-xs font-medium tracking-widest uppercase text-[#5a3828] hover:text-[#2c211b] mt-6 group"
             >
               {t("editorial.cta")}
               <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </Link>
           </motion.div>
         </div>
       </div>

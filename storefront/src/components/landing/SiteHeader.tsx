@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { getNavLinks } from "@/lib/landing-data";
 import type { NavLinkData } from "@/lib/landing-data";
@@ -40,15 +41,60 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
   const t = useTranslations("header");
 
   const { itemCount, openCart } = useCart();
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setMobileMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    desktop.addEventListener("change", closeOnDesktop);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      desktop.removeEventListener("change", closeOnDesktop);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
 
   return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-[#2c211b]/10 transition-all duration-300">
+    <>
+      {mobileMenuOpen && (
+        <div
+          data-testid="mobile-menu-backdrop"
+          className="fixed inset-0 z-40 bg-transparent md:hidden"
+          aria-hidden="true"
+          onClick={(event) => {
+            event.stopPropagation();
+            setMobileMenuOpen(false);
+          }}
+        />
+      )}
+      <header
+        className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-[#2c211b]/10 transition-all duration-300"
+        onClickCapture={(event) => {
+          if (
+            mobileMenuOpen &&
+            !(event.target as Element).closest(
+              "#mobile-navigation-menu, [aria-controls='mobile-navigation-menu']",
+            )
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            setMobileMenuOpen(false);
+          }
+        }}
+      >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 h-20 flex items-center justify-between">
 
         {/* Logo */}
         <Link href={`/${locale}`} className="flex items-center group">
-          <img
+          <Image
             src={locale === "ru" ? "/images/sunluk_logo_cyrillic.svg" : "/images/sunluk_logo.svg"}
+            width={locale === "ru" ? 1201 : 1212}
+            height={202}
             alt="Sunluk"
             className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-10"
           />
@@ -65,11 +111,11 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
         <div className="flex items-center gap-3 sm:gap-6">
           {/* ponytail: swap # for real Telegram / Max handles when known */}
           <a href="https://t.me/" target="_blank" rel="noreferrer noopener" aria-label={t("telegram")} className="p-1.5 opacity-70 hover:opacity-100 transition-opacity duration-200">
-            <img src="/images/telegram.svg" alt="" className="w-6 h-6" />
+            <Image src="/images/telegram.svg" width={24} height={24} alt="" className="w-6 h-6" />
           </a>
           {locale === "ru" && (
             <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" aria-label={t("max")} className="p-1.5 opacity-70 hover:opacity-100 transition-opacity duration-200">
-              <img src="/images/max.svg" alt="" className="w-5 h-5" />
+              <Image src="/images/max.svg" width={720} height={720} alt="" className="w-5 h-5" />
             </a>
           )}
           <button
@@ -94,6 +140,8 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden text-[#2c211b] hover:text-[#2f6f78] p-1.5 transition-colors"
             aria-label={mobileMenuOpen ? t("closeMenu") : t("openMenu")}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-menu"
           >
             {mobileMenuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
           </button>
@@ -102,7 +150,10 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
 
       {/* Mobile Navigation Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-background border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto">
+        <div
+          id="mobile-navigation-menu"
+          className="md:hidden absolute top-full left-0 w-full bg-background border-b border-[#2c211b]/10 py-6 px-4 flex flex-col gap-5 text-sm font-medium tracking-widest text-center shadow-lg animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto"
+        >
           {links.map((link) => (
             <NavLink
               key={link.href}
@@ -117,6 +168,7 @@ export default function SiteHeader({ navLinks }: { navLinks?: NavLinkData[] }) {
           </div>
         </div>
       )}
-    </header>
+      </header>
+    </>
   );
 }

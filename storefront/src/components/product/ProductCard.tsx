@@ -1,10 +1,10 @@
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import Link from "next/link";
 import type { StoreProduct } from "./types";
 import { ProductBadge } from "./ProductBadge";
 import { PriceDisplay } from "./PriceDisplay";
 import type { Locale } from "@/i18n/routing";
-import { cheapestVariantPrice } from "@/lib/price";
+import { cheapestVariantPrice, projectAvailability } from "@/lib/price";
 
 interface ProductCardProps {
   product: StoreProduct;
@@ -14,6 +14,9 @@ interface ProductCardProps {
 export function ProductCard({ product, locale }: ProductCardProps) {
   const src = product.thumbnail ?? product.images?.[0]?.url;
   const price = cheapestVariantPrice(product.variants);
+  const isUnavailable =
+    !!product.variants?.length &&
+    !product.variants.some((variant) => projectAvailability(variant).available);
 
   const href = `/${locale ?? "ru"}/products/${product.handle}`;
 
@@ -24,9 +27,15 @@ export function ProductCard({ product, locale }: ProductCardProps) {
     >
       {/* Image */}
       <div className="aspect-[4/5] overflow-hidden bg-[#f4ebe6] mb-3 sm:mb-4 relative">
-        <ProductBadge badge={String(product.metadata?.badge ?? "")} />
+        <ProductBadge
+          badge={
+            isUnavailable
+              ? "sold_out"
+              : String(product.metadata?.badge ?? "")
+          }
+        />
         {src ? (
-          <Image
+          <ProductImage
             src={src}
             alt={product.title}
             fill
@@ -43,7 +52,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
       </div>
 
       {/* Info */}
-      <h3 className="font-serif text-xs sm:text-base font-bold text-[#2c211b] mb-1 group-hover:text-[#2f6f78] transition-colors">
+      <h3 className="font-serif text-xs sm:text-base font-medium text-[#2c211b] mb-1 group-hover:text-[#2f6f78] transition-colors">
         {product.title}
       </h3>
 
@@ -54,7 +63,7 @@ export function ProductCard({ product, locale }: ProductCardProps) {
       )}
 
       <div className="mt-auto">
-        <PriceDisplay price={price} className="text-xs sm:text-base" />
+        <PriceDisplay price={price} className="text-xs sm:text-base font-normal!" />
       </div>
     </Link>
   );

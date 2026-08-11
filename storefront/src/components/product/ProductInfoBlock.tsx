@@ -5,7 +5,7 @@ import { useLocale } from "next-intl";
 import type { StoreProduct, CalculatedPrice, ProductVariant, StockInfo } from "./types";
 import { PriceDisplay, formatPriceValue } from "./PriceDisplay";
 import { VariantSelector } from "./VariantSelector";
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import { Package } from "lucide-react";
 import { projectAvailability } from "@/lib/price";
 export interface ProductInfoBlockLabels {
@@ -102,6 +102,17 @@ interface ProductInfoBlockProps {
   price: CalculatedPrice | null;
   labels?: ProductInfoBlockLabels;
   packagingProducts?: StoreProduct[];
+}
+
+function isSelectablePackaging(product: StoreProduct, variant: ProductVariant | undefined): variant is ProductVariant {
+  const price = variant?.calculated_price;
+  return Boolean(
+    variant?.id &&
+    product.handle !== "gift-box" &&
+    projectAvailability(variant).available &&
+    price?.calculated_amount != null &&
+    price?.currency_code,
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -246,14 +257,13 @@ export function ProductInfoBlock({
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
   const [selectionValid, setSelectionValid] = useState(false);
   const [mobileBarVisible, setMobileBarVisible] = useState(false);
-  // ponytail: default to the free branded pouch (brand-pouch) — gift-box is disabled, colored pouches are paid
-  const [selectedPackaging, setSelectedPackaging] = useState<string>("brand-pouch");
-
-
+  // ponytail: default to the free velvet pouch; unavailable choices never reach the cart
+  const [selectedPackaging, setSelectedPackaging] = useState<string>("velvet-pouch");
 
   const selectedPackagingVariantId = useMemo(() => {
     const pkgProduct = packagingProducts?.find((p) => p.handle === selectedPackaging);
-    return pkgProduct?.variants?.[0]?.id ?? null;
+    const variant = pkgProduct?.variants?.[0];
+    return pkgProduct && isSelectablePackaging(pkgProduct, variant) ? variant.id : null;
   }, [selectedPackaging, packagingProducts]);
 
   const onOptionChangeRef = useRef<((optionId: string, value: string) => void) | null>(null);
@@ -419,18 +429,19 @@ export function ProductInfoBlock({
                 const isSelected = selectedPackaging === p.handle;
                 if (!variant) return null;
 
-                // ponytail: shared availability projection (single source of truth)
+                const isSelectable = isSelectablePackaging(p, variant);
                 const isInStock = projectAvailability(variant).available;
                 // ponytail: gift-box is temporarily unavailable (not produced yet) — show as disabled with 'coming soon' label
                 const isComingSoon = p.handle === "gift-box";
-                const isSelectable = isInStock && !isComingSoon;
-
                 const amount = variant.calculated_price?.calculated_amount;
                 const currency = variant.calculated_price?.currency_code;
-                const isFree = !amount;
-                const priceText = (isFree || !amount || !currency)
+                const hasPrice = amount != null && Boolean(currency);
+                const isFree = hasPrice && amount === 0;
+                const priceText = isFree
                   ? labels.packagingFree
-                  : `+ ${formatPriceValue(amount, currency, locale)}`;
+                  : amount != null && currency
+                    ? `+ ${formatPriceValue(amount, currency, locale)}`
+                    : "";
 
                 const displayText = isComingSoon
                   ? labels.packagingComingSoon || (locale === "en" ? "Coming soon" : "Скоро в наличии")
@@ -456,7 +467,7 @@ export function ProductInfoBlock({
                   >
                     <div className="relative w-20 h-20 flex-shrink-0 bg-[#f4ebe6] overflow-hidden flex items-center justify-center">
                       {imageUrl ? (
-                        <Image
+                        <ProductImage
                           src={imageUrl}
                           alt={p.title}
                           fill

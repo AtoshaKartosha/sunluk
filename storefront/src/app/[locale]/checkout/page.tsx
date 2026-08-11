@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { ChevronDown } from "lucide-react";
@@ -61,6 +61,12 @@ const EMPTY_ADDRESS: ContactShippingFormState = {
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const E164_PHONE_RE = /^\+[1-9]\d{6,14}$/;
+
+function normalizePhone(value: string): string {
+  return value.replace(/[\s().-]/g, "");
+}
+
 
 const REQUIRED_FIELDS: (keyof ContactShippingFormState)[] = [
   "email",
@@ -70,6 +76,7 @@ const REQUIRED_FIELDS: (keyof ContactShippingFormState)[] = [
   "city",
   "postal_code",
   "country_code",
+  "phone",
 ];
 
 const FIELD_IDS: Record<keyof ContactShippingFormState, string> = {
@@ -442,6 +449,9 @@ export default function CheckoutPage() {
 
   const validateField = useCallback(
     (field: keyof ContactShippingFormState, value: string): string | undefined => {
+      if (field === "phone" && !E164_PHONE_RE.test(normalizePhone(value))) {
+        return tc("validation.phone");
+      }
       if (REQUIRED_FIELDS.includes(field) && !value.trim()) {
         return tc("validation.required");
       }
@@ -484,7 +494,7 @@ export default function CheckoutPage() {
           city: contactForm.city,
           postal_code: contactForm.postal_code,
           country_code: contactForm.country_code,
-          phone: contactForm.phone,
+          phone: normalizePhone(contactForm.phone),
         };
 
         const updatedCart = await updateCart(cart.id, {
@@ -933,20 +943,25 @@ export default function CheckoutPage() {
                       htmlFor="checkout-phone"
                       className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
                     >
-                      {tc("phoneOptional")}
+                      {tc("phone")} *
                     </label>
                     <input
                       id="checkout-phone"
                       type="tel"
+                      aria-required="true"
                       autoComplete="tel"
                       enterKeyHint="done"
                       value={contactForm.phone}
                       onChange={(e) =>
                         updateContactField("phone", e.target.value)
                       }
+                      onBlur={() => handleFieldBlur("phone")}
+                      aria-invalid={!!fieldErrors.phone || undefined}
+                      aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
                       className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors"
                       placeholder={tc("phonePlaceholder")}
                     />
+                    {fieldErrorEl("phone")}
                   </div>
                 </div>
       
@@ -1239,7 +1254,7 @@ export default function CheckoutPage() {
                       <li key={mainItem.id} className="flex gap-4">
                         {mainItem.thumbnail && (
                           <div className="w-14 h-14 shrink-0 bg-[#f4ebe6] overflow-hidden">
-                            <Image
+                            <ProductImage
                               src={mainItem.thumbnail}
                               alt={mainItem.title || "Product thumbnail"}
                               width={56}

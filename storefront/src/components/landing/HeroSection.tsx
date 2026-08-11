@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { previousPathname, stripLocalePrefix } from "@/components/navigation/pathname-history";
+import type { Locale } from "@/i18n/routing";
 import { CharReveal } from "./char-reveal";
 import { ArrowRightIcon } from "./icons";
 import { useEntrance } from "./use-entrance";
-export function HeroSection() {
+
+const MotionLink = motion.create(Link);
+
+interface HeroSectionProps {
+  locale: Locale;
+}
+export function HeroSection({ locale }: HeroSectionProps) {
   const t = useTranslations("home");
   const pathname = usePathname();
   const playIntroAnimation =
@@ -39,15 +47,15 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[350px] lg:min-h-[440px] flex flex-col bg-background overflow-hidden">
+    <section className="relative flex flex-col overflow-hidden bg-background md:min-h-[350px] lg:min-h-[440px]">
       {/* Hero Contents */}
-      <div className="relative flex-1 flex items-center pt-10 md:pt-16 pb-2.5">
+      <div className="relative flex flex-col pb-2.5 md:flex-1 md:items-center md:pt-16">
         {/* Hero video / split layout */}
         <motion.div
           initial={intro ? { opacity: 0, scale: 1.08 } : false}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute inset-y-0 right-0 h-full w-full overflow-visible md:w-[52%]"
+          className="relative aspect-[4/3] w-full overflow-hidden md:absolute md:inset-y-0 md:right-0 md:h-full md:w-[52%] md:aspect-auto md:overflow-visible"
         >
           <div 
             onClick={handleNextSlide}
@@ -77,14 +85,14 @@ export function HeroSection() {
           </div>
           <div className="pointer-events-none absolute inset-y-0 -left-16 z-10 hidden w-[38%] bg-[linear-gradient(to_right,var(--color-background)_0%,var(--color-background)_55%,transparent_100%)] backdrop-blur-md [mask-image:linear-gradient(to_right,black_0%,black_55%,transparent_100%)] md:block" />
         </motion.div>
-        <div className="relative max-w-[1600px] mx-auto px-4 sm:px-10 lg:px-16 z-20 w-full pointer-events-none">
+        <div className="relative z-20 mx-auto w-full max-w-[1600px] px-4 py-8 pointer-events-none sm:px-10 md:py-0 lg:px-16">
           <motion.div 
             initial={intro ? { opacity: 0 } : false}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl flex flex-col items-start gap-6 sm:gap-8 bg-[#2c211b]/50 backdrop-blur-md border border-white/15 p-6 sm:p-8 md:p-0 md:bg-transparent md:backdrop-blur-none md:border-none shadow-[0_20px_60px_rgba(44,33,27,0.18)] md:shadow-none pointer-events-auto"
+            className="flex w-full max-w-xl flex-col items-start gap-6 pointer-events-auto sm:gap-8 md:max-w-2xl lg:max-w-3xl"
           >
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#f4ebe6] md:text-[#2c211b] [text-shadow:0_1px_2px_rgba(44,33,27,0.45)] md:[text-shadow:none] w-full">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b] w-full">
               <CharReveal
                 text={t("hero.title1")}
                 stagger={0.018}
@@ -103,7 +111,7 @@ export function HeroSection() {
                 playAnimation={intro}
               />
             </h1>
-            <p className="text-base sm:text-lg leading-relaxed text-[#f4ebe6]/90 md:text-[#2c211b]/80 [text-shadow:0_1px_2px_rgba(44,33,27,0.45)] md:[text-shadow:none] max-w-md w-full">
+            <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-md w-full">
               <CharReveal
                 text={t("hero.subtitle1")}
                 stagger={0.01}
@@ -122,18 +130,18 @@ export function HeroSection() {
                 playAnimation={intro}
               />
             </p>
-            <motion.a 
+            <MotionLink
               initial={intro ? { opacity: 0 } : false}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.75, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              href="#collection"
+              href={`/${locale}/products`}
               className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg hover:translate-y-[-2px] group"
             >
               {t("hero.cta")}
               <ArrowRightIcon className="w-4 h-4 ml-3 group-hover:translate-x-1.5 transition-transform" />
-            </motion.a>
+            </MotionLink>
           </motion.div>
         </div>
       </div>

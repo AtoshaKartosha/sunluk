@@ -1450,12 +1450,33 @@ export default async function initial_data_seed({
     entity: "inventory_item",
     fields: ["id"],
   });
+  const { data: launchProducts } = await query.graph({
+    entity: "product",
+    fields: ["variants.inventory_items.inventory_item_id"],
+    filters: {
+      handle: ["dune", "silk"],
+    },
+  });
+  const launchInventoryItemIds = new Set(
+    launchProducts.flatMap((product) =>
+      product.variants.flatMap((variant) =>
+        variant.inventory_items?.flatMap((item) =>
+          item?.inventory_item_id ? [item.inventory_item_id] : []
+        ) ?? []
+      )
+    )
+  );
+  if (launchInventoryItemIds.size !== 2) {
+    throw new Error(
+      `Expected Dune and Silk to create two inventory items, found ${launchInventoryItemIds.size}.`
+    );
+  }
 
   await createInventoryLevelsWorkflow(container).run({
     input: {
       inventory_levels: inventoryItems.map((item) => ({
         location_id: stockLocation.id,
-        stocked_quantity: 1000000,
+        stocked_quantity: launchInventoryItemIds.has(item.id) ? 0 : 1000000,
         inventory_item_id: item.id,
       })),
     },

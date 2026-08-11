@@ -1,5 +1,24 @@
-import { describe, it, expect } from "vitest";
-import { collectSources, calculateZoomPosition } from "../../components/product/ProductGallery";
+import { createElement } from "react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import {
+  calculateZoomPosition,
+  collectSources,
+  ProductGallery,
+} from "../../components/product/ProductGallery";
 
 describe("Product Gallery Image Sources Collection", () => {
   it("handles null or undefined images list and returns only the thumbnail", () => {
@@ -64,5 +83,173 @@ describe("Product Gallery Zoom Coordinate Calculations", () => {
   it("handles a bounding box with zero dimensions gracefully", () => {
     const zeroRect = { left: 100, top: 200, width: 0, height: 0 };
     expect(calculateZoomPosition(150, 250, zeroRect)).toEqual({ x: 50, y: 50 });
+  });
+});
+
+describe("Product Gallery Pointer Zoom Behavior", () => {
+  let desktopZoomMatches = true;
+
+  beforeEach(() => {
+    desktopZoomMatches = true;
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: desktopZoomMatches,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  const images = [
+    { id: "1", url: "/chain-1.webp" },
+    { id: "2", url: "/chain-2.webp" },
+  ];
+
+  function renderGallery(nextImages = images) {
+    return render(
+      createElement(ProductGallery, {
+        images: nextImages,
+        title: "Chain",
+      }),
+    );
+  }
+
+  function getHero(): HTMLDivElement {
+    return screen.getByRole("button", { name: "Previous image" })
+      .parentElement as HTMLDivElement;
+  }
+
+  function getHeroImage(index: number): HTMLImageElement {
+    return screen.getByAltText(
+      `Chain — image ${index}`,
+    ) as HTMLImageElement;
+  }
+
+  function enterDesktopZoom(hero: HTMLDivElement) {
+    fireEvent.pointerEnter(hero, { pointerType: "mouse" });
+  }
+
+  it("shows the complete image below lg and zooms from mouse coordinates on desktop", () => {
+    renderGallery();
+    const hero = getHero();
+    const image = getHeroImage(1);
+    Object.defineProperty(hero, "getBoundingClientRect", {
+      value: () => ({
+        left: 100,
+        top: 200,
+        width: 200,
+        height: 100,
+      }),
+    });
+
+    expect(image).toHaveClass("object-contain", "lg:object-cover");
+    enterDesktopZoom(hero);
+    fireEvent.pointerMove(hero, {
+      pointerType: "mouse",
+      clientX: 150,
+      clientY: 225,
+    });
+
+    expect(image).toHaveStyle({
+      transform: "scale(1.5)",
+      transformOrigin: "25% 25%",
+    });
+  });
+
+  it("does not zoom for touch pointers or mouse pointers below lg", () => {
+    renderGallery();
+    const hero = getHero();
+    const image = getHeroImage(1);
+
+    fireEvent.pointerEnter(hero, { pointerType: "touch" });
+    expect(image).toHaveStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+
+    desktopZoomMatches = false;
+    fireEvent.pointerEnter(hero, { pointerType: "mouse" });
+    expect(image).toHaveStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+  });
+
+  it("resets zoom and origin for arrows, thumbnails, and swipes", () => {
+    renderGallery();
+    const hero = getHero();
+
+    enterDesktopZoom(hero);
+    fireEvent.pointerMove(hero, {
+      pointerType: "mouse",
+      clientX: 1,
+      clientY: 1,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next image" }));
+    expect(getHeroImage(2)).toHaveStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+
+    fireEvent.pointerLeave(hero, { pointerType: "mouse" });
+    enterDesktopZoom(hero);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Chain — image 1" })[0],
+    );
+    expect(getHeroImage(1)).toHaveStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+
+    fireEvent.pointerLeave(hero, { pointerType: "mouse" });
+    enterDesktopZoom(hero);
+    fireEvent.touchStart(hero, { touches: [{ clientX: 200 }] });
+    fireEvent.touchEnd(hero, { changedTouches: [{ clientX: 100 }] });
+    expect(getHeroImage(2)).toHaveStyle({
+      transform: "scale(1)",
+      transformOrigin: "center",
+    });
+  });
+
+  it("resets zoom and selection when the image sources change", async () => {
+    const gallery = renderGallery();
+    const hero = getHero();
+    fireEvent.click(screen.getByRole("button", { name: "Next image" }));
+    expect(getHeroImage(2).parentElement?.parentElement).toHaveClass(
+      "opacity-100",
+    );
+    enterDesktopZoom(hero);
+    expect(getHeroImage(2)).toHaveStyle({ transform: "scale(1.5)" });
+
+    gallery.rerender(
+      createElement(ProductGallery, {
+        images: [
+          { id: "3", url: "/new-chain-1.webp" },
+          { id: "4", url: "/new-chain-2.webp" },
+        ],
+        title: "Chain",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(getHeroImage(1)).toHaveStyle({
+        transform: "scale(1)",
+        transformOrigin: "center",
+      });
+      expect(getHeroImage(1).parentElement?.parentElement).toHaveClass(
+        "opacity-100",
+      );
+    });
   });
 });

@@ -49,13 +49,7 @@ export default async function HomePage({ params }: HomePageProps) {
         const region = await resolveRegion(undefined, medusaLocale);
         if (region && !("type" in region)) {
           const result = await listProducts(region, medusaLocale);
-          prod = (result.products as (import("@/lib/medusa/products").ProductListItem & { created_at?: string })[])
-            .sort(
-              (a, b) =>
-                new Date(b.created_at || "").getTime() -
-                new Date(a.created_at || "").getTime()
-            )
-            .slice(0, 4) as unknown as StoreProduct[];
+          prod = result.products.slice(0, 4) as unknown as StoreProduct[];
         }
       } catch (error) {
         console.error("Error fetching homepage products:", error);
@@ -90,11 +84,11 @@ export default async function HomePage({ params }: HomePageProps) {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(siteJsonLd) }}
       />
       <SiteHeader navLinks={getNavLinks(loc, true, overrides)} />
-      <HeroSection />
-      <EditorialSection />
+      <HeroSection locale={loc} />
+      <EditorialSection locale={loc} />
       <CollectionSection locale={loc} products={products} />
       <FeaturesSection />
-      <AboutSection />
+      <AboutSection locale={loc} />
       <ContactsSection />
       <NewsletterSection />
       <SiteFooter

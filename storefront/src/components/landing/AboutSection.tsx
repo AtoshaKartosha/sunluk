@@ -1,11 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { Locale } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import Link from "next/link";
 import { useEntrance } from "./use-entrance";
 
-export function AboutSection() {
+const MotionLink = motion.create(Link);
+
+interface AboutSectionProps {
+  locale: Locale;
+}
+
+export function AboutSection({ locale }: AboutSectionProps) {
   const t = useTranslations("home");
   const animate = useEntrance();
 
@@ -56,14 +64,14 @@ export function AboutSection() {
           <p className="text-base sm:text-lg leading-relaxed text-[#2c211b]/80 max-w-lg">
             {t("about.description")}
           </p>
-          <motion.a
-            href="#collection"
+          <MotionLink
+            href={`/${locale}/products`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="inline-flex items-center justify-center px-10 py-4 bg-[#5a3828] text-white hover:bg-[#2c211b] text-xs font-medium tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-lg mt-4 rounded-none cursor-pointer"
           >
             {t("about.cta")}
-          </motion.a>
+          </MotionLink>
         </motion.div>
       </div>
     </section>

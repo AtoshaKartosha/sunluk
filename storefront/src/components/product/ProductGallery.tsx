@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import Image from "next/image";
-import type { ProductImage } from "./types";
+import { ProductImage } from "@/components/product/ProductImage";
+import type { ProductImage as ProductImageData } from "./types";
 
 interface ProductGalleryProps {
-  images: ProductImage[] | null | undefined;
+  images: ProductImageData[] | null | undefined;
   thumbnail?: string | null;
   title: string;
 }
 
 export function collectSources(
-  images: ProductImage[] | null | undefined,
+  images: ProductImageData[] | null | undefined,
   thumbnail: string | null | undefined,
 ): string[] {
   const sources: string[] = [];
@@ -41,6 +41,16 @@ export function calculateZoomPosition(
     x: Math.max(0, Math.min(100, x)),
     y: Math.max(0, Math.min(100, y)),
   };
+}
+
+const DESKTOP_ZOOM_MEDIA =
+  "(min-width: 1024px) and (any-hover: hover) and (any-pointer: fine)";
+
+function isDesktopMousePointer(pointerType: string): boolean {
+  return (
+    pointerType === "mouse" &&
+    window.matchMedia(DESKTOP_ZOOM_MEDIA).matches
+  );
 }
 
 /** Simple swipe detection hook. */
@@ -84,22 +94,58 @@ export function ProductGallery({
   title,
 }: ProductGalleryProps) {
   const sources = collectSources(images, thumbnail);
+  const sourceKey = sources.join("\0");
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [previousSourceKey, setPreviousSourceKey] = useState(sourceKey);
   const heroRef = useRef<HTMLDivElement | null>(null);
+  const zoomPointerActiveRef = useRef<string | null>(null);
+
+  const resetZoom = useCallback(() => {
+    zoomPointerActiveRef.current = null;
+    setIsZoomed(false);
+    setZoomPos({ x: 50, y: 50 });
+  }, []);
+
+  if (sourceKey !== previousSourceKey) {
+    setPreviousSourceKey(sourceKey);
+    setActiveIndex(0);
+    setIsZoomed(false);
+    setZoomPos({ x: 50, y: 50 });
+  }
+
+  const selectImage = useCallback(
+    (index: number) => {
+      resetZoom();
+      setActiveIndex(index);
+    },
+    [resetZoom],
+  );
 
   const goNext = useCallback(() => {
+    resetZoom();
     setActiveIndex((i) => (i + 1) % sources.length);
-  }, [sources.length]);
+  }, [resetZoom, sources.length]);
 
   const goPrev = useCallback(() => {
+    resetZoom();
     setActiveIndex((i) => (i - 1 + sources.length) % sources.length);
-  }, [sources.length]);
+  }, [resetZoom, sources.length]);
 
   useSwipe(heroRef, goNext, goPrev);
+
+
+  useEffect(() => {
+    const desktopZoom = window.matchMedia(DESKTOP_ZOOM_MEDIA);
+    const handleChange = () => {
+      if (!desktopZoom.matches) resetZoom();
+    };
+    desktopZoom.addEventListener("change", handleChange);
+    return () => desktopZoom.removeEventListener("change", handleChange);
+  }, [resetZoom]);
 
   // Close lightbox on Escape.
   useEffect(() => {
@@ -137,8 +183,8 @@ export function ProductGallery({
               <button
                 key={src}
                 type="button"
-                onClick={() => setActiveIndex(i)}
-                onMouseEnter={() => setActiveIndex(i)}
+                onClick={() => selectImage(i)}
+                onMouseEnter={() => selectImage(i)}
                 className={[
                   "relative flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-colors",
                   i === activeIndex
@@ -147,7 +193,7 @@ export function ProductGallery({
                 ].join(" ")}
                 aria-label={`${title} — image ${i + 1}`}
               >
-                <Image
+                <ProductImage
                   src={src}
                   alt=""
                   fill
@@ -165,12 +211,25 @@ export function ProductGallery({
             ref={heroRef}
             className={[
               "relative aspect-[4/5] overflow-hidden bg-[#f4ebe6]",
-              !isSingle && "cursor-zoom-in",
+              !isSingle && "lg:cursor-zoom-in",
             ].join(" ")}
             onClick={() => !isSingle && setLightboxOpen(true)}
-            onMouseEnter={() => setIsZoomed(true)}
-            onMouseLeave={() => setIsZoomed(false)}
-            onMouseMove={(e) => {
+            onPointerEnter={(e) => {
+              if (!isDesktopMousePointer(e.pointerType)) {
+                resetZoom();
+                return;
+              }
+              zoomPointerActiveRef.current = sourceKey;
+              setIsZoomed(true);
+            }}
+            onPointerLeave={resetZoom}
+            onPointerMove={(e) => {
+              if (
+                zoomPointerActiveRef.current !== sourceKey ||
+                !isDesktopMousePointer(e.pointerType)
+              ) {
+                return;
+              }
               const rect = e.currentTarget.getBoundingClientRect();
               const pos = calculateZoomPosition(e.clientX, e.clientY, rect);
               setZoomPos(pos);
@@ -184,13 +243,13 @@ export function ProductGallery({
                   i === activeIndex ? "opacity-100 z-10" : "opacity-0 z-0",
                 ].join(" ")}
               >
-                <Image
+                <ProductImage
                   src={src}
                   alt={`${title} — image ${i + 1}`}
                   fill
                   priority={i === 0}
                   sizes="(min-width: 1024px) 42vw, 100vw"
-                  className="object-cover"
+                  className="object-contain lg:object-cover"
                   style={{
                     transform: i === activeIndex && isZoomed ? "scale(1.5)" : "scale(1)",
                     transformOrigin: i === activeIndex && isZoomed ? `${zoomPos.x}% ${zoomPos.y}%` : "center",
@@ -235,8 +294,8 @@ export function ProductGallery({
                 <button
                   key={src}
                   type="button"
-                  onClick={() => setActiveIndex(i)}
-                  onMouseEnter={() => setActiveIndex(i)}
+                  onClick={() => selectImage(i)}
+                  onMouseEnter={() => selectImage(i)}
                   className={[
                     "relative flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-colors",
                     i === activeIndex
@@ -245,7 +304,7 @@ export function ProductGallery({
                   ].join(" ")}
                   aria-label={`${title} — image ${i + 1}`}
                 >
-                  <Image
+                  <ProductImage
                     src={src}
                     alt=""
                     fill
@@ -285,7 +344,7 @@ export function ProductGallery({
             className="relative w-full h-full max-w-[90vw] max-h-[85vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
+            <ProductImage
               src={sources[activeIndex]}
               alt={`${title} — image ${activeIndex + 1}`}
               fill
@@ -326,7 +385,7 @@ export function ProductGallery({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveIndex(i);
+                  selectImage(i);
                 }}
                 className={[
                   "w-2 h-2 transition-all",

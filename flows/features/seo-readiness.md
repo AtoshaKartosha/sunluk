@@ -10,7 +10,7 @@ Success criteria:
 - Home, catalog, product detail, and information pages have distinct localized metadata.
 - Checkout, authentication, cabinet, and order pages emit `noindex, nofollow`.
 - `/robots.txt` and `/sitemap.xml` are served by built-in Next.js metadata routes.
-- Product URLs in the sitemap come from published Store API products; backend failure leaves a valid static sitemap.
+- Product URLs in the sitemap come from published, sales-channel-visible Store API products, including visible zero-stock products; backend failure leaves a valid static sitemap.
 - Product pages return an actual 404 when the product does not exist.
 - Search-facing structured data covers the site entity, website, products, and product breadcrumbs.
 - Each rendered page has one `main` landmark; critical images and the hero video do not create avoidable loading work.
@@ -105,7 +105,7 @@ Public projection:
 - Absolute canonical URL for the current locale and route.
 - `ru`, `en`, and `x-default` alternate URLs for equivalent pages.
 - Localized title/description plus social metadata.
-- Sitemap entries for public static pages and currently available public products.
+- Sitemap entries for public static pages and published, sales-channel-visible products, including visible products whose current availability is out of stock.
 - Schema.org objects containing only facts already present in code or Medusa responses.
 
 Private projection:
@@ -116,8 +116,8 @@ Private projection:
 
 | Direction | Name | Target flow | Payload | Allowed when | Reject reason |
 |---|---|---|---|---|---|
-| Incoming shared data | `catalog:indexable-route-projection` | Catalog Browsing | `{ locale, path, productHandle?, product? }` | Route maps to public published catalog content | Missing/unpublished product or private route |
-| Incoming shared data | `catalog:locale-routing-map` | Catalog Localization | `{ locales, defaultLocale, stableProductHandles }` | Locale is supported | Unsupported locale |
+| Incoming shared data | `catalog:indexable-route-projection` | Catalog Browsing | `{ locale, path, productHandle?, product? }` | Route maps to public, published, sales-channel-visible catalog content; zero-stock availability does not remove indexability | Missing/unpublished product or private route |
+| Incoming shared data | `catalog:locale-routing-map` | Catalog Localization | `{ locales, defaultLocale, localeMarketDefaults, stableProductHandles }` | Locale is supported | Unsupported locale |
 | Internal | `seo:metadata-projected` | None | `{ canonical, languages, title, description, robots }` | Route classification and locale are known | Unknown route classification or invalid origin |
 | Internal | `seo:sitemap-requested` | None | `{ locales, staticPaths }` | Metadata route is requested | None; product-fetch failure degrades to static entries |
 | Internal | `seo:structured-data-projected` | None | `{ organization?, website?, product?, breadcrumb? }` | Required facts are available | Omit schema fields whose source data is absent |
@@ -130,6 +130,7 @@ Private projection:
 - Product Store API failure: preserve the existing retryable dependency-error behavior; never turn an upstream failure into a false 404.
 - Medusa unavailable during sitemap generation: keep static public URLs and omit unavailable product entries; never fail the XML response.
 - A product exists in one locale/region but not the other: include only URLs returned for that locale; metadata still uses stable handles for equivalent-language alternates on a valid PDP.
+- A published sales-channel-visible product is out of stock: keep its public route, sitemap entry, canonical metadata, and Product structured data; project Medusa-derived out-of-stock availability rather than silently removing the URL.
 - Missing description or image: use the existing safe localized description fallback; omit unsupported image/schema fields rather than invent values.
 - Query parameters on transactional pages: segment-level `noindex` covers all variants, including checkout success order IDs.
 - Private URLs are omitted from sitemap but not blocked in `robots.txt`, so crawlers can observe their `noindex` directive.
@@ -173,6 +174,7 @@ Cross-flow references:
 | HTTP smoke | Missing product returns 404 while upstream failure does not fake a 404 | `/ru/products/__seo_missing__` | Passed 2026-07-20 with Medusa available and unavailable |
 | Browser smoke | Home and catalog render, keep one main landmark, load images, and have no horizontal overflow | `/ru`, `/en/products` at 1440px and 390px | Passed 2026-07-20 |
 | Browser smoke | Product page emits Product/BreadcrumbList data and loads product images | `/ru/products/azure`, `/en/products/azure` | Passed 2026-07-20 with no console errors |
+| Storefront SEO smoke | Published zero-stock Dune and Silk remain in sitemap/product metadata with unavailable structured-data projection | `/sitemap.xml`, `/ru/products/dune`, `/ru/products/silk` | Planned for launch availability update |
 
 ## 11. Implementation Plan
 
@@ -232,8 +234,10 @@ Validation:
 - Private routes returned `noindex, nofollow`; missing product returned HTTP 404.
 - JSON-LD parsed as Organization/WebSite on home and Product/BreadcrumbList on PDP.
 - Browser smoke passed at desktop and 390px: one `main`, no horizontal overflow, content images loaded, hero poster/preload correct, no PDP console errors.
-- Global lint completed with zero errors; remaining warnings predate this flow and are outside its runtime contract.
+- Global lint completed with zero errors and zero warnings after the shared header/footer image migration.
 - Flow-code sync: IN SYNC 2026-07-20. Final read-only audit found zero drift or blockers across SEO behavior, performance fixes, validation trace, and cross-flow contracts.
+
+Launch availability trace: code and flow contracts are synchronized for published zero-stock Dune/Silk and crawlable private-route `noindex`. `npm run test --prefix storefront` passed 20 files / 128 tests, both production builds passed, the final storefront rebuild and global lint rerun completed with zero errors and zero warnings, and production `/robots.txt` returned `Allow: /` plus the absolute sitemap URL with no private-route disallows on 2026-08-11. The inventory updater and resulting live sitemap/PDP unavailable projection must be smoke-tested after deployment.
 - Implementation commits: `dfeffaf` (storefront SEO) and `674197b` (targeted tests).
 
 ## 13. Open Questions
@@ -250,4 +254,7 @@ None blocking. The production fallback origin is `https://sunluk.com`; deploymen
 - [x] SEO changes do not duplicate Medusa commerce logic.
 - [x] Cross-flow shared-data dependencies are named.
 - [x] Performance work is limited to confirmed defects with observable checks.
+- [x] Published zero-stock products remain indexable; availability changes structured data, not route visibility.
 - [x] No new dependency or speculative route is introduced.
+
+Flow review v2 (2026-08-11): **APPROVED**. Published zero-stock products remain indexable with Medusa-derived unavailable projection, matching Catalog and Architecture contracts.

@@ -41,7 +41,7 @@ describe("Landing perf smoke", () => {
   });
 
   it("HeroSection: renders background image slider", () => {
-    render(<HeroSection />);
+    render(<HeroSection locale="ru" />);
     const img = screen.getByAltText(
       "SUNLUK hero slide 1",
     ) as HTMLImageElement;
@@ -51,7 +51,7 @@ describe("Landing perf smoke", () => {
   });
 
   it("EditorialSection: 6 imgs (3 alt + 3 decorative), all sized", () => {
-    const { container } = render(<EditorialSection />);
+    const { container } = render(<EditorialSection locale="ru" />);
     const imgs = container.querySelectorAll("img");
     expect(imgs.length).toBe(6);
     const alts = Array.from(imgs).map((i) => i.getAttribute("alt") ?? "");
@@ -61,7 +61,7 @@ describe("Landing perf smoke", () => {
   });
 
   it("AboutSection: image slider container with role img and aria-label", () => {
-    const { container } = render(<AboutSection />);
+    const { container } = render(<AboutSection locale="ru" />);
     const slider = container.querySelector('[role="img"]');
     expect(slider).toBeTruthy();
     expect(slider?.getAttribute("aria-label")).toBeTruthy();

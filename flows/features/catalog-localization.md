@@ -2,14 +2,14 @@
 
 ## 1. Intent
 
-Let a storefront visitor read product title and description in Russian or English while prices, availability, and checkout compatibility continue to be controlled by the independently selected Medusa region.
+Let a storefront visitor read product content in Russian or English while v0 uses the route locale as a market default only when no explicit country is supplied; Medusa remains authoritative for the resolved region, currency, pricing, and availability.
 
 Success criteria:
 
 - Storefront supports exactly two customer-facing locales for v1: `ru` -> `ru-RU` and `en` -> `en-US`.
 - Product list and product detail pages request Medusa product content in the active locale on every server render.
 - Product `title` and `description` fall back to the product's default Medusa content when a requested translation is missing.
-- Locale selection does not change region, currency, price calculation, or product availability rules.
+- With no explicit country, `ru-RU` resolves Russia and other locales resolve `NEXT_PUBLIC_DEFAULT_REGION ?? "dk"`; an explicit country always takes precedence.
 - Admin-managed translations become visible in storefront without requiring storefront-side product duplication.
 - Every product-to-product navigation link preserves the active supported locale; opening a related product from `/en/...` stays under `/en/...`, and `/ru/...` stays under `/ru/...`.
 
@@ -29,7 +29,7 @@ Out of scope:
 - Localized product handles, category slugs, or separate SEO slugs per language.
 - Full-store translation of checkout, cabinet, landing page, or admin chrome outside the catalog slice.
 - Automatic machine translation or AI-generated translations.
-- Locale-driven region switching.
+- Explicit country/region selection UI and geolocation.
 
 Deferred decisions:
 
@@ -41,6 +41,7 @@ Chosen v1 decisions:
 - Storefront routes are locale-prefixed: `/ru/...` and `/en/...`.
 - Product handles remain stable across locales.
 - Medusa Store API locale values are `ru-RU` and `en-US`.
+- Locale-to-market default is `ru-RU -> ru`; `en-US` uses `NEXT_PUBLIC_DEFAULT_REGION ?? "dk"` until explicit country selection exists.
 
 ## 3. Actors and Permissions
 
@@ -147,13 +148,13 @@ flowchart LR
 Authoritative state:
 
 - Product source content, translation records, supported store locales, and fallback behavior live in Medusa.
-- Region, currency, pricing, inventory, and publishability remain Medusa-owned and are unchanged by locale selection.
+- Region, currency, pricing, inventory, and publishability remain Medusa-owned; locale supplies only the v0 default country when no explicit country is present.
 
 Storefront projection:
 
 - Active route locale (`ru` or `en`).
 - Derived Medusa locale code (`ru-RU` or `en-US`).
-- Region resolved independently from locale.
+- Region resolved from explicit country first, otherwise the locale market default.
 - Localized product list/detail response for the current locale.
 - Fallback rendering state when the product exists but requested translation fields are absent.
 - Every catalog card and related-product link derives its locale prefix from the active route projection; components must not default a supported `en` route back to `ru`.
@@ -169,16 +170,16 @@ Admin projection:
 |---|---|---|---|---|---|
 | Incoming | `catalog:published` | Catalog Localization | `{ productIds?, categoryIds?, regionIds?, salesChannelIds? }` | Admin publishes products that the storefront may read | None; publishing is authoritative input from Medusa admin state |
 | Incoming | `catalog:translation-published` | Catalog Localization | `{ productIds, locales }` | Admin saves product translations for supported locales | Unsupported locales are ignored by storefront routing until explicitly enabled |
-| Internal | `catalog:locale-selected` | None | `{ locale: "ru" | "en", medusaLocale: "ru-RU" | "en-US" }` | Route locale is supported or rewritten to default | Unsupported locale outside configured set |
-| Internal | `catalog:localized-products-requested` | None | `{ regionId, locale, medusaLocale }` | Locale and region are both known | Missing locale or unresolved region |
+| Internal | `catalog:locale-selected` | None | `{ locale: "ru" | "en", medusaLocale: "ru-RU" | "en-US", localeDefaultCountry: string, source: "ru-locale" | "configured" | "dk-fallback" }` | Route locale is supported or rewritten to default; `localeDefaultCountry` follows the named source | Unsupported locale outside configured set |
+| Internal | `catalog:localized-products-requested` | None | `{ regionId, locale, medusaLocale }` | Locale and its resolved region are both known | Missing locale or unresolved region |
 | Internal | `catalog:product-navigation-requested` | None | `{ locale: "ru" | "en", handle }` | Destination link uses the active supported route locale | Link omits locale or changes a supported active locale |
 | Outgoing | `catalog:localized-content-ready` | Catalog Browsing | `{ locale, medusaLocale, fallbackProductIds? }` | Localized catalog or product detail payload is ready for rendering | Store API request failed |
-| Outgoing shared data | `catalog:locale-routing-map` | SEO Readiness | `{ locales, defaultLocale, stableProductHandles }` | Storefront routing configuration is loaded | Unsupported locale or localized handle divergence |
+| Outgoing shared data | `catalog:locale-routing-map` | SEO Readiness | `{ locales, defaultLocale, localeMarketDefaults, stableProductHandles }` | Storefront routing configuration is loaded | Unsupported locale or localized handle divergence |
 
 ## 7. Edge Cases
 
 - Visitor requests `/de/products`: storefront rewrites to `/ru/products`; it does not guess or preserve an unsupported locale.
-- Locale and region disagree (for example `en` locale with Denmark region): allow it; locale never mutates region.
+- Locale market default and an explicit country disagree: explicit country wins. Until a country selector exists, `ru` routes use Russia while `en` routes use the configured/default non-Russia country.
 - Medusa product exists but requested translation is missing: render default product `title`/`description` and keep the rest of the page in the requested UI locale.
 - Translation exists for title but not description: field-level fallback applies only to the missing field; do not blank the field.
 - Product detail route handle is stable across locales; switching locale on a valid handle must keep the same handle.
@@ -231,12 +232,15 @@ Current files that inform the flow:
 - `storefront/src/app/products/[handle]/page.tsx`.
 - `storefront/src/lib/medusa.ts`.
 - `storefront/src/lib/medusa/products.ts`.
+- `storefront/src/lib/medusa/regions.ts`.
+- `storefront/src/lib/__tests__/region-resolution.test.ts`.
 
 ## 10. Targeted Tests
 
 | Layer | Behavior | File | Status |
 |---|---|---|---|
 | Storefront unit | Locale router maps `ru`/`en` to `ru-RU`/`en-US` and rejects unsupported locale prefixes | `storefront/src/i18n/routing.test.ts` or nearest project test equivalent | Pending implementation |
+| Storefront unit | Explicit country wins; omitted country maps `ru-RU -> ru`, otherwise configured country or `dk` | `storefront/src/lib/__tests__/region-resolution.test.ts` | Passed 2026-08-11 |
 | Storefront integration | Product list sends both `region_id` and locale to Medusa on `/[locale]/products` | `storefront/src/lib/medusa/products.test.ts` or nearest project test equivalent | Pending implementation |
 | Storefront integration | Product detail keeps same handle when switching between `/ru/products/[handle]` and `/en/products/[handle]` | To add with localized route implementation | Pending implementation |
 | Storefront integration | Missing translation falls back to source content for only the missing field | `storefront/src/lib/medusa/products.test.ts` or nearest project test equivalent | Pending implementation |
@@ -254,10 +258,11 @@ Current files that inform the flow:
 4. Enable Medusa locales/translations configuration and seed or migrate RU/EN product translations plus locale-keyed merchandising metadata.
 5. Add targeted tests for locale mapping, Medusa request payloads, field-level fallback, Store API translated responses, and metadata rendering.
 6. Pass the active route locale through related-product/grid rendering so every product destination changes only the handle.
+7. Add a focused region-resolution test for explicit-country precedence and both locale-default branches.
 
 ## 12. Implementation Trace
 
-Current status: Completed. Locale routing, request-scoped Store API reads, localized merchandising content/material names, and locale-preserving related-product navigation are integrated.
+Current status: Completed. Locale routing, request-scoped Store API reads, v0 locale market defaults, localized merchandising content/material names, and locale-preserving related-product navigation are integrated.
 
 Flow review: APPROVED 2026-07-15. The locale-preserving navigation contract has explicit rejection behavior, concrete browser checks, named files, and no new cross-flow event.
 
@@ -273,12 +278,14 @@ Implementation files:
 - `storefront/src/app/[locale]/products/[handle]/page.tsx`
 - `storefront/src/lib/medusa.ts`
 - `storefront/src/lib/medusa/products.ts`
+- `storefront/src/lib/medusa/regions.ts`
 - `storefront/src/components/product/ProductCard.tsx`
 - `storefront/src/components/product/ProductInfoBlock.tsx`
 - `storefront/src/components/cart/CartDrawer.tsx`
 - `storefront/src/components/product/ProductGrid.tsx`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/types.ts`
+- `storefront/src/lib/__tests__/region-resolution.test.ts`
 - `backend/apps/backend/medusa-config.ts`
 - `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`
 - `backend/apps/backend/src/migration-scripts/update-product-cards.ts`
@@ -291,6 +298,7 @@ Validation:
 - Store API returned `azure`, `dune`, `luna`, `silk`, `amethyst`, and `lagoon` with localized copy/metadata and no legacy handles.
 - Browser smoke passed for `/ru/products/azure` and `/en/products/azure`, including subtitle and both metadata accordions.
 - Browser navigation passed from `/en/products/azure` to `/en/products/dune` and from `/ru/products/azure` to `/ru/products/dune`.
+- 2026-08-11 `region-resolution.test.ts` passed explicit-country precedence, `ru-RU -> ru`, configured-country, `dk` fallback, and unsupported-country branches; the final storefront suite passed 20 files / 128 tests.
 
 ## 13. Open Questions
 
@@ -299,11 +307,13 @@ Validation:
 
 ## 14. Review Checklist
 
-- [x] Locale is explicit and independent from region.
+- [x] Locale and its v0 market-default effect on region are explicit; Medusa remains commerce authority and explicit country takes precedence.
 - [x] Missing translation fallback is explicit.
 - [x] Unsupported locale handling is explicit.
 - [x] Product handles remain stable across locales.
+
 - [x] Locale-aware Store API reads and locale-unsafe singleton risk are named.
 - [x] Admin translation publication boundary is declared.
 - [x] Targeted tests cover both localized and fallback paths.
 - [x] Product-to-product navigation preserves the active supported locale.
+Flow review v2 (2026-08-11): **APPROVED**. Explicit-country precedence, locale market defaults, exact payloads, and the focused resolver test clear the Approval Bar.

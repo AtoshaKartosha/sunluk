@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { InstagramIcon, SendIcon } from "./icons";
 import { getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
@@ -30,14 +31,16 @@ export function SiteFooter({
           {/* Logo and social */}
           <div className="lg:col-span-2 flex flex-col items-start gap-6">
             <Link href={locale ? `/${locale}` : "/"} className="flex items-center group">
-              <img
+              <Image
                 src={activeLocale === "ru" ? "/images/sunluk_logo_cyrillic.svg" : "/images/sunluk_logo.svg"}
+                width={activeLocale === "ru" ? 1201 : 1212}
+                height={202}
                 alt="Sunluk"
                 className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80 sm:h-10"
               />
             </Link>
             <div className="flex items-center gap-4 mt-2">
-              <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Instagram">
+              <a href="https://www.instagram.com/sunluk.accessories/" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Instagram">
                 <InstagramIcon className="w-5 h-5" />
               </a>
               <a href="#" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Telegram">
@@ -45,7 +48,7 @@ export function SiteFooter({
               </a>
               {activeLocale === "ru" && (
                 <a href="https://max.ru/" target="_blank" rel="noreferrer noopener" className="text-[#2c211b]/70 hover:text-[#2f6f78] p-1 transition-colors duration-200" aria-label="Max">
-                  <img src="/images/max.svg" alt="" className="w-5 h-5 opacity-70" />
+                  <Image src="/images/max.svg" width={720} height={720} alt="" className="w-5 h-5 opacity-70" />
                 </a>
               )}
             </div>

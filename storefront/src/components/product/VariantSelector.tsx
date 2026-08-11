@@ -210,9 +210,11 @@ export function VariantSelector({
               currency_code: resolved.calculated_price.currency_code,
             }
           : null,
-        packaging_variant_id: selectedPackagingVariantId,
+        ...(selectedPackagingVariantId !== null
+          ? { packaging_variant_id: selectedPackagingVariantId }
+          : {}),
       });
-      if (selectedPackagingVariantId && updatedCart) {
+      if (selectedPackagingVariantId !== null && updatedCart) {
         // Find the main line item we just added/updated.
         const mainLineItem = updatedCart.items?.find(
           (item) =>

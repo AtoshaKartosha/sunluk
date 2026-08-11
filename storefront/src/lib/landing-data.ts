@@ -137,7 +137,7 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
     links: [
       { label: "Связаться с нами", href: "#" },
       { label: "Telegram", href: "#" },
-      { label: "Instagram", href: "#" },
+      { label: "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
       { label: "Email", href: "mailto:info@sunluk.ru" },
     ],
   },
@@ -201,7 +201,7 @@ export function getFooterGroups(
         links: [
           { label: f?.contactUs ?? "Contact Us", href: "#" },
           { label: f?.telegram ?? "Telegram", href: "#" },
-          { label: f?.instagram ?? "Instagram", href: "#" },
+          { label: f?.instagram ?? "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
           { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },
         ],
       },
@@ -231,7 +231,7 @@ export function getFooterGroups(
       links: [
         { label: f?.contactUs ?? "Связаться с нами", href: "#" },
         { label: f?.telegram ?? "Telegram", href: "#" },
-        { label: f?.instagram ?? "Instagram", href: "#" },
+        { label: f?.instagram ?? "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
         { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },
       ],
     },

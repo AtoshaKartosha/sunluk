@@ -4,7 +4,7 @@ import { useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
@@ -293,7 +293,7 @@ function CartLineItem({
     <li className="flex gap-4 px-5 py-4">
       {/* Thumbnail */}
       {thumbnail ? (
-        <Image
+        <ProductImage
           src={thumbnail}
           alt={item.title || "Product thumbnail"}
           width={80}
@@ -467,6 +467,13 @@ function CartFooter({ cart, currency, disabled, locale, closeCart }: CartFooterP
         </div>
       </div>
 
+      <Link
+        href={`/${locale}/products`}
+        onClick={closeCart}
+        className="mt-4 flex w-full items-center justify-center px-6 py-3 text-sm font-medium tracking-widest uppercase text-[#2c211b] transition-colors hover:bg-[#2c211b]/5"
+      >
+        {t("continueShopping")}
+      </Link>
       {/* CTA */}
       <Link
         href={`/${locale}/checkout`}

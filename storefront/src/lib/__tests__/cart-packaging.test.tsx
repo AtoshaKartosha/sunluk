@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { VariantSelector } from "../../components/product/VariantSelector";
 import CartDrawer from "../../components/cart/CartDrawer";
 import type { StoreCart, StoreCartLineItem } from "../../components/cart/types";
@@ -9,6 +9,8 @@ import type { StoreCart, StoreCartLineItem } from "../../components/cart/types";
 const mockAddItem = vi.fn();
 const mockUpdateItem = vi.fn();
 const mockRemoveItem = vi.fn();
+const mockCloseCart = vi.fn();
+let mockMutating = false;
 
 let activeCart: StoreCart | null = null;
 
@@ -16,14 +18,14 @@ vi.mock("../../components/cart/CartContext", () => ({
   useCart: () => ({
     cart: activeCart,
     loading: false,
-    mutating: false,
+    mutating: mockMutating,
     isOpen: true,
     itemCount: activeCart?.items?.length ?? 0,
     addItem: mockAddItem,
     updateItem: mockUpdateItem,
     removeItem: mockRemoveItem,
     openCart: vi.fn(),
-    closeCart: vi.fn(),
+    closeCart: mockCloseCart,
     clearCart: vi.fn(),
     setCart: vi.fn(),
   }),
@@ -54,6 +56,7 @@ describe("VariantSelector Packaging Metadata", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     activeCart = null;
+    mockMutating = false;
   });
 
   it("correctly includes packaging_variant_id in metadata when adding item to cart", async () => {
@@ -120,6 +123,33 @@ describe("VariantSelector Packaging Metadata", () => {
     expect(mockAddItem).toHaveBeenCalledWith("pkg_box_123", 1, {
       parent_line_item_id: "item_main_123",
     });
+  });
+
+  it("omits packaging_variant_id when no packaging is selected", async () => {
+    const mockVariant = {
+      id: "var_123",
+      title: "Test Variant",
+      manage_inventory: false,
+      inventory_quantity: 10,
+      allow_backorder: true,
+      prices: [],
+      options: [],
+      calculated_price: {
+        calculated_amount: 1000,
+        original_amount: 1000,
+        currency_code: "rub",
+      },
+    };
+
+    render(
+      <VariantSelector options={[]} variants={[mockVariant]} labels={mockLabels} />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
+    const [, , metadata] = mockAddItem.mock.calls[0];
+    expect(metadata).not.toHaveProperty("packaging_variant_id");
   });
 
   it("does not merge different packaging items and links to the correct parent variant", async () => {
@@ -193,6 +223,114 @@ describe("VariantSelector Packaging Metadata", () => {
     // Verify packaging is added, linked to item_main_box (which has matching packaging_variant_id), NOT item_main_pouch
     expect(mockAddItem).toHaveBeenCalledWith("pkg_box_123", 1, {
       parent_line_item_id: "item_main_box",
+    });
+  });
+
+  it("skips packaging and re-enables retry when the returned cart has no matching main item", async () => {
+    mockAddItem.mockResolvedValue({
+      id: "cart_123",
+      items: [
+        {
+          id: "item_other_123",
+          variant_id: "var_123",
+          metadata: { packaging_variant_id: "other_package" },
+        },
+      ],
+    });
+
+    render(
+      <VariantSelector
+        options={[]}
+        variants={[{
+          id: "var_123",
+          manage_inventory: false,
+          options: [],
+          calculated_price: { calculated_amount: 1000, currency_code: "rub" },
+        }]}
+        labels={mockLabels}
+        selectedPackagingVariantId="pkg_box_123"
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: /add to cart/i });
+    fireEvent.click(button);
+
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(button).not.toBeDisabled());
+    expect(mockAddItem).toHaveBeenLastCalledWith("var_123", 1, expect.any(Object));
+    expect(mockAddItem).not.toHaveBeenCalledWith("pkg_box_123", 1, expect.any(Object));
+
+    fireEvent.click(button);
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(2));
+    expect(mockAddItem).toHaveBeenLastCalledWith("var_123", 1, expect.any(Object));
+  });
+
+  it("re-enables retry after packaging fails while retaining the accepted main cart", async () => {
+    const mainCart = {
+      id: "cart_123",
+      currency_code: "rub",
+      subtotal: 1000,
+      total: 1000,
+      items: [
+        {
+          id: "item_main_123",
+          title: "Accepted main product",
+          variant_id: "var_123",
+          quantity: 1,
+          unit_price: 1000,
+          metadata: { packaging_variant_id: "pkg_box_123" },
+        },
+      ],
+    } as unknown as StoreCart;
+    mockAddItem.mockImplementation((variantId: string) => {
+      if (variantId === "var_123") {
+        activeCart = mainCart;
+        return Promise.resolve(mainCart);
+      }
+      return Promise.reject(new Error("packaging unavailable"));
+    });
+
+    const selector = (
+      <VariantSelector
+        options={[]}
+        variants={[{
+          id: "var_123",
+          manage_inventory: false,
+          options: [],
+          calculated_price: { calculated_amount: 1000, currency_code: "rub" },
+        }]}
+        labels={mockLabels}
+        selectedPackagingVariantId="pkg_box_123"
+      />
+    );
+    const view = render(
+      <>
+        {selector}
+        <CartDrawer />
+      </>,
+    );
+
+    const button = screen.getByRole("button", { name: /add to cart/i });
+    fireEvent.click(button);
+
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(2));
+    await expect(mockAddItem.mock.results[0]?.value).resolves.toBe(mainCart);
+    await expect(mockAddItem.mock.results[1]?.value).rejects.toThrow("packaging unavailable");
+    await waitFor(() => expect(button).not.toBeDisabled());
+    view.rerender(
+      <>
+        {selector}
+        <CartDrawer />
+      </>,
+    );
+    expect(screen.getByText("Accepted main product")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+
+    fireEvent.click(button);
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(4));
+    expect(mockAddItem).toHaveBeenNthCalledWith(3, "var_123", 1, expect.any(Object));
+    expect(mockAddItem).toHaveBeenNthCalledWith(4, "pkg_box_123", 1, {
+      parent_line_item_id: "item_main_123",
     });
   });
 });
@@ -366,5 +504,35 @@ describe("CartDrawer Packaging Row Display", () => {
 
     const productTotalTexts = screen.getAllByText(/1\s*000\s*(₽|руб)/i);
     expect(productTotalTexts.length).toBe(2);
+  });
+});
+
+describe("CartDrawer continue shopping action", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMutating = true;
+    activeCart = {
+      id: "cart_123",
+      currency_code: "rub",
+      items: [
+        {
+          id: "item_main_123",
+          title: "Main Product",
+          unit_price: 9000,
+          quantity: 1,
+        },
+      ] as unknown as StoreCartLineItem[],
+    } as unknown as StoreCart;
+  });
+
+  it("links to the locale catalog and closes without being disabled by a cart mutation", () => {
+    render(<CartDrawer />);
+
+    const continueShopping = screen.getByRole("link", { name: "continueShopping" });
+    expect(continueShopping).toHaveAttribute("href", "/ru/products");
+    expect(continueShopping).not.toHaveClass("pointer-events-none");
+
+    fireEvent.click(continueShopping);
+    expect(mockCloseCart).toHaveBeenCalledOnce();
   });
 });

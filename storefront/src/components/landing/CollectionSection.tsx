@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Locale } from "@/i18n/routing";
 import { ProductCard, type StoreProduct } from "@/components/product";
-import Image from "next/image";
+import { ProductImage } from "@/components/product/ProductImage";
 import { useEntrance } from "./use-entrance";
 
 interface CollectionSectionProps {
@@ -73,7 +73,7 @@ export function CollectionSection({ locale, products = [] }: CollectionSectionPr
                 className="group flex flex-col text-left bg-transparent transition-all duration-300"
               >
                 <div className="aspect-[4/5] overflow-hidden bg-background mb-3 sm:mb-5 rounded-none relative">
-                  <Image
+                  <ProductImage
                     src={product.image}
                     alt={t(`collection.products.${i}.title`)}
                     fill
