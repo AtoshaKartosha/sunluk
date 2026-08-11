@@ -122,7 +122,7 @@ Expected implementation files:
 
 Current files that inform the flow:
 
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` seeds regions (Europe/EUR, Russia/RUB) with `pp_system_default` — the manual provider used to complete orders without acquiring.
+- `backend/apps/backend/src/scripts/initial-data-seed.ts` seeds regions (Europe/EUR, Russia/RUB) with `pp_system_default` — the manual provider used to complete orders without acquiring.
 - The storefront persists its active locale into cart/order `metadata.locale` at checkout. `x-medusa-locale` is a request-time content-negotiation header (it returns localized product/translation data for the in-flight request) and is NOT persisted on the order, so it is not relied upon for email localization; the region cannot substitute (EU region may be `en` or `de`).
 - Product photos in the invoice require a configured **public file/image provider** (S3-compatible). File storage is currently scaffolded in env (`.env.template` S3_* / MinIO) but NOT wired into `medusa-config.ts`, so `thumbnail`/product image URLs may be empty or non-public — photos will not render in the email until storage is configured. Until then the template degrades to image-less lines (see §7). Wiring S3 is a prerequisite/parallel task for the "красивые письма с фото" goal.
 

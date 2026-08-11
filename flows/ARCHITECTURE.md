@@ -109,7 +109,7 @@ flowchart LR
 ## Current implementation trace
 
 - Backend config: `backend/apps/backend/medusa-config.ts`.
-- Seeded commerce data: `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
+- Seeded commerce data: `backend/apps/backend/src/scripts/initial-data-seed.ts`.
 - Storefront locale routing: `storefront/src/proxy.ts` (next-intl proxy; Next 16 successor to the deprecated `middleware.ts` convention).
 - Storefront entry points: `storefront/src/app/[locale]/page.tsx`, `storefront/src/app/[locale]/products/page.tsx`, `storefront/src/app/[locale]/products/[handle]/page.tsx`.
 - CI/CD automation: `flows/integrations/ci-cd.md`.

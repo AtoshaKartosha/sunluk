@@ -219,8 +219,8 @@ Expected implementation files for this slice:
 - `storefront/src/components/cart/CartDrawer.tsx`.
 - `storefront/src/components/product/types.ts`.
 - `backend/apps/backend/medusa-config.ts`.
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
-- `backend/apps/backend/src/migration-scripts/update-product-cards.ts`.
+- `backend/apps/backend/src/scripts/initial-data-seed.ts`.
+- `backend/apps/backend/src/scripts/update-product-cards.ts`.
 - `backend/apps/backend/src/admin/i18n/index.ts` if custom admin translation helpers are needed.
 
 Current files that inform the flow:
@@ -247,7 +247,7 @@ Current files that inform the flow:
 | Backend integration | Store API returns translated `title`/`description` for populated locales and source fallback otherwise | `backend/integration-tests/http/store/product-localization.spec.ts` or nearest project test equivalent | Pending implementation |
 | Manual/admin QA | Updating a product translation in Medusa Admin is reflected in storefront after revalidation | Manual admin QA checklist for launch | Pending implementation |
 | Storefront browser smoke | RU/EN product detail renders localized title, subtitle, Wear It Your Way metadata, and included-kit metadata | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
-| Backend migration smoke | Product-card migration is rerunnable and Store API exposes all six localized launch products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration smoke | Product-card migration is rerunnable and Store API exposes all six localized launch products without legacy handles | `backend/apps/backend/src/scripts/update-product-cards.ts` | Passed 2026-07-15 |
 | Storefront browser smoke | Related-product navigation preserves `/en` and `/ru` locale prefixes | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
 
 ## 11. Implementation Plan
@@ -287,14 +287,14 @@ Implementation files:
 - `storefront/src/components/product/types.ts`
 - `storefront/src/lib/__tests__/region-resolution.test.ts`
 - `backend/apps/backend/medusa-config.ts`
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`
-- `backend/apps/backend/src/migration-scripts/update-product-cards.ts`
+- `backend/apps/backend/src/scripts/initial-data-seed.ts`
+- `backend/apps/backend/src/scripts/update-product-cards.ts`
 
 Validation:
 
 - `npm run build --prefix storefront` completed successfully.
 - `npx tsc --noEmit` in `backend/apps/backend` completed successfully.
-- `npx medusa exec ./src/migration-scripts/update-product-cards.ts` completed successfully twice against the local database.
+- `npx medusa exec ./src/scripts/update-product-cards.ts` completed successfully twice against the local database.
 - Store API returned `azure`, `dune`, `luna`, `silk`, `amethyst`, and `lagoon` with localized copy/metadata and no legacy handles.
 - Browser smoke passed for `/ru/products/azure` and `/en/products/azure`, including subtitle and both metadata accordions.
 - Browser navigation passed from `/en/products/azure` to `/en/products/dune` and from `/ru/products/azure` to `/ru/products/dune`.

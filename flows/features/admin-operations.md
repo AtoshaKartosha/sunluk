@@ -278,10 +278,10 @@ Expected implementation/configuration files when custom admin behavior is built:
 Current files that inform the flow:
 
 - The placeholder custom admin route (`api/admin/custom/route.ts`) has been removed; no Sunluk-specific custom admin HTTP routes exist yet.
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` seeds initial admin-managed commerce data.
+- `backend/apps/backend/src/scripts/initial-data-seed.ts` seeds initial admin-managed commerce data.
 - `backend/apps/backend/medusa-config.ts` configures Medusa backend environment and HTTP boundaries.
-- `backend/apps/backend/src/migration-scripts/update-product-cards.ts` performs the one-time, idempotent launch-collection catalog migration through Medusa execution context.
-- `backend/apps/backend/src/migration-scripts/normalize-store.ts` owns the reusable idempotent Store invariant and the operator-run production repair.
+- `backend/apps/backend/src/scripts/update-product-cards.ts` performs the one-time, idempotent launch-collection catalog migration through Medusa execution context.
+- `backend/apps/backend/src/scripts/normalize-store.ts` owns the reusable idempotent Store invariant and the operator-run production repair.
 - The launch correction maps `purple` to `amethyst` and `sun-chain` to `lagoon`; the seed continues to create only canonical handles on fresh databases.
 
 ## 10. Targeted Tests
@@ -291,14 +291,14 @@ Current files that inform the flow:
 | Backend integration | Custom admin routes require admin authorization before mutating state | To add when custom admin routes are implemented | Pending implementation |
 | Backend integration | Catalog/config changes are visible through Store API only when published/sellable | To add when storefront catalog integration is implemented | Pending implementation |
 | Backend integration | Checkout-affecting setting changes force cart/checkout revalidation | To add when checkout integration is implemented | Pending implementation |
-| Backend migration smoke | Launch-collection update is rerunnable, preserves mapped product IDs, and exposes six published products without legacy handles | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
-| Backend migration smoke | Existing Purple and Sun Chain IDs become Amethyst and Lagoon; redundant unreferenced canonical duplicates are removed | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
-| Backend migration safety | A duplicate with cart/order references is archived and unpublished instead of deleted; rerun remains idempotent | `backend/apps/backend/src/migration-scripts/update-product-cards.ts` | Passed 2026-07-15 |
-| Backend migration smoke | Fresh migrated state converges to one Store with EUR default plus USD and RUB | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Passed 2026-07-28 |
-| Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra active Store rows, and converges identically on rerun | `backend/apps/backend/src/migration-scripts/normalize-store.ts` | Passed locally and in production 2026-07-28 |
+| Backend migration smoke | Launch-collection update is rerunnable, preserves mapped product IDs, and exposes six published products without legacy handles | `backend/apps/backend/src/scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration smoke | Existing Purple and Sun Chain IDs become Amethyst and Lagoon; redundant unreferenced canonical duplicates are removed | `backend/apps/backend/src/scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration safety | A duplicate with cart/order references is archived and unpublished instead of deleted; rerun remains idempotent | `backend/apps/backend/src/scripts/update-product-cards.ts` | Passed 2026-07-15 |
+| Backend migration smoke | Fresh migrated state converges to one Store with EUR default plus USD and RUB | `backend/apps/backend/src/scripts/normalize-store.ts` | Passed 2026-07-28 |
+| Backend migration smoke | Duplicate Store state preserves the oldest Store ID, removes only extra active Store rows, and converges identically on rerun | `backend/apps/backend/src/scripts/normalize-store.ts` | Passed locally and in production 2026-07-28 |
 | Production safety | Store normalization leaves product/variant price, region, sales-channel, API-key, cart, and order identities/counts unchanged | Admin API snapshots plus PostgreSQL backup | Passed after bootstrap reuse correction 2026-07-28 |
 | Admin browser smoke | Product variant price editor exposes a RUB currency column through the default Medusa Admin | Production Medusa Admin | Passed 2026-07-28 |
-| Backend migration smoke | Repeated seed bootstrap reuses the same default sales-channel and publishable-key IDs without increasing either count | `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` | Passed in production 2026-07-28 |
+| Backend migration smoke | Repeated seed bootstrap reuses the same default sales-channel and publishable-key IDs without increasing either count | `backend/apps/backend/src/scripts/initial-data-seed.ts` | Passed in production 2026-07-28 |
 
 ## 11. Implementation Plan
 
@@ -322,7 +322,7 @@ Flow reviews: launch migration approved 2026-07-15; Store normalization v2 and s
 Validation:
 
 - `npx tsc --noEmit` in `backend/apps/backend` completed successfully.
-- `npx medusa exec ./src/migration-scripts/update-product-cards.ts` completed successfully twice against the local database.
+- `npx medusa exec ./src/scripts/update-product-cards.ts` completed successfully twice against the local database.
 - Store API returned all six launch products with localized copy/metadata and no legacy handles.
 - Corrected migration completed twice. `prod_01KXD77RCZR088H58YSG2BEEK3` now owns `amethyst`; `prod_01KXDBBK6V5TXA74QWR0XXH0TY` now owns `lagoon`; redundant canonical duplicates and synthetic test data were removed; the pre-existing Purple cart reference remains valid; Store API exposes no `purple`, `sun-chain`, or archived duplicate handle.
 - `npm run build --prefix backend` completed successfully; final global lint completed with no errors and five pre-existing storefront `<img>` warnings.

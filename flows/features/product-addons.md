@@ -180,7 +180,7 @@ Implementation files:
 - `storefront/src/app/[locale]/products/[handle]/page.tsx`
 - `storefront/src/app/[locale]/checkout/page.tsx`
 - `storefront/src/app/[locale]/cabinet/orders/[id]/page.tsx`
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`
+- `backend/apps/backend/src/scripts/initial-data-seed.ts`
 - `storefront/src/lib/__tests__/cart-packaging.test.tsx`
 - `storefront/src/lib/__tests__/product-addons.test.tsx`
 

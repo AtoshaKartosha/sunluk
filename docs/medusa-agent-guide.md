@@ -166,7 +166,7 @@ Agents can execute these operations in the backend workspace directory (`backend
   ```
 * **Seed database**:
   ```bash
-  npx medusa db:seed --file src/migration-scripts/initial-data-seed.ts
+  npx medusa db:seed --file src/scripts/initial-data-seed.ts
   ```
 
 ### 8.2 User Administration

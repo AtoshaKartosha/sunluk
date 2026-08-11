@@ -153,7 +153,7 @@ Authoritative state:
 
 - Products, categories, variants, prices, regions, inventory, sales channel membership, ordered image URLs, and thumbnails live in Medusa.
 - Recovered immutable product-media bytes live in the tracked backend static directory and are copied into the production image; seed data recreates their Medusa URL/order mapping on a clean database.
-- Seed data currently creates Europe and Russia regions, the storefront sales channel, product categories, products, variants, prices, stock location, shipping options, and recovered product media in `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
+- Seed data currently creates Europe and Russia regions, the storefront sales channel, product categories, products, variants, prices, stock location, shipping options, and recovered product media in `backend/apps/backend/src/scripts/initial-data-seed.ts`.
 
 Storefront projection:
 
@@ -201,6 +201,7 @@ Storefront projection:
 - Touch, swipe, or compatibility mouse events on phone/tablet must not activate the desktop 1.5x zoom. Changing gallery media clears prior zoom position.
 - Canonical handles missing from a response are omitted without reordering the remaining cards; unknown handles sort after the six canonical handles.
 - Dune or Silk has zero tracked inventory and backorder is disabled: show it in the collection as unavailable and reject add-to-cart through the same Medusa-derived availability projection.
+- A changed manual seed or catalog updater must never replay implicitly during `medusa db:migrate`: manual data scripts live outside Medusa's auto-discovered `src/migration-scripts/` directory and run only through an explicit operator command.
 
 ## 8. Side Effects
 
@@ -213,6 +214,7 @@ Storefront projection:
 - Product media selection is browser-native: WebP is preferred and PNG is the capability fallback at every product rendering path, including listing, detail, packaging, cart, checkout, and order history.
 - `cart:item-selected` hands the validated main selection to Product Add-ons; Product Add-ons coordinates one main and an optional linked `cart:line-item-add-requested` Cart mutation.
 - Clean database seeding restores the recovered thumbnail and ordered gallery mapping, while backend rebuilds retain the tracked immutable bytes.
+- Production schema migration never replays catalog seed/update scripts; the focused Dune/Silk updater remains a separate, explicit, convergent post-deploy operation.
 
 ## 9. Schemas Touched
 
@@ -238,13 +240,13 @@ Expected implementation files for this release:
 - `storefront/messages/ru.json` and `storefront/messages/en.json`.
 - `storefront/public/images/` paired launch-product WebP/PNG assets, enumerated by `storefront/src/lib/__tests__/product-media-assets.test.ts`.
 - `backend/apps/backend/static/` paired current product/packaging WebP/PNG assets, enumerated by `storefront/src/lib/__tests__/product-media-assets.test.ts`.
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
-- `backend/apps/backend/src/migration-scripts/update-launch-inventory.ts`.
+- `backend/apps/backend/src/scripts/initial-data-seed.ts`.
+- `backend/apps/backend/src/scripts/update-launch-inventory.ts`.
 - Medusa Store API product, region, pricing, and inventory response types from `@medusajs/js-sdk`.
 
 Current files that inform the flow:
 
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts`.
+- `backend/apps/backend/src/scripts/initial-data-seed.ts`.
 - `backend/apps/backend/medusa-config.ts`.
 
 - `backend/apps/backend/Dockerfile` copies the tracked `backend/apps/backend/static/` media into the production runtime image.
@@ -272,7 +274,8 @@ Current files that inform the flow:
 | Storefront unit | Product picture resolver prefers WebP, falls back to same-stem PNG, and preserves query strings | `storefront/src/lib/__tests__/product-image.test.tsx` | Passed 2026-08-11 |
 | Storefront UI/integration | Touch navigation never zooms; mouse zoom resets whenever gallery media changes | `storefront/src/lib/__tests__/product-gallery.test.ts` | Passed 2026-08-11 |
 | Storefront UI/integration | Zero-stock Dune and Silk cards remain visible as unavailable and cannot enter cart | `storefront/src/lib/__tests__/product-availability.test.tsx` | Passed 2026-08-11 |
-| Backend script smoke | `update-launch-inventory.ts` changes only Dune and Silk to zero and is convergent on rerun | `npx medusa exec ./src/migration-scripts/update-launch-inventory.ts` from `backend/apps/backend` against an isolated database, twice | Pending deployment |
+| Backend script smoke | `update-launch-inventory.ts` changes only Dune and Silk to zero and is convergent on rerun | `npx medusa exec ./src/scripts/update-launch-inventory.ts` from `backend/apps/backend` against an isolated database, twice | Pending deployment |
+| Backend migration smoke | `medusa db:migrate` completes without discovering or executing manual catalog seed/update scripts; the focused updater runs only when explicitly invoked | Production-built backend runtime followed by Store API inventory verification | Built-image path audit passed; production command pending |
 | Storefront asset audit | Every current storefront and backend product/packaging media stem has both WebP and PNG bytes before deployment | `storefront/src/lib/__tests__/product-media-assets.test.ts` | Passed 2026-08-11 |
 | Storefront rendering | Shared product-picture path renders listing, PDP gallery, packaging, cart, checkout, and cabinet order images; no-WebP capability selects PNG | `product-image.test.tsx`, `product-media-assets.test.ts`, and named ProductImage callsites | Passed; live transactional-route smoke pending deployment |
 | Storefront smoke | Hero, editorial, and about CTAs route to locale products; breadcrumb reads `КОЛЛЕКЦИЯ` / `COLLECTION`; card title is Medium and price is normal weight | Chrome landing smoke plus focused component assertions | Passed 2026-08-11 |
@@ -293,10 +296,11 @@ Current files that inform the flow:
 12. Route every product image renderer through one native `<picture>` component; retain the original URL for unpaired formats.
 13. Restrict gallery zoom to mouse input, reset zoom when media changes, and show the complete image on phone/tablet.
 14. Route landing CTAs to localized product lists and update the catalog breadcrumb and card typography.
+15. Move manual data seed/update scripts out of Medusa's auto-discovered migration directory and update every explicit operator command.
 
 ## 12. Implementation Trace
 
-Current status: base catalog/PDP/media recovery and the 2026-08-11 release code are implemented. The Dune/Silk production inventory mutation remains an explicit post-deploy data operation; it is not run by CI or application startup.
+Current status: base catalog/PDP/media recovery and the 2026-08-11 release code are implemented. Manual data scripts now build under `/app/src/scripts/` while `/app/src/migration-scripts/` is empty; deploying the correction, rerunning schema migration, and explicitly applying Dune/Silk inventory remain.
 
 Current implementation files:
 
@@ -313,14 +317,14 @@ Current implementation files:
 - `storefront/src/components/product/ProductJsonLd.tsx`
 - `backend/apps/backend/static/` (24 recovered immutable media files plus `wooden-case-placeholder.webp`)
 - `backend/apps/backend/Dockerfile` (runtime media copy)
-- `backend/apps/backend/src/migration-scripts/initial-data-seed.ts` (durable public URL, ordered product mapping, and `wooden-case` placeholder mapping)
+- `backend/apps/backend/src/scripts/initial-data-seed.ts` (durable public URL, ordered product mapping, and `wooden-case` placeholder mapping)
 - `storefront/src/components/product/ProductImage.tsx`, `storefront/src/components/product/ProductCard.tsx`
 - `storefront/src/components/landing/HeroSection.tsx`, `storefront/src/components/landing/EditorialSection.tsx`, `storefront/src/components/landing/AboutSection.tsx`, `storefront/src/components/landing/CollectionSection.tsx`
 - `storefront/src/components/cart/CartDrawer.tsx`
 - `storefront/src/app/[locale]/checkout/page.tsx`, `storefront/src/app/[locale]/cabinet/orders/[id]/page.tsx`
 - `storefront/messages/ru.json`, `storefront/messages/en.json`
 - `storefront/public/images/` and `backend/apps/backend/static/` paired product-media assets
-- `backend/apps/backend/src/migration-scripts/update-launch-inventory.ts`
+- `backend/apps/backend/src/scripts/update-launch-inventory.ts`
 - `storefront/src/lib/__tests__/products-order.test.ts`, `storefront/src/lib/__tests__/product-availability.test.tsx`, `storefront/src/lib/__tests__/product-image.test.tsx`, `storefront/src/lib/__tests__/product-media-assets.test.ts`, `storefront/src/lib/__tests__/product-gallery.test.ts`
 
 Release v3 implementation:
@@ -353,7 +357,8 @@ Validation:
 - 2026-08-11 `npm run lint` completed with zero errors and zero warnings.
 - Chrome production-build smoke at 375x667 passed for RU/EN hero layout and punctuation, all four localized `/products` CTAs, canonical Instagram URL, mobile menu outside/inside/Escape behavior, and four loaded WebP-preferred/PNG-fallback landing product pictures.
 - Live catalog/PDP/cart/checkout browser smoke could not run locally because PostgreSQL 16 binaries are absent and the checked-in local publishable key is not valid for production. The corresponding ordering, availability, gallery, cart, and phone contracts passed the full component suite; repeat live routes after deployment.
-- Production data command pending deployment: `npx medusa exec ./src/migration-scripts/update-launch-inventory.js` from the built backend runtime, followed by Store API/PDP checks for visible unavailable Dune/Silk.
+- Production data command pending deployment: `npx medusa exec ./src/scripts/update-launch-inventory.js` from the built backend runtime, followed by Store API/PDP checks for visible unavailable Dune/Silk.
+- Migration-safe backend image audit listed all five manual commands under `/app/src/scripts/` and an empty `/app/src/migration-scripts/`; backend lint, 34 unit tests, build, and Docker build passed.
 
 Notes:
 
