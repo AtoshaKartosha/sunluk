@@ -4,7 +4,7 @@ import type { RegionResult } from "./regions";
 const CART_ID_KEY = "sunluk_cart_id";
 
 const CART_FIELDS =
-  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods";
+  "id,region_id,customer_id,email,sales_channel_id,currency_code,total,subtotal,tax_total,discount_total,shipping_total,item_total,item_subtotal,item_tax_total,item_count,*items,*items.variant,*items.product,*region,*shipping_address,*billing_address,*shipping_methods,*promotions";
 
 // ---------------------------------------------------------------------------
 // Cart ID persistence (localStorage)
@@ -197,6 +197,19 @@ export async function addShippingMethod(cartId: string, optionId: string, medusa
   const { cart } = await sdk.store.cart.addShippingMethod(
     cartId,
     { option_id: optionId },
+    { fields: CART_FIELDS },
+  );
+  return cart;
+}
+
+/**
+ * Apply a promotion code to the cart.
+ */
+export async function applyPromotion(cartId: string, code: string, medusaLocale?: string) {
+  const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
+  const { cart } = await sdk.store.cart.addPromotions(
+    cartId,
+    { promo_codes: [code] },
     { fields: CART_FIELDS },
   );
   return cart;

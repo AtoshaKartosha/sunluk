@@ -14,6 +14,7 @@ import { useLocale } from "next-intl";
 import { toMedusaLocale, type Locale } from "@/i18n/routing";
 import {
   addLineItem,
+  applyPromotion as applyPromotionSDK,
   clearCartId,
   createCart,
   getCart,
@@ -42,6 +43,7 @@ interface CartContextType {
   ) => Promise<StoreCart | undefined>;
   updateItem: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
+  applyPromotion: (code: string) => Promise<StoreCart | undefined>;
   openCart: () => void;
   closeCart: () => void;
   clearCart: () => void;
@@ -295,6 +297,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     [cart, runWithRecovery, medusaLocale],
   );
+  const applyPromotionCode = useCallback(
+    async (code: string) => {
+      const currentId = cart?.id ?? getStoredCartId();
+      if (!currentId) return;
+
+      setMutating(true);
+      try {
+        const updated = await runWithRecovery(
+          currentId,
+          async (id) =>
+            (await applyPromotionSDK(id, code, medusaLocale)) as unknown as StoreCart,
+          true,
+        );
+        const normalized = code.trim().toLowerCase();
+        const applied = updated?.promotions?.some(
+          (p) => p.code?.toLowerCase() === normalized,
+        );
+        if (!applied) {
+          throw new Error("Promotion was not applied");
+        }
+        setCart(updated);
+        return updated;
+      } catch (err) {
+        // Non-recoverable failure — leave the previous projection in place.
+        throw err;
+      } finally {
+        setMutating(false);
+      }
+    },
+    [cart, runWithRecovery, medusaLocale],
+  );
+
 
   // ---- Drawer controls ----
 
@@ -318,6 +352,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       updateItem,
       removeItem,
+      applyPromotion: applyPromotionCode,
       openCart,
       closeCart,
       clearCart,
@@ -332,6 +367,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       updateItem,
       removeItem,
+      applyPromotionCode,
       openCart,
       closeCart,
       clearCart,

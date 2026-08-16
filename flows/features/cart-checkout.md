@@ -13,13 +13,14 @@ Success criteria:
 - The active cart drawer offers a secondary locale-preserving return to the product collection without mutating cart contents.
 - A successful checkout emits `order:placed` for admin operations.
 - Medusa prices standard delivery from the discounted merchandise total: Russia/RUB costs 800 RUB below 4,999 RUB and is free from 4,999 RUB; Europe/EUR costs 10 EUR below 60 EUR and is free from 60 EUR.
+- A visitor can submit one promotion code during the checkout address step; Medusa accepts or rejects it and the storefront renders only the returned cart totals.
 
 ## 2. Scope
 
 In scope:
 
 - Cart creation and item updates.
-- Promotion code entry if Medusa supports it for the configured region.
+- Promotion code entry during checkout for regions where Medusa has configured promotions.
 - Checkout address, shipping option, payment session/provider, and order completion.
 - Required international phone validation and normalization before the contact-to-delivery transition.
 - Cart-drawer continuation to `/{locale}/products`.
@@ -64,7 +65,16 @@ flowchart TD
   ShowCart --> Choice
   Choice -->|add one more accessory| Products[Navigate to locale product collection; preserve cart]
   Choice -->|checkout| Checkout[Begin checkout]
-  Checkout --> Phone{Required phone normalizes to E.164?}
+  Checkout --> ExistingPromo{Promotion already applied?}
+  ExistingPromo -->|yes| ShowPromo[Show applied code; no second-code form]
+  ExistingPromo -->|no| PromoChoice{Submit promotion code?}
+  PromoChoice -->|no| Phone
+  PromoChoice -->|yes| ApplyPromo[Send trimmed code to Medusa]
+  ApplyPromo --> PromoAccepted{Medusa accepts promotion?}
+  PromoAccepted -->|yes| ShowPromo
+  PromoAccepted -->|no| PromoError[Show localized error; keep previous cart]
+  PromoError --> PromoChoice
+  ShowPromo --> Phone{Required phone normalizes to E.164?}
   Phone -->|no| PhoneError[Show phone error; remain on contact step]
   Phone -->|yes| Address{Other contact and address fields valid?}
   Address -->|no| AddressError[Request corrections]
@@ -102,6 +112,8 @@ stateDiagram-v2
   CartError --> CartActive: user resolves issue or retries
   CartActive --> CheckoutAddress: begin checkout
   CartActive --> CartActive: continue shopping; preserve cart and close drawer
+  CheckoutAddress --> CheckoutPromotionUpdating: submit first promotion code
+  CheckoutPromotionUpdating --> CheckoutAddress: accepted cart or rejected error
   CheckoutAddress --> CheckoutAddress: required phone missing or invalid
   CheckoutAddress --> CheckoutDelivery: address and normalized phone accepted
   CheckoutDelivery --> CheckoutPayment: shipping option selected
@@ -144,6 +156,7 @@ Storefront projection:
 
 - Current cart response from Medusa.
 - Local form values for contact, address, shipping selection, and payment selection before submission.
+- Local promotion-code input plus pending/error state; the code is not authoritative and is cleared after Medusa accepts it.
 - Shipping availability and `shipping_total` returned by Medusa. Before a shipping method is selected, the UI shows a pending state rather than inferring a price from subtotal.
 - Local loading/error state for each mutation.
 
@@ -158,6 +171,7 @@ Storefront projection:
 | Internal | `cart:mutation-rejected` | None | `{ cartId?, variantId, reason }` | Medusa rejects one line mutation | Preserve the last authoritative cart projection; caller may retry |
 | Internal | `checkout:address-submitted` | None | `{ cartId, email, phone, shippingAddress, billingAddress? }` | Required fields are present, phone is normalized E.164, and Medusa accepts the address | Missing/incomplete/malformed phone or invalid address/contact data |
 | Internal | `cart:continue-shopping` | None | `{ cartId, locale, href }` | Active cart drawer is visible | Missing locale or non-products destination |
+| Internal | `checkout:promotion-submitted` | None | `{ cartId, code }` | Checkout is on the address step, trimmed code is non-empty, cart has no applied promotion, and no cart mutation is pending | Empty code, existing promotion, duplicate submit, invalid/expired/inapplicable code, or Medusa rejection |
 | Internal | `checkout:shipping-selected` | None | `{ cartId, shippingOptionId }` | Shipping option belongs to cart region and is enabled | Invalid/stale shipping option |
 | Internal | `checkout:shipping-priced` | None | `{ cartId, shippingOptionId, regionId, currencyCode, discountedMerchandiseTotal, shippingTotal }` | A supported regional option is available; Medusa evaluates the current discounted merchandise total | Missing option, unsupported region/currency, or stale cart state |
 | Internal | `checkout:payment-selected` | None | `{ cartId, paymentProviderId }` | Provider is enabled for cart region/currency | Provider unavailable or initialization failed |
@@ -169,7 +183,12 @@ Storefront projection:
 - Variant becomes unavailable after product detail view: Medusa mutation rejects and UI shows no cart change.
 - Quantity exceeds inventory or max purchase rules: reject with Medusa error and preserve last valid cart projection.
 - Product Add-ons' main line succeeds but its later packaging-line request fails: the first returned main-only cart remains authoritative and packaging is not displayed as added.
-- Promotion code is invalid or expired: show promotion-specific error; keep cart active.
+- Promotion code is blank after trimming: do not call Medusa; show the localized required-code error.
+- Promotion code is invalid, expired, or inapplicable to the active cart: show a promotion-specific localized error and preserve the last authoritative cart projection.
+- Promotion submission is already pending: disable the input and action; a synchronous in-flight guard prevents a second request before rerender.
+- Promotion code is accepted: replace the cart projection with Medusa's returned cart, clear the input/error, and render the returned discount and totals.
+- Cart already contains an applied promotion on initial load or after acceptance: show the applied code and hide the submission form; replacing, stacking, and removing promotions are out of scope for this change.
+- Visitor advances beyond the address step: the promotion form is no longer actionable, preventing a late totals mutation after shipping/payment selection.
 - Russia/RUB discounted merchandise total is 4,998 RUB: the calculated provider returns 800 RUB.
 - Russia/RUB discounted merchandise total is exactly 4,999 RUB: the calculated provider returns 0 RUB.
 - Europe/EUR discounted merchandise total is 59.99 EUR: the calculated provider returns 10 EUR.
@@ -195,6 +214,7 @@ Storefront projection:
 - Create or reuse the Russia fulfillment set/service zone and its calculated standard shipping option.
 - Create or reuse the Europe fulfillment set/service zone and its calculated standard shipping option.
 - Recalculate Medusa shipping totals through the provider after cart mutations or product-discount changes.
+- Apply a promotion through the Medusa Store API and replace the storefront cart projection only with a response that contains the submitted promotion.
 - Initialize payment sessions with configured provider.
 - Complete cart into Medusa order.
 - Emit `order:placed` so admin/order management can observe the new order.
@@ -219,6 +239,9 @@ Expected implementation files for the regional delivery rule:
 - `storefront/src/app/[locale]/checkout/page.tsx` validates and normalizes required E.164 phone input before `updateCart`.
 - `storefront/src/components/cart/CartDrawer.tsx` closes and routes the secondary action to `/{locale}/products`.
 - `storefront/messages/ru.json` and `storefront/messages/en.json` provide phone-error and continue-shopping copy.
+- `storefront/src/lib/medusa/cart.ts`, `storefront/src/components/cart/CartContext.tsx`, and `storefront/src/components/cart/types.ts` expose the minimum typed apply-promotion mutation and returned promotions projection.
+- `storefront/src/app/[locale]/checkout/page.tsx` renders the localized promotion input, pending state, rejection feedback, applied code, and Medusa-returned discount/totals.
+- `storefront/messages/ru.json` and `storefront/messages/en.json` provide promotion input, action, applied-state, and error copy.
 
 ## 10. Targeted Tests
 
@@ -237,6 +260,7 @@ Expected implementation files for the regional delivery rule:
 | Storefront integration | More than 15 phone digits stays on contact and makes no cart update | `storefront/src/lib/__tests__/checkout-contact.test.tsx` | Passed 2026-08-11 |
 | Storefront integration | Formatted valid international phone is normalized into both submitted addresses before delivery loads | `storefront/src/lib/__tests__/checkout-contact.test.tsx` | Passed 2026-08-11 |
 | Storefront component | Secondary cart action closes the drawer, preserves cart state, and links to `/{locale}/products` | `storefront/src/lib/__tests__/cart-packaging.test.tsx` | Passed 2026-08-11 |
+| Storefront integration | Empty code makes no Medusa call; rapid duplicate submission sends one request; accepted code replaces cart totals and hides the form; rejection preserves cart; existing promotion displays without a second form; promotion actions disappear after the address step | `storefront/src/lib/__tests__/checkout-promotions.test.tsx` | Passed 2026-08-16 |
 
 ## 11. Implementation Plan
 
@@ -247,10 +271,11 @@ Expected implementation files for the regional delivery rule:
 5. Add targeted regional boundary, discount-transition, and cart-transition tests, then validate checkout against Medusa responses.
 6. Require and normalize international phone input before the existing address submission transition.
 7. Add one secondary cart-drawer link that closes the drawer and returns to the localized collection without mutating the cart.
+8. Add one localized checkout promotion form that trims a non-empty code, applies it through Medusa, blocks duplicate submission, and refreshes the authoritative cart projection.
 
 ## 12. Implementation Trace
 
-Current status: Completed. Medusa remains authoritative for cart, totals, shipping, and completion. The 2026-08-11 release additionally requires/normalizes E.164 phone input before address submission and adds a locale-preserving continue-shopping action in the active cart drawer.
+Current status: Completed. Medusa remains authoritative for cart, promotions, totals, shipping, and completion. The 2026-08-16 release adds one promotion-code mutation limited to the checkout address step.
 
 Implementation files:
 - `storefront/src/components/cart/CartContext.tsx`, `storefront/src/components/cart/CartDrawer.tsx`
@@ -264,12 +289,20 @@ Implementation files:
 - `storefront/src/components/product/ProductInfoBlock.tsx` (VAT label render removal)
 - `storefront/src/app/[locale]/products/[handle]/page.tsx` (VAT label prop removal)
 - `storefront/src/lib/__tests__/checkout-contact.test.tsx`, `storefront/src/lib/__tests__/cart-packaging.test.tsx`
+- `storefront/src/components/cart/types.ts`, `storefront/src/lib/__tests__/checkout-promotions.test.tsx`, `storefront/src/lib/__tests__/checkout-shipping.test.tsx`, `storefront/messages/ru.json`, and `storefront/messages/en.json`
 
 Release v4 implementation:
 
 - Required phone validation and normalization are implemented in `storefront/src/app/[locale]/checkout/page.tsx`.
 - The localized secondary collection action is implemented in `storefront/src/components/cart/CartDrawer.tsx`.
 - Focused checkout-contact and cart-drawer assertions are implemented under `storefront/src/lib/__tests__/`.
+
+Release v5 implementation:
+
+- `CartContext.applyPromotion` calls the Medusa Store API, validates the returned promotion projection, serializes with cart mutations, and updates the cart only from the authoritative response.
+- Checkout renders the localized form only on the address step and only when no promotion is applied; accepted/existing promotions display their code without replacement, stacking, or removal controls.
+- A synchronous in-flight guard blocks rapid duplicate submissions; localized empty and backend-rejection feedback preserve the active checkout.
+- Focused promotion assertions cover empty, pending/duplicate, accepted, rejected, existing-promotion, and post-address behavior.
 
 Validation commands & results:
 - Backend unit tests: `npm exec -- jest --silent --runInBand --forceExit src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` from `backend/apps/backend` (17/17 tests passed)
@@ -281,6 +314,10 @@ Validation commands & results:
 - 2026-08-11 final full storefront suite: `npm run test --prefix storefront` passed 20 files / 128 tests, including invalid/overlong/valid phone, normalized address payload, cart continuation, packaging metadata omission, and shipping projections.
 - 2026-08-11 storefront/backend production builds passed; the final storefront rebuild and global lint rerun passed with zero errors and zero warnings.
 - Chrome verified locale `/products` destinations and mobile navigation. Live cart/checkout browser interaction remains a post-deploy smoke because the workstation has no PostgreSQL 16 binaries.
+- 2026-08-16 promotion tests: `npm test -- --run src/lib/__tests__/checkout-promotions.test.tsx` from `storefront` passed 1 file / 6 tests.
+- 2026-08-16 storefront lint: `npm run lint --prefix storefront` passed with zero errors and zero warnings.
+- 2026-08-16 storefront production build: `npm run build --prefix storefront` completed successfully.
+- 2026-08-16 Chrome smoke: added an available product, opened `/ru/checkout`, confirmed localized promo input/action, verified empty-code local rejection and invalid-code Medusa rejection while retaining the entered code.
 
 ## 13. Open Questions
 
@@ -302,11 +339,18 @@ Validation commands & results:
 - [x] Accepted phone normalization and submitted address projection are explicit.
 - [x] Continue-shopping navigation preserves cart authority and locale.
 - [x] Product Add-ons to Cart `cart:line-item-add-requested` contract matches the architecture map; Cart does not consume `cart:item-selected` directly.
+- [x] Promotion application remains Medusa-authoritative; address-step scope, blank, rejected, accepted, existing-promotion, and rapid duplicate-submit behavior are explicit.
 
 Flow review v5 (2026-08-11): **APPROVED**. The single-line Cart mutation boundary, internal region resolution, exact payloads, phone validation, and focused tests clear the Approval Bar.
+
+Flow review v6 (2026-08-16): **REJECTED**. Promotion entry was initially placed before checkout, lacked checkout-state transitions, and did not define existing-promotion behavior.
+
+Flow review v7 (2026-08-16): **APPROVED**. Promotion entry is limited to `CheckoutAddress`; an existing or newly accepted promotion is displayed without replacement, stacking, or removal controls. Medusa remains authoritative and no cross-flow event is added.
 
 Flow review v2 (2026-07-13): **APPROVED**. No blockers; regional thresholds, post-discount authority, provider boundary, failure paths, schemas, and targeted tests are explicit.
 
 Flow review v3 (2026-07-27): **APPROVED**. Provider capability at option creation, runtime currency rejection, manual-provider registration, and the clean-database seed boundary are explicit; no new event, authority, permission, or cross-flow blocker was introduced.
 
 Flow-code sync (2026-07-27): **IN SYNC**. The seeded Russia options use the regional calculated provider, production Store API boundary checks match the declared 4,999 RUB threshold, and no storefront-owned shipping calculation was introduced.
+
+Flow-code sync v7 (2026-08-16): **IN SYNC**. Checkout promotion entry, Medusa-authoritative cart replacement, address-step scope, localized rejection states, duplicate-submit guard, returned discount rendering, focused tests, and Section 12 trace match the implementation; no cross-flow event was added.

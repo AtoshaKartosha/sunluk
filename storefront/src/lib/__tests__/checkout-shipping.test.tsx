@@ -25,7 +25,7 @@ vi.mock("@/lib/medusa/cart", () => ({
 }));
 
 vi.mock("@/lib/medusa/regions", () => ({
-  getRegionCountries: vi.fn().mockResolvedValue([]),
+  getStoreCountries: vi.fn().mockResolvedValue(["ru", "de"]),
 }));
 
 vi.mock("@/lib/medusa/customer", () => ({

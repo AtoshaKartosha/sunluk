@@ -58,6 +58,12 @@ export interface StoreCartShippingMethod {
   shipping_option_id: string;
 }
 
+export interface StoreCartPromotion {
+  id?: string;
+  code?: string;
+  is_automatic?: boolean;
+}
+
 export interface StoreCart {
   id: string;
   region_id?: string;
@@ -73,6 +79,7 @@ export interface StoreCart {
   item_tax_total: number;
   item_count?: number;
   shipping_methods?: StoreCartShippingMethod[];
+  promotions?: StoreCartPromotion[];
   email?: string | null;
   shipping_address?: StoreCartAddress | null;
   billing_address?: StoreCartAddress | null;

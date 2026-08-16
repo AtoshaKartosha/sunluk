@@ -374,10 +374,11 @@ function CityCombobox({
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, loading, clearCart, setCart } = useCart();
+  const { cart, loading, clearCart, setCart, applyPromotion, mutating } = useCart();
   const locale = useLocale();
   const t = useTranslations("checkout");
   const tc = useTranslations("checkout.contact");
+  const tpromo = useTranslations("checkout.promotion");
   const ts = useTranslations("checkout.shipping");
   const tp = useTranslations("checkout.payment");
   const ta = useTranslations("checkout.actions");
@@ -395,6 +396,45 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof ContactShippingFormState, string>>
   >({});
+
+  // ---- Promotion state ----
+  const [promoCode, setPromoCode] = useState("");
+  const [promoSubmitting, setPromoSubmitting] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
+  const promoSubmittingRef = useRef(false);
+  const appliedPromotion = cart?.promotions?.find((p) => p.code) ?? cart?.promotions?.[0] ?? null;
+
+  const handlePromotionSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
+      if (promoSubmittingRef.current || mutating) return;
+
+      const trimmed = promoCode.trim();
+      if (!trimmed) {
+        setPromoError(tpromo("validation.required"));
+        setPromoSuccess(null);
+        return;
+      }
+
+      promoSubmittingRef.current = true;
+      setPromoSubmitting(true);
+      setPromoError(null);
+      setPromoSuccess(null);
+
+      try {
+        await applyPromotion(trimmed);
+        setPromoCode("");
+        setPromoSuccess(tpromo("applied"));
+      } catch {
+        setPromoError(tpromo("errors.failed"));
+      } finally {
+        promoSubmittingRef.current = false;
+        setPromoSubmitting(false);
+      }
+    },
+    [promoCode, mutating, applyPromotion, tpromo],
+  );
 
   // ---- Shipping state ----
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -971,6 +1011,79 @@ export default function CheckoutPage() {
                     />
                     {fieldErrorEl("phone")}
                   </div>
+                </div>
+
+                {/* Promotion section */}
+                <div className="space-y-2 border-t border-[#2c211b]/10 pt-6">
+                  <label
+                    htmlFor="checkout-promo-code"
+                    className="block text-[11px] font-medium tracking-[0.15em] uppercase text-[#2c211b]/70"
+                  >
+                    {tpromo("label")}
+                  </label>
+                  {appliedPromotion ? (
+                    <div className="flex items-center justify-between p-3.5 bg-white border border-[#2f6f78]/30">
+                      <span className="text-sm font-medium text-[#2f6f78] uppercase">
+                        {appliedPromotion.code ?? tpromo("applied")}
+                      </span>
+                      <span role="status" aria-live="polite" className="text-xs text-[#2f6f78] font-medium">
+                        {tpromo("applied")}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-3">
+                        <input
+                          id="checkout-promo-code"
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value);
+                            if (promoError) setPromoError(null);
+                          }}
+                          disabled={promoSubmitting || mutating}
+                          aria-invalid={!!promoError || undefined}
+                          aria-describedby={
+                            promoError
+                              ? "checkout-promo-error"
+                              : promoSuccess
+                                ? "checkout-promo-success"
+                                : undefined
+                          }
+                          className="flex-1 px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] placeholder:text-[#2c211b]/30 focus:outline-none focus:border-[#2f6f78] transition-colors disabled:opacity-50"
+                          placeholder={tpromo("placeholder")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handlePromotionSubmit()}
+                          disabled={promoSubmitting || mutating}
+                          className="px-6 py-3 bg-[#2c211b] text-[#f4ebe6] hover:bg-[#2f6f78] text-xs font-medium tracking-widest uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {promoSubmitting ? ta("saving") : tpromo("apply")}
+                        </button>
+                      </div>
+                      {promoError && (
+                        <p
+                          id="checkout-promo-error"
+                          role="alert"
+                          aria-live="assertive"
+                          className="text-xs text-red-600 mt-1"
+                        >
+                          {promoError}
+                        </p>
+                      )}
+                      {promoSuccess && (
+                        <p
+                          id="checkout-promo-success"
+                          role="status"
+                          aria-live="polite"
+                          className="text-xs text-[#2f6f78] mt-1 font-medium"
+                        >
+                          {promoSuccess}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
       
                 {stepError && (
