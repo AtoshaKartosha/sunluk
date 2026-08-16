@@ -71,10 +71,9 @@ export async function resolveRegion(
 }
 
 /**
- * List the ISO-2 country codes (lowercased) for the region with the given id.
- * Returns an empty array when the region is missing or has no countries.
+ * List every ISO-2 country code (lowercased) supported by a store region.
  */
-export async function getRegionCountries(regionId: string): Promise<string[]> {
+export async function getStoreCountries(): Promise<string[]> {
   const sdk = getMedusaClient();
 
   const { regions } = (await sdk.store.region.list({
@@ -87,10 +86,14 @@ export async function getRegionCountries(regionId: string): Promise<string[]> {
     }>;
   };
 
-  const match = regions.find((r) => r.id === regionId);
-  return (
-    match?.countries
-      ?.map((c) => c.iso_2?.toLowerCase())
-      .filter((c): c is string => Boolean(c)) ?? []
-  );
+  return [
+    ...new Set(
+      regions.flatMap(
+        (region) =>
+          region.countries
+            ?.map((country) => country.iso_2?.toLowerCase())
+            .filter((code): code is string => Boolean(code)) ?? [],
+      ),
+    ),
+  ];
 }

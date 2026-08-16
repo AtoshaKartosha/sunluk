@@ -2,6 +2,7 @@ import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { updateCart } from "@/lib/medusa/cart";
+import { getStoreCountries } from "@/lib/medusa/regions";
 import CheckoutPage from "../../app/[locale]/checkout/page";
 import type { StoreCart } from "../../components/cart/types";
 
@@ -20,7 +21,7 @@ vi.mock("@/lib/medusa/cart", () => ({
 }));
 
 vi.mock("@/lib/medusa/regions", () => ({
-  getRegionCountries: vi.fn().mockResolvedValue([]),
+  getStoreCountries: vi.fn().mockResolvedValue(["gb", "de", "dk", "se", "fr", "es", "it", "ru"]),
 }));
 
 vi.mock("@/lib/medusa/customer", () => ({
@@ -80,6 +81,20 @@ describe("Checkout contact phone", () => {
       ],
       shipping_methods: [],
     } as unknown as StoreCart;
+  });
+
+  it("defaults to Russia in Russian and keeps every supported country selectable", async () => {
+    render(<CheckoutPage />);
+
+    const country = await screen.findByRole("combobox", { name: "country *" });
+    expect(getStoreCountries).toHaveBeenCalledOnce();
+    expect(country).toHaveValue("ru");
+    await waitFor(() =>
+      expect(Array.from((country as HTMLSelectElement).options, (option) => option.value)).toContain("de"),
+    );
+
+    fireEvent.change(country, { target: { value: "de" } });
+    expect(country).toHaveValue("de");
   });
 
   it.each(["", "+1", "49 170 1234567", "+4917012345678901"])(

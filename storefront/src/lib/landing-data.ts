@@ -129,13 +129,13 @@ export const FOOTER_GROUPS: FooterGroupData[] = [
   {
     title: "МАГАЗИН",
     links: [
-      { label: "Коллекция", href: "#" },
+      { label: "Коллекция", href: "/ru/products" },
     ],
   },
   {
     title: "ВОПРОСЫ",
     links: [
-      { label: "Связаться с нами", href: "#" },
+      { label: "Связаться с нами", href: "/ru#contacts" },
       { label: "Telegram", href: "#" },
       { label: "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
       { label: "Email", href: "mailto:info@sunluk.ru" },
@@ -193,13 +193,13 @@ export function getFooterGroups(
       {
         title: f?.shop ?? "SHOP",
         links: [
-          { label: f?.allProducts ?? "All Products", href: "#" },
+          { label: f?.allProducts ?? "All Products", href: "/en/products" },
         ],
       },
       {
         title: f?.questions ?? "QUESTIONS",
         links: [
-          { label: f?.contactUs ?? "Contact Us", href: "#" },
+          { label: f?.contactUs ?? "Contact Us", href: "/en#contacts" },
           { label: f?.telegram ?? "Telegram", href: "#" },
           { label: f?.instagram ?? "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
           { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },
@@ -223,13 +223,13 @@ export function getFooterGroups(
     {
       title: f?.shop ?? "МАГАЗИН",
       links: [
-        { label: f?.allProducts ?? "Коллекция", href: "#" },
+        { label: f?.allProducts ?? "Коллекция", href: "/ru/products" },
       ],
     },
     {
       title: f?.questions ?? "ВОПРОСЫ",
       links: [
-        { label: f?.contactUs ?? "Связаться с нами", href: "#" },
+        { label: f?.contactUs ?? "Связаться с нами", href: "/ru#contacts" },
         { label: f?.telegram ?? "Telegram", href: "#" },
         { label: f?.instagram ?? "Instagram", href: "https://www.instagram.com/sunluk.accessories/" },
         { label: f?.email ?? "Email", href: "mailto:info@sunluk.ru" },

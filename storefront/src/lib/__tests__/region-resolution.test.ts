@@ -12,7 +12,7 @@ vi.mock("../medusa", () => ({
   }),
 }));
 
-import { resolveRegion } from "../medusa/regions";
+import { getStoreCountries, resolveRegion } from "../medusa/regions";
 
 const region = (id: string, country: string, currency: string) => ({
   id,
@@ -97,5 +97,18 @@ describe("resolveRegion", () => {
       type: "unsupported",
       countryCode: "xx",
     });
+  });
+});
+
+describe("getStoreCountries", () => {
+  it("returns the unique countries supported across every region", async () => {
+    defaultRegionList.mockResolvedValue({
+      regions: [
+        { ...region("reg_eu", "de", "eur"), countries: [{ iso_2: "DE" }, { iso_2: "dk" }] },
+        { ...region("reg_ru", "ru", "rub"), countries: [{ iso_2: "ru" }, { iso_2: "de" }] },
+      ],
+    });
+
+    await expect(getStoreCountries()).resolves.toEqual(["de", "dk", "ru"]);
   });
 });

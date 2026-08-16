@@ -18,7 +18,7 @@ import {
   completeCart,
   clearCartId,
 } from "@/lib/medusa/cart";
-import { getRegionCountries } from "@/lib/medusa/regions";
+import { getStoreCountries } from "@/lib/medusa/regions";
 import { getClientCustomer } from "@/lib/medusa/customer";
 import { getPackagingName } from "@/lib/medusa/packaging-names";
 
@@ -386,7 +386,10 @@ export default function CheckoutPage() {
 
   // ---- Step state ----
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("contact");
-  const [contactForm, setContactForm] = useState<ContactShippingFormState>(EMPTY_ADDRESS);
+  const [contactForm, setContactForm] = useState<ContactShippingFormState>({
+    ...EMPTY_ADDRESS,
+    country_code: locale === "ru" ? "ru" : EMPTY_ADDRESS.country_code,
+  });
   const [stepSubmitting, setStepSubmitting] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<
@@ -621,13 +624,12 @@ export default function CheckoutPage() {
       </p>
     ) : null;
 
-  // ---- Load the cart region's countries for the selector ----
+  // ---- Load every country supported by the store ----
   useEffect(() => {
-    const regionId = cart?.region_id;
-    if (!regionId || countries.length > 0) return;
+    if (countries.length > 0) return;
 
     let cancelled = false;
-    getRegionCountries(regionId)
+    getStoreCountries()
       .then((list) => {
         if (cancelled) return;
         setCountries(list);
@@ -644,7 +646,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [cart?.region_id, countries.length]);
+  }, [countries.length]);
 
   // ---- Move focus to the active step heading on step change ----
   useEffect(() => {
@@ -852,41 +854,47 @@ export default function CheckoutPage() {
                     >
                       {tc("country")} *
                     </label>
-                    <select
-                      id="checkout-country"
-                      required
-                      autoComplete="country"
-                      value={contactForm.country_code}
-                      onChange={(e) => {
-                        const code = e.target.value;
-                        // Reset city when the country changes so it always matches
-                        // the selected country (and its suggestion list).
-                        setContactForm((prev) => ({ ...prev, country_code: code, city: "" }));
-                        setFieldErrors((prev) => {
-                          if (!prev.country_code && !prev.city) return prev;
-                          const next = { ...prev };
-                          delete next.country_code;
-                          delete next.city;
-                          return next;
-                        });
-                      }}
-                      onBlur={() => handleFieldBlur("country_code")}
-                      aria-invalid={!!fieldErrors.country_code || undefined}
-                      aria-describedby={fieldErrors.country_code ? "checkout-country-error" : undefined}
-                      className="w-full px-4 py-3 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] focus:outline-none focus:border-[#2f6f78] transition-colors"
-                    >
-                      {countries.length === 0 ? (
-                        <option value={contactForm.country_code} disabled>
-                          {tc("countryLoading")}
-                        </option>
-                      ) : (
-                        countries.map((code) => (
-                          <option key={code} value={code}>
-                            {regionNames?.of(code.toUpperCase()) ?? code.toUpperCase()}
+                    <div className="relative">
+                      <select
+                        id="checkout-country"
+                        required
+                        autoComplete="country"
+                        value={contactForm.country_code}
+                        onChange={(e) => {
+                          const code = e.target.value;
+                          // Reset city when the country changes so it always matches
+                          // the selected country (and its suggestion list).
+                          setContactForm((prev) => ({ ...prev, country_code: code, city: "" }));
+                          setFieldErrors((prev) => {
+                            if (!prev.country_code && !prev.city) return prev;
+                            const next = { ...prev };
+                            delete next.country_code;
+                            delete next.city;
+                            return next;
+                          });
+                        }}
+                        onBlur={() => handleFieldBlur("country_code")}
+                        aria-invalid={!!fieldErrors.country_code || undefined}
+                        aria-describedby={fieldErrors.country_code ? "checkout-country-error" : undefined}
+                        className="w-full appearance-none px-4 py-3 pr-10 bg-white border border-[#2c211b]/15 text-sm text-[#2c211b] focus:outline-none focus:border-[#2f6f78] transition-colors"
+                      >
+                        {countries.length === 0 ? (
+                          <option value={contactForm.country_code} disabled>
+                            {tc("countryLoading")}
                           </option>
-                        ))
-                      )}
-                    </select>
+                        ) : (
+                          countries.map((code) => (
+                            <option key={code} value={code}>
+                              {regionNames?.of(code.toUpperCase()) ?? code.toUpperCase()}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2c211b]/50"
+                      />
+                    </div>
                     {fieldErrorEl("country_code")}
                   </div>
                   <div className="space-y-1.5">
