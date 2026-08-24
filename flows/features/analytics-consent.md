@@ -156,16 +156,17 @@ Cross-flow boundaries: none. Analytics observes public route URLs but emits no c
 - `storefront/messages/info/ru.json`: Russian privacy-policy disclosure for Yandex Metrika and withdrawal.
 - `storefront/messages/info/en.json`: English privacy-policy disclosure for Yandex Metrika and withdrawal.
 - `storefront/src/lib/__tests__/analytics-consent.test.tsx`: focused observable consent behavior.
+- `storefront/src/lib/__tests__/info-sections.test.ts`: bilingual privacy-policy structure count.
 
 ## 10. Targeted Tests
 
 | Layer | Behavior | File | Status |
 |---|---|---|---|
-| Storefront component | Unknown consent shows provider, purpose, Webvisor disclosure, privacy link, and controls without a Metrika request | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Planned |
-| Storefront component | Accept persists grant, loads once, and sends current route once | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Planned |
-| Storefront component | Reject persists denial and route changes remain untracked | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Planned |
-| Storefront component | Footer settings can revoke grant, destruct the counter, clear storage, and block later hits | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Planned |
-| Browser smoke | Production requests `mc.yandex.ru` only after accept and stops after withdrawal | `https://sunluk.ru` | Planned |
+| Storefront component | Unknown consent shows provider, purpose, Webvisor disclosure, privacy link, and controls without a Metrika request | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Passed 2026-08-24 |
+| Storefront component | Accept persists grant, loads once, and sends current route once | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Passed 2026-08-24 |
+| Storefront component | Reject persists denial and route changes remain untracked | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Passed 2026-08-24 |
+| Storefront component | Footer settings can revoke grant, destruct the counter, clear storage, and block later hits | `storefront/src/lib/__tests__/analytics-consent.test.tsx` | Passed 2026-08-24 |
+| Browser smoke | Production requests `mc.yandex.ru` only after accept and stops after withdrawal | `https://sunluk.ru` | Passed 2026-08-24 |
 
 ## 11. Implementation Plan
 
@@ -177,13 +178,33 @@ Cross-flow boundaries: none. Analytics observes public route URLs but emits no c
 
 ## 12. Implementation Trace
 
-Current status: Draft; implementation not started.
+Current status: Complete and deployed.
 
-Implementation files: pending.
+Implementation files:
 
-Test file: pending.
+- `storefront/src/components/analytics/analytics-consent.tsx`
+- `storefront/src/app/[locale]/layout.tsx`
+- `storefront/src/components/landing/SiteFooter.tsx`
+- `storefront/messages/ru.json`
+- `storefront/messages/en.json`
+- `storefront/messages/info/ru.json`
+- `storefront/messages/info/en.json`
+- `flows/ARCHITECTURE.md`
 
-Validation: pending.
+Test files:
+
+- `storefront/src/lib/__tests__/analytics-consent.test.tsx`
+- `storefront/src/lib/__tests__/info-sections.test.ts`
+
+Validation:
+
+- `npm run lint --prefix storefront` passed with zero warnings and errors.
+- `npm run build --prefix storefront` completed successfully.
+- `npm run test --prefix storefront` passed 22 files / 143 tests.
+- `npm run lint --prefix backend` passed the global lint gate.
+- Local production-build browser smoke confirmed zero Yandex requests before consent, tag loading after acceptance, footer withdrawal, and no later route hit.
+- GitHub Actions Storefront CI run `32734085520` passed for deployment commit `afb42e5`.
+- Production browser smoke at `https://sunluk.ru` confirmed zero Yandex requests before consent; after acceptance `tag.js?id=111719197` and `watch/111719197` returned HTTP 200; withdrawal removed the counter and a later route change made no Yandex request.
 
 ## 13. Open Questions
 
