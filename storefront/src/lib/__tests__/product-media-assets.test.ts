@@ -15,6 +15,8 @@ const backendProductAndPackagingMedia = [
   "1783929297839-Silver Chain.webp",
   "1783932890776-Silver Chain 2.webp",
   "1783932890777-Silver Chain 3.webp",
+  "1787584806460-Silver Chain 4.webp",
+  "1787584806460-Silver Chain 5.webp",
   "1783929220517-Sand Chain.webp",
   "1783932907893-Sand Chain 2.webp",
   "1783932907893-Sand Chain 3.webp",

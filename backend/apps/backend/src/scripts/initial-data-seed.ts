@@ -623,7 +623,7 @@ export default async function initial_data_seed({
     },
     luna: {
       thumbnail: "1783929297839-Silver Chain.webp",
-      images: ["1783929297839-Silver Chain.webp", "1783932890776-Silver Chain 2.webp", "1783932890777-Silver Chain 3.webp"],
+      images: ["1783929297839-Silver Chain.webp", "1783932890776-Silver Chain 2.webp", "1783932890777-Silver Chain 3.webp", "1787584806460-Silver Chain 4.webp", "1787584806460-Silver Chain 5.webp"],
     },
     silk: {
       thumbnail: "1783929220517-Sand Chain.webp",
