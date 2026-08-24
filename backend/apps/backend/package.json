@@ -15,7 +15,7 @@
   "scripts": {
     "build": "medusa build",
     "lint": "tsc --noEmit",
-    "start": "medusa exec ./src/scripts/update-luna-images.js && medusa start",
+    "start": "medusa start",
     "dev": "medusa develop",
     "test:integration:http": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent=false --runInBand --forceExit",
     "test:integration:modules": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent=false --runInBand --forceExit",
