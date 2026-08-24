@@ -92,9 +92,10 @@ export function HeroSection({ locale }: HeroSectionProps) {
             transition={{ duration: 0.5 }}
             className="flex w-full max-w-xl flex-col items-start gap-6 pointer-events-auto sm:gap-8 md:max-w-2xl lg:max-w-3xl"
           >
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b] w-full">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-light tracking-wide leading-[1.1] text-[#2c211b] w-full">
               <CharReveal
                 text={t("hero.title1")}
+                className="whitespace-nowrap"
                 stagger={0.018}
                 delay={0}
                 y={0}
@@ -104,6 +105,7 @@ export function HeroSection({ locale }: HeroSectionProps) {
               <br />
               <CharReveal
                 text={t("hero.title2")}
+                className="whitespace-nowrap"
                 stagger={0.018}
                 delay={0.14}
                 y={0}
