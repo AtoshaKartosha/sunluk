@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export const ANALYTICS_CONSENT_STORAGE_KEY = "sunluk_analytics_consent";
 export const METRIKA_COUNTER_ID = 111719197;
-export const METRIKA_TAG_SRC = "https://mc.yandex.ru/metrika/tag.js";
+export const METRIKA_TAG_SRC = "https://mc.yandex.ru/metrika/tag.js?id=111719197";
 export const REOPEN_ANALYTICS_EVENT = "sunluk:reopen-analytics-consent";
 
 export type ConsentState = "unknown" | "granted" | "denied";
