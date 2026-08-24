@@ -278,6 +278,7 @@ Current files that inform the flow:
 | Backend migration smoke | `medusa db:migrate` completes without discovering or executing manual catalog seed/update scripts; the focused updater runs only when explicitly invoked | Production-built backend runtime followed by Store API inventory verification | Passed in production 2026-08-11 |
 | Storefront asset audit | Every current storefront and backend product/packaging media stem has both WebP and PNG bytes before deployment | `storefront/src/lib/__tests__/product-media-assets.test.ts` | Passed 2026-08-11 |
 | Storefront rendering | Shared product-picture path renders listing, PDP gallery, packaging, cart, checkout, and cabinet order images; no-WebP capability selects PNG | `product-image.test.tsx`, `product-media-assets.test.ts`, and named ProductImage callsites | Passed; live catalog/PDP passed, transactional cart/checkout not submitted |
+| Storefront asset audit | Luna gallery additions #4/#5 have paired WebP/PNG bytes with the approved 983x983 and 548x983 dimensions | `storefront/src/lib/__tests__/product-media-assets.test.ts` | Passed 2026-08-24 |
 | Storefront smoke | Hero, editorial, and about CTAs route to locale products; breadcrumb reads `КОЛЛЕКЦИЯ` / `COLLECTION`; card title is Medium and price is normal weight | Chrome landing smoke plus focused component assertions | Passed 2026-08-11 |
 
 ## 11. Implementation Plan
@@ -315,7 +316,7 @@ Current implementation files:
 - `storefront/src/components/product/index.ts`
 - `storefront/src/components/product/ProductRelatedProducts.tsx`
 - `storefront/src/components/product/ProductJsonLd.tsx`
-- `backend/apps/backend/static/` (24 recovered immutable media files plus `wooden-case-placeholder.webp`)
+- `backend/apps/backend/static/` (28 recovered immutable media files plus `wooden-case-placeholder.webp`)
 - `backend/apps/backend/Dockerfile` (runtime media copy)
 - `backend/apps/backend/src/scripts/initial-data-seed.ts` (durable public URL, ordered product mapping, and `wooden-case` placeholder mapping)
 - `storefront/src/components/product/ProductImage.tsx`, `storefront/src/components/product/ProductCard.tsx`
@@ -360,6 +361,9 @@ Validation:
 - Production data command `npx medusa exec ./src/scripts/update-launch-inventory.js` updated two Dune/Silk inventory levels on the first run and zero on the second.
 - Production `npx medusa db:migrate` completed with every module up to date and only Medusa's own `create-super-admin-role.js` pending; no Sunluk manual data script was discovered. The migration-safe image audit listed all five manual commands under `/app/src/scripts/` and an empty `/app/src/migration-scripts/`.
 - Live `https://sunluk.ru/ru/products` exposed six canonical cards with Dune/Silk sold out; RU Dune and EN Silk PDPs disabled purchase controls, loaded visible media, and produced no browser console errors or HTTP responses at/above 400.
+- 2026-08-24 Luna media audit: `product-media-assets.test.ts` passed 2/2; backend lint and build completed successfully.
+- Backend CI runs `32744898293`, `32746510244`, and cleanup run `32747245704` passed; the temporary idempotent production sync job was removed after completion.
+- Production `/ru/products/luna` preserved its existing gallery image and rendered both approved additions from tracked backend assets: `Silver Chain 4` at 983x983 and `Silver Chain 5` at 548x983.
 
 Notes:
 
@@ -399,3 +403,5 @@ Prior flow-code sync (2026-07-27): **IN SYNC** before the approved `wooden-case`
 Flow review v2 (2026-07-27): **APPROVED**. The explicit owner decision, neutral/non-photographic constraint, durable asset path, non-destructive update, replacement boundary, and API/browser checks are concrete; no blocker remains before implementation.
 
 Flow-code sync v2 (2026-07-28): **IN SYNC**. Commit `ebe5af9` is deployed; the approved 1200x1200 neutral placeholder is durable in the runtime image and clean seed, the live product references it non-destructively, and Store API plus browser rendering checks passed.
+
+Flow-code sync v4 (2026-08-24): **IN SYNC**. Luna's two approved paired media additions are durable in the backend runtime image and clean seed, production Medusa references both without resetting commerce data, the temporary sync job is removed, and production browser rendering passed.
