@@ -6,6 +6,7 @@ import { baseMetadata } from "@/lib/seo";
 import { CartProvider } from "@/components/cart/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { PathnameHistoryTracker } from "@/components/navigation/pathname-history";
+import { AnalyticsConsent } from "@/components/analytics/analytics-consent";
 import type { ReactNode, CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Geist_Mono } from "next/font/google";
@@ -78,6 +79,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             <PathnameHistoryTracker />
+            <AnalyticsConsent />
             <main className="flex-1">{children}</main>
             <CartDrawer />
           </CartProvider>

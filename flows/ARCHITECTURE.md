@@ -65,6 +65,12 @@ flowchart LR
     N1[Mobile menu open]
   end
 
+  subgraph AnalyticsConsent["Analytics Consent\nflows/features/analytics-consent.md"]
+    Y0[Consent unknown]
+    Y1[Consent granted or denied]
+    Y2[Telemetry gated by consent]
+  end
+
   Admin -- "catalog:published" --> Catalog
   Admin -- "catalog:published" --> Localization
   Admin -- "catalog:translation-published" --> Localization
@@ -97,6 +103,7 @@ flowchart LR
 | Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, localeMarketDefaults, stableProductHandles }`. Canonical/language alternates use configured prefixes; v0 locale market defaults affect catalog region resolution only when no explicit country is supplied. |
 | Site Content | None | Commerce flows | Presentation-only localized overrides; checked-in defaults remain available and no commerce-domain event is emitted. |
 | Storefront Navigation | None | Commerce flows | Local presentation/navigation state only; locale-prefixed destinations remain code-owned and no commerce-domain event is emitted. |
+| Analytics Consent | None | Commerce flows | Telemetry/presentation only; the browser-local choice gates Yandex Metrika and never blocks or mutates commerce state. |
 
 ## Non-negotiables
 
@@ -116,4 +123,5 @@ flowchart LR
 - Storefront SEO readiness: `flows/features/seo-readiness.md`.
 - Localized site-content overrides: `flows/features/site-content.md`.
 - Mobile menu navigation behavior: `flows/features/storefront-navigation.md`.
+- Optional analytics consent and Yandex Metrika lifecycle: `flows/features/analytics-consent.md`.
 - 2026-08-11 release: Catalog emits `cart:item-selected` to Product Add-ons, Product Add-ons emits one or two `cart:line-item-add-requested` calls to Cart, visible zero-stock products remain indexable, and Storefront Navigation has no commerce boundary. Final storefront suite (128 tests), storefront/backend builds, global lint with zero warnings, production robots smoke, and mobile Chrome smoke passed for locally reachable routes.

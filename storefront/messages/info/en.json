@@ -435,6 +435,10 @@
         "text": "2.4. Sunluk processes Personal data, technical information and other information of the User within the time limits established by the legislation of the Russian Federation and from the moment such information is provided."
       },
       {
+        "type": "paragraph",
+        "text": "2.5. With the User's consent, the Website uses the Yandex Metrika web analytics service (including the Webvisor session replay feature to analyze user interaction). The service collects technical browsing data (pages viewed, actions on the Site, browser and device parameters) for traffic analysis and website optimization. The User may grant, change, or withdraw analytics consent at any time via the analytics settings control in the Website footer."
+      },
+      {
         "type": "heading",
         "text": "3. Personal data"
       },
@@ -517,6 +521,10 @@
       {
         "type": "paragraph",
         "text": "7.2. Consent to receive newsletters and promotional materials may be withdrawn by the User at any time by sending Sunluk a corresponding notification in the same way."
+      },
+      {
+        "type": "paragraph",
+        "text": "7.3. The User has the right to withdraw previously granted consent for analytics data collection by Yandex Metrika at any time by using the analytics settings control in the Website footer."
       },
       {
         "type": "heading",

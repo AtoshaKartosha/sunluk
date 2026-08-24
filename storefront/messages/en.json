@@ -177,7 +177,8 @@
     "shop": "SHOP",
     "allProducts": "All Products",
     "questions": "QUESTIONS",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "analyticsSettings": "Analytics Settings"
   },
   "localeSwitcher": {
     "ru": "RU",
@@ -442,5 +443,20 @@
   "metadata": {
     "title": "SUNLUK — Eyewear Accessories",
     "description": "Eyewear accessories that become a part of your style. SUNLUK — change yourself, express yourself."
+  },
+  "analytics": {
+    "title": "Cookies & Analytics",
+    "description": "We use Yandex Metrika and Webvisor (session replay) to analyze website traffic, user interactions, and improve our store. Data is collected only with your consent. You can change or withdraw your consent at any time via the settings link in the footer.",
+    "accept": "Accept",
+    "reject": "Reject",
+    "privacyPolicy": "Privacy Policy",
+    "manage": "Analytics Settings",
+    "settingsTitle": "Analytics Settings",
+    "settingsDescription": "Yandex Metrika and Webvisor help us analyze website performance and improve user experience. You can enable or disable analytics data collection.",
+    "statusGranted": "Analytics is enabled",
+    "statusDenied": "Analytics is disabled",
+    "withdraw": "Withdraw consent",
+    "grant": "Enable analytics",
+    "close": "Close"
   }
 }

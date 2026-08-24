@@ -6,7 +6,7 @@ import { INFO_SECTION_IDS } from "../info-sections";
 
 const expectedBlockCounts = {
   terms: 83,
-  privacy: 45,
+  privacy: 47,
   purchase: 24,
   shipping: 8,
   returns: 7,

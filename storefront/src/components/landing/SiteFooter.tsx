@@ -5,6 +5,7 @@ import { getFooterGroups, getCopyright } from "@/lib/landing-data";
 import type { FooterGroupData } from "@/lib/landing-data";
 import { useLocale } from "next-intl";
 import type { Locale } from "@/i18n/routing";
+import { AnalyticsConsentSettingsButton } from "@/components/analytics/analytics-consent";
 
 export function SiteFooter({
   footerGroups,
@@ -84,6 +85,7 @@ export function SiteFooter({
 
         <div className="pt-8 border-t border-[#2c211b]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#2c211b]/60">
           <p>{copy}</p>
+          <AnalyticsConsentSettingsButton className="hover:text-[#2f6f78] transition-colors cursor-pointer" />
         </div>
 
       </div>
