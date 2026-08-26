@@ -123,6 +123,7 @@ export function HeroSection({ locale }: HeroSectionProps) {
                 playAnimation={intro}
               />
               <br className="hidden sm:inline" />
+              {" "}
               <CharReveal
                 text={t("hero.subtitle2")}
                 stagger={0.01}
