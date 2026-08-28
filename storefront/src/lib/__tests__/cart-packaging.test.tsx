@@ -139,7 +139,7 @@ describe("VariantSelector Packaging Metadata", () => {
     expect(mockAddItem).toHaveBeenCalledWith("pkg_box_123", 1, {
       parent_line_item_id: "item_main_123",
     });
-    expect(window.dataLayer).toEqual([
+    expect(window.dataLayer?.filter((event) => "add" in event.ecommerce)).toEqual([
       {
         ecommerce: {
           currencyCode: "RUB",
@@ -189,7 +189,7 @@ describe("VariantSelector Packaging Metadata", () => {
     await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
     const [, , metadata] = mockAddItem.mock.calls[0];
     expect(metadata).not.toHaveProperty("packaging_variant_id");
-    expect(window.dataLayer).toEqual([
+    expect(window.dataLayer?.filter((event) => "add" in event.ecommerce)).toEqual([
       {
         ecommerce: {
           currencyCode: "RUB",
@@ -229,7 +229,7 @@ describe("VariantSelector Packaging Metadata", () => {
     fireEvent.click(button);
     await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(button).not.toBeDisabled());
-    expect(window.dataLayer).toEqual([]);
+    expect(window.dataLayer?.filter((event) => "add" in event.ecommerce)).toEqual([]);
     expect(ym).not.toHaveBeenCalled();
 
     setStoredConsent("denied");
@@ -238,7 +238,7 @@ describe("VariantSelector Packaging Metadata", () => {
     mockAddItem.mockResolvedValueOnce({ id: "cart_123", items: [] });
     fireEvent.click(button);
     await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(2));
-    expect(window.dataLayer).toEqual([]);
+    expect(window.dataLayer?.filter((event) => "add" in event.ecommerce)).toEqual([]);
     expect(ym).not.toHaveBeenCalled();
   });
 

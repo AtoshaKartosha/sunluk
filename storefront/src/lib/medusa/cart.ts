@@ -237,5 +237,7 @@ export async function createPaymentSessions(cartId: string, medusaLocale?: strin
  */
 export async function completeCart(cartId: string, medusaLocale?: string) {
   const sdk = medusaLocale ? getMedusaClientWithLocale(medusaLocale) : getMedusaClient();
-  return sdk.store.cart.complete(cartId);
+  return sdk.store.cart.complete(cartId, {
+    fields: "id,display_id,total,currency_code,*items",
+  });
 }

@@ -21,6 +21,7 @@ import {
 import { getStoreCountries } from "@/lib/medusa/regions";
 import { getClientCustomer } from "@/lib/medusa/customer";
 import { getPackagingName } from "@/lib/medusa/packaging-names";
+import { trackMetrikaPurchase } from "@/components/analytics/analytics-consent";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -612,6 +613,7 @@ export default function CheckoutPage() {
         const result = await completeCart(cart.id);
 
         if (result.type === "order" && result.order) {
+          trackMetrikaPurchase(result.order);
           clearCartId();
           clearCart();
           router.push(`/${locale}/checkout/success?order_number=${result.order.display_id}`);

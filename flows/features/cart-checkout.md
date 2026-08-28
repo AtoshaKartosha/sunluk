@@ -11,7 +11,7 @@ Success criteria:
 - Checkout cannot complete without required customer/contact, shipping, delivery, and payment state.
 - Contact cannot advance with a missing, incomplete, or malformed phone number; the storefront normalizes accepted international input before Medusa address submission.
 - The active cart drawer offers a secondary locale-preserving return to the product collection without mutating cart contents.
-- A successful checkout emits `order:placed` for admin operations.
+- A successful checkout emits `order:placed` for admin/cabinet and exposes one consent-observed `order:ecommerce-purchase-confirmed` projection containing immutable order id, authoritative total/currency, and all completed order lines.
 - Medusa prices standard delivery from the discounted merchandise total: Russia/RUB costs 800 RUB below 4,999 RUB and is free from 4,999 RUB; Europe/EUR costs 10 EUR below 60 EUR and is free from 60 EUR.
 - A visitor can submit one promotion code during the checkout address step; Medusa accepts or rejects it and the storefront renders only the returned cart totals.
 
@@ -44,7 +44,8 @@ Deferred decisions:
 |---|---|---|
 | Anonymous visitor | Create and update guest cart; attempt guest checkout if enabled | Medusa Store API and cart token/cookie |
 | Authenticated customer | Create/update customer cart; attach addresses/customer identity | Medusa customer session |
-| Medusa backend | Authoritative cart/order/payment/fulfillment state transitions | Medusa workflows/modules |
+| Medusa backend | Authoritative cart/order/payment/fulfillment state transitions and completed-order projection | Medusa workflows/modules |
+| Analytics Consent | May observe a Medusa-confirmed order only to emit consent-gated Yandex purchase telemetry; cannot complete, alter, or retry commerce | Browser-local analytics consent plus successful completed-order response |
 | Admin user | Configure regions, shipping options, payment providers, prices, promotions | Medusa Admin/API |
 
 ## 4. Diagrams
@@ -94,9 +95,13 @@ flowchart TD
   Free --> Select
   Select --> Payment[Initialize/select payment provider]
   Payment --> Complete{Medusa completes cart?}
-  Complete -->|no| PaymentError[Show retryable failure]
+  Complete -->|no| PaymentError[Show retryable failure; no purchase telemetry]
   Complete -->|yes| Order[Order placed]
-  Order --> Emit[Emit order:placed]
+  Order --> PurchaseProjection{Completed-order projection valid?}
+  PurchaseProjection -->|no| TelemetryRejected[Continue order success without partial telemetry]
+  PurchaseProjection -->|yes| EmitPurchase[Expose purchase once by order id]
+  TelemetryRejected --> Emit[Emit order:placed]
+  EmitPurchase --> Emit
 ```
 
 ### State machine
@@ -120,7 +125,8 @@ stateDiagram-v2
   CheckoutDelivery --> CheckoutDelivery: cart mutation recalculates shipping total
   CheckoutPayment --> Completing: payment session ready
   Completing --> OrderPlaced: Medusa completes cart
-  Completing --> CheckoutPayment: completion rejected/retryable
+  Completing --> CheckoutPayment: completion rejected/retryable; no purchase telemetry
+  OrderPlaced --> OrderPlaced: expose one ecommerce purchase projection by immutable order id
   OrderPlaced --> [*]
 ```
 
@@ -140,6 +146,8 @@ flowchart LR
   Backend --> Payment[(Payment session/provider)]
   Backend --> Order[(Order)]
   Backend --> UI
+  UI --> Purchase[order:ecommerce-purchase-confirmed]
+  Purchase --> Analytics[Analytics Consent]
   UI --> Placed[order:placed]
   Placed --> Admin
 ```
@@ -176,6 +184,7 @@ Storefront projection:
 | Internal | `checkout:shipping-priced` | None | `{ cartId, shippingOptionId, regionId, currencyCode, discountedMerchandiseTotal, shippingTotal }` | A supported regional option is available; Medusa evaluates the current discounted merchandise total | Missing option, unsupported region/currency, or stale cart state |
 | Internal | `checkout:payment-selected` | None | `{ cartId, paymentProviderId }` | Provider is enabled for cart region/currency | Provider unavailable or initialization failed |
 | Outgoing | `order:placed` | Admin Operations | `{ orderId, cartId, customerId? }` | Medusa completes the cart and creates an order | Payment failure, stale cart, incomplete checkout |
+| Outgoing | `order:ecommerce-purchase-confirmed` | Analytics Consent | `{ orderId, currencyCode, revenue, products: [{ productId?, sku?, name, price, quantity }] }` | Medusa completion returns a valid order with id, total, currency, non-empty valid lines, and SKU or product id on every line; expose before local cart clearing/navigation | Payment/completion failure, cart/error result, missing/invalid order data, invalid line, denied consent at receiver, or duplicate order id |
 
 ## 7. Edge Cases
 
@@ -200,8 +209,11 @@ Storefront projection:
 - Seed/setup runs more than once: it must not create duplicate regional calculated shipping options.
 - Shipping option disappears after address entry: require reselection from current Medusa options.
 - Payment provider initialization fails: keep checkout in payment state and allow retry/provider switch.
-- Duplicate submit/double click on order completion: completion action must be idempotent from the user's perspective; UI disables repeated submit while Medusa request is in flight and reloads final cart/order state after response.
-- Network failure after payment/order completion request: reload cart/order status before allowing another completion attempt.
+- Duplicate submit/double click on order completion: completion action must be idempotent from the user's perspective; UI disables repeated submit while Medusa request is in flight and reloads final cart/order state after response. Analytics independently deduplicates a confirmed purchase by immutable `order.id`.
+- Network failure after payment/order completion request: reload cart/order status before allowing another completion attempt; do not infer a purchase from the pre-completion cart.
+- Completed order response is projected with `id,display_id,total,currency_code,*items`; a missing/null item list, invalid total/currency, or invalid line rejects the entire observational purchase payload without undoing the already-created order.
+- Completed line identity uses `variant_sku`, then `product_id`; a line with neither rejects the entire telemetry projection. Name uses `product_title`, then line title. Unit price and quantity come from the completed order, not the pre-completion cart.
+- Order success page is reloadable and has only display context; it never emits purchase telemetry. The successful completion branch exposes the purchase before clearing cart state and navigating.
 - Phone is blank, contains fewer than 7 or more than 15 digits after normalization, omits the leading `+`, uses a zero country-code prefix, contains letters, or places `+` anywhere but first: show the localized phone error, focus the field, do not call `updateCart`, and remain in `CheckoutAddress`.
 - Phone contains allowed presentation separators such as spaces, parentheses, hyphens, or dots around a valid international number: strip those separators and submit canonical `+` plus 7–15 digits to both shipping and billing address projections.
 - A prefilled phone is incomplete or malformed: treat it exactly like visitor input and block contact submission until corrected.
@@ -218,6 +230,7 @@ Storefront projection:
 - Initialize payment sessions with configured provider.
 - Complete cart into Medusa order.
 - Emit `order:placed` so admin/order management can observe the new order.
+- Expose one `order:ecommerce-purchase-confirmed` projection before local cart clearing/navigation. Analytics Consent maps it to Yandex `ecommerce.purchase` only when granted; telemetry failure cannot change the Medusa order or success navigation.
 - Persist cart identifier/session token in browser storage/cookie as required by the storefront implementation.
 - Close the cart drawer before the secondary continue-shopping navigation; retain the Medusa cart identifier and contents.
 - Normalize and submit a valid required phone only during the existing address update; invalid input causes no Store API side effect.
@@ -242,6 +255,10 @@ Expected implementation files for the regional delivery rule:
 - `storefront/src/lib/medusa/cart.ts`, `storefront/src/components/cart/CartContext.tsx`, and `storefront/src/components/cart/types.ts` expose the minimum typed apply-promotion mutation and returned promotions projection.
 - `storefront/src/app/[locale]/checkout/page.tsx` renders the localized promotion input, pending state, rejection feedback, applied code, and Medusa-returned discount/totals.
 - `storefront/messages/ru.json` and `storefront/messages/en.json` provide promotion input, action, applied-state, and error copy.
+- `storefront/src/lib/medusa/cart.ts` requests `id,display_id,total,currency_code,*items` from the existing complete-cart call.
+- `storefront/src/app/[locale]/checkout/page.tsx` projects the confirmed order to analytics before clearing local cart state and navigating.
+- `storefront/src/components/analytics/analytics-consent.tsx` validates, consent-gates, and deduplicates Yandex purchase telemetry by order id.
+- `storefront/src/lib/__tests__/checkout-completion.test.tsx` covers the completed-order purchase payload, invalid/error response rejection, call ordering, and duplicate order id.
 
 ## 10. Targeted Tests
 
@@ -250,7 +267,8 @@ Expected implementation files for the regional delivery rule:
 | Storefront integration | Restored cart region synchronization either returns a Medusa-updated cart or retains the prior authoritative cart on rejection | To add with cart implementation | Pending implementation |
 | Storefront integration | Cart displays Medusa-returned totals after line item updates | To add with cart implementation | Pending implementation |
 | Storefront integration | Checkout completion blocks until address, shipping, and payment are accepted | To add with checkout implementation | Pending implementation |
-| Storefront integration | Duplicate completion submit does not create duplicate user-visible order flow | To add with checkout implementation | Pending implementation |
+| Storefront integration | Valid Medusa order completion exposes one purchase projection before cart clearing/navigation with immutable order id, authoritative revenue/currency, and every completed line using SKU-first identity | `storefront/src/lib/__tests__/checkout-completion.test.tsx` | Passed 2026-08-28 |
+| Storefront integration | Invalid completed-order analytics data emits no partial telemetry while the already-confirmed order still clears local cart state and navigates; repeated order id is deduplicated | `storefront/src/lib/__tests__/checkout-completion.test.tsx` | Passed 2026-08-28 |
 | Backend unit | Calculated provider advertises capability without checkout currency; runtime pricing still rejects missing or unsupported currency | `backend/apps/backend/src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` | Implemented |
 | Backend unit | Russia/RUB discounted total 4,998 returns 800 RUB shipping; 4,999 returns zero | `backend/apps/backend/src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` | Passed |
 | Backend unit | Europe/EUR discounted total 59.99 returns 10 EUR shipping; 60 returns zero | `backend/apps/backend/src/modules/regional-fulfillment/__tests__/regional-fulfillment.unit.spec.ts` | Passed |
@@ -272,10 +290,10 @@ Expected implementation files for the regional delivery rule:
 6. Require and normalize international phone input before the existing address submission transition.
 7. Add one secondary cart-drawer link that closes the drawer and returns to the localized collection without mutating the cart.
 8. Add one localized checkout promotion form that trims a non-empty code, applies it through Medusa, blocks duplicate submission, and refreshes the authoritative cart projection.
+9. Request the minimal completed-order projection in the existing completion call, expose one validated purchase before clearing/navigation, and let Analytics Consent enforce consent plus order-id deduplication.
 
 ## 12. Implementation Trace
-
-Current status: Completed. Medusa remains authoritative for cart, promotions, totals, shipping, and completion. The 2026-08-16 release adds one promotion-code mutation limited to the checkout address step.
+Current status: Completed. Medusa remains authoritative for cart, promotions, totals, shipping, and completion; the observational completed-order analytics boundary is implemented and verified. The 2026-08-16 release adds one promotion-code mutation limited to the checkout address step.
 
 Implementation files:
 - `storefront/src/components/cart/CartContext.tsx`, `storefront/src/components/cart/CartDrawer.tsx`
@@ -297,6 +315,8 @@ Release v4 implementation:
 - The localized secondary collection action is implemented in `storefront/src/components/cart/CartDrawer.tsx`.
 - Focused checkout-contact and cart-drawer assertions are implemented under `storefront/src/lib/__tests__/`.
 
+- 2026-08-28 Ecommerce completion tests: `npm test -- --run src/lib/__tests__/analytics-consent.test.tsx src/lib/__tests__/cart-packaging.test.tsx src/lib/__tests__/product-detail-analytics.test.tsx src/lib/__tests__/checkout-completion.test.tsx` passed 4 files / 25 tests.
+- 2026-08-28 final global storefront/backend lint passed; storefront production build compiled, passed TypeScript, and completed page generation using the existing site-content fallback when its configured endpoint was unavailable.
 Release v5 implementation:
 
 - `CartContext.applyPromotion` calls the Medusa Store API, validates the returned promotion projection, serializes with cart mutations, and updates the cart only from the authoritative response.
@@ -328,8 +348,8 @@ Validation commands & results:
 ## 14. Review Checklist
 
 - [x] Cart and order state authority remains in Medusa.
-- [x] Cross-flow `cart:line-item-add-requested`, `commerce:settings-updated`, and `order:placed` are declared.
-- [x] Stale cart and duplicate completion risks are explicit.
+- [x] Cross-flow `cart:line-item-add-requested`, `commerce:settings-updated`, `order:placed`, and `order:ecommerce-purchase-confirmed` are declared.
+- [x] Stale cart, duplicate completion, immutable order-id telemetry deduplication, and non-retroactive success-page behavior are explicit.
 - [x] Payment provider choices are open questions, not assumed implementation.
 - [x] Regional delivery pricing names every boundary outcome: 4,998 RUB costs 800 RUB; 4,999 RUB is free; 59.99 EUR costs 10 EUR; 60 EUR is free.
 - [x] Product discounts are applied before threshold evaluation.
@@ -340,6 +360,8 @@ Validation commands & results:
 - [x] Continue-shopping navigation preserves cart authority and locale.
 - [x] Product Add-ons to Cart `cart:line-item-add-requested` contract matches the architecture map; Cart does not consume `cart:item-selected` directly.
 - [x] Promotion application remains Medusa-authoritative; address-step scope, blank, rejected, accepted, existing-promotion, and rapid duplicate-submit behavior are explicit.
+- [x] Purchase projection uses only Medusa-confirmed order id, total, currency, and complete line items; invalid projections reject telemetry without changing order success.
+- [x] Cart and Checkout → Analytics Consent is observational and matches the architecture payload.
 
 Flow review v5 (2026-08-11): **APPROVED**. The single-line Cart mutation boundary, internal region resolution, exact payloads, phone validation, and focused tests clear the Approval Bar.
 
@@ -351,6 +373,10 @@ Flow review v2 (2026-07-13): **APPROVED**. No blockers; regional thresholds, pos
 
 Flow review v3 (2026-07-27): **APPROVED**. Provider capability at option creation, runtime currency rejection, manual-provider registration, and the clean-database seed boundary are explicit; no new event, authority, permission, or cross-flow blocker was introduced.
 
+
+Flow review v8 (2026-08-28): **APPROVED**. The completed-order-only purchase projection, Medusa field authority, SKU/product-id continuity, whole-payload rejection, order-id deduplication, pre-navigation timing, exact files/tests, and Cart and Checkout → Analytics Consent boundary clear the Approval Bar.
 Flow-code sync (2026-07-27): **IN SYNC**. The seeded Russia options use the regional calculated provider, production Store API boundary checks match the declared 4,999 RUB threshold, and no storefront-owned shipping calculation was introduced.
 
 Flow-code sync v7 (2026-08-16): **IN SYNC**. Checkout promotion entry, Medusa-authoritative cart replacement, address-step scope, localized rejection states, duplicate-submit guard, returned discount rendering, focused tests, and Section 12 trace match the implementation; no cross-flow event was added.
+
+Flow-code sync v8 (2026-08-28): **IN SYNC**. The complete-cart request projects the approved order fields, purchase uses Medusa-confirmed id/total/currency/lines, invalid analytics data cannot change order success, emission precedes local clear/navigation, order-id deduplication is covered, and the Cart and Checkout → Analytics Consent contract matches the architecture map.

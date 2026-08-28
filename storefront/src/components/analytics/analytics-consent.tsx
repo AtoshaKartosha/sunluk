@@ -9,24 +9,42 @@ export const ANALYTICS_CONSENT_STORAGE_KEY = "sunluk_analytics_consent";
 export const METRIKA_COUNTER_ID = 111719197;
 export const METRIKA_TAG_SRC = "https://mc.yandex.ru/metrika/tag.js?id=111719197";
 export const REOPEN_ANALYTICS_EVENT = "sunluk:reopen-analytics-consent";
-
+export const METRIKA_CONSENT_GRANTED_EVENT = "sunluk:analytics-consent-granted";
 export type ConsentState = "unknown" | "granted" | "denied";
+
+type MetrikaProduct = {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+type MetrikaDataLayerEvent =
+  | {
+      ecommerce: {
+        currencyCode: string;
+        add: { products: MetrikaProduct[] };
+      };
+    }
+  | {
+      ecommerce: {
+        currencyCode: string;
+        detail: { products: MetrikaProduct[] };
+      };
+    }
+  | {
+      ecommerce: {
+        currencyCode: string;
+        purchase: {
+          actionField: { id: string; revenue: number };
+          products: MetrikaProduct[];
+        };
+      };
+    };
 
 declare global {
   interface Window {
-    dataLayer?: Array<{
-      ecommerce: {
-        currencyCode: string;
-        add: {
-          products: Array<{
-            id: string;
-            name: string;
-            price: number;
-            quantity: number;
-          }>;
-        };
-      };
-    }>;
+    dataLayer?: MetrikaDataLayerEvent[];
     ym?: {
       (...args: unknown[]): void;
       a?: unknown[][];
@@ -120,6 +138,7 @@ export function clearYandexStorage(): void {
 let isMetrikaInitialized = false;
 let metrikaCommand: NonNullable<Window["ym"]> | null = null;
 let metrikaDataLayer: NonNullable<Window["dataLayer"]> | null = null;
+const successfulPurchaseOrderIds = new Set<string>();
 
 
 export function initMetrika(counterId = METRIKA_COUNTER_ID): void {
@@ -243,6 +262,121 @@ export function trackMetrikaAddToCart({
   }
 }
 
+export function trackMetrikaProductDetail({
+  productId,
+  sku,
+  name,
+  price,
+  currencyCode,
+}: {
+  productId: string;
+  sku?: string | null;
+  name: string;
+  price: number;
+  currencyCode: string;
+}): boolean {
+  if (!isMetrikaInitialized && getStoredConsent() === "granted") {
+    initMetrika();
+  }
+  if (
+    !isMetrikaInitialized ||
+    !metrikaDataLayer ||
+    typeof productId !== "string" ||
+    !productId.trim() ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    !Number.isFinite(price) ||
+    price < 0 ||
+    typeof currencyCode !== "string" ||
+    !/^[A-Za-z]{3}$/.test(currencyCode)
+  ) return false;
+
+  try {
+    metrikaDataLayer.push({
+      ecommerce: {
+        currencyCode: currencyCode.toUpperCase(),
+        detail: { products: [{ id: sku || productId, name, price, quantity: 1 }] },
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function trackMetrikaPurchase(order: unknown): boolean {
+  if (!isMetrikaInitialized || !metrikaDataLayer || !order || typeof order !== "object") {
+    return false;
+  }
+
+  const { id, total, currency_code, items } = order as Record<string, unknown>;
+  if (
+    typeof id !== "string" ||
+    !id.trim() ||
+    typeof total !== "number" ||
+    !Number.isFinite(total) ||
+    total < 0 ||
+    typeof currency_code !== "string" ||
+    !/^[A-Za-z]{3}$/.test(currency_code) ||
+    !Array.isArray(items) ||
+    items.length === 0
+  ) return false;
+
+  const products: MetrikaProduct[] = [];
+  for (const item of items) {
+    if (!item || typeof item !== "object") return false;
+    const { variant_sku, product_id, product_title, title, unit_price, quantity } =
+      item as Record<string, unknown>;
+    const productId =
+      typeof variant_sku === "string" && variant_sku.trim()
+        ? variant_sku
+        : typeof product_id === "string" && product_id.trim()
+          ? product_id
+          : null;
+    const name =
+      typeof product_title === "string" && product_title.trim()
+        ? product_title
+        : typeof title === "string" && title.trim()
+          ? title
+          : null;
+    if (
+      typeof productId !== "string" ||
+      !productId.trim() ||
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof unit_price !== "number" ||
+      !Number.isFinite(unit_price) ||
+      unit_price < 0 ||
+      typeof quantity !== "number" ||
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) return false;
+    products.push({
+      id: productId,
+      name,
+      price: unit_price,
+      quantity,
+    });
+  }
+
+  if (successfulPurchaseOrderIds.has(id)) return false;
+  try {
+    metrikaDataLayer.push({
+      ecommerce: {
+        currencyCode: currency_code.toUpperCase(),
+        purchase: {
+          actionField: { id, revenue: total },
+          products,
+        },
+      },
+    });
+    successfulPurchaseOrderIds.add(id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function openAnalyticsConsentSettings(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(REOPEN_ANALYTICS_EVENT));
@@ -252,6 +386,7 @@ export function resetMetrikaStateForTesting(): void {
   isMetrikaInitialized = false;
   metrikaCommand = null;
   metrikaDataLayer = null;
+  successfulPurchaseOrderIds.clear();
 }
 
 function RouteHitTracker({ consent }: { consent: ConsentState }) {
@@ -312,6 +447,7 @@ export function AnalyticsConsent() {
         if (e.newValue === "granted") {
           setConsent("granted");
           initMetrika();
+          window.dispatchEvent(new Event(METRIKA_CONSENT_GRANTED_EVENT));
         } else if (e.newValue === "denied") {
           setConsent("denied");
           destructMetrika();
@@ -336,6 +472,7 @@ export function AnalyticsConsent() {
     setConsent("granted");
     setSettingsOpen(false);
     initMetrika();
+    window.dispatchEvent(new Event(METRIKA_CONSENT_GRANTED_EVENT));
   }, []);
 
   const handleReject = useCallback(() => {

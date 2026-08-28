@@ -78,7 +78,9 @@ flowchart LR
   Admin -- "commerce:settings-updated" --> Cart
   Catalog -- "cart:item-selected" --> Addons
   Addons -- "cart:line-item-add-requested" --> Cart
+  Catalog -- "catalog:product-detail-observed" --> AnalyticsConsent
   Addons -- "cart:item-added" --> AnalyticsConsent
+  Cart -- "order:ecommerce-purchase-confirmed" --> AnalyticsConsent
   Cart -- "order:placed" --> Admin
   Cart -- "order:placed" --> Cabinet
   Catalog -. "catalog:indexable-route-projection" .-> SEO
@@ -98,6 +100,8 @@ flowchart LR
 | Catalog Browsing | `cart:item-selected` | Product Add-ons | Payload: `{ productId, variantId, quantity, regionId }`. Catalog resolves the available main variant; Product Add-ons resolves the preselected or visitor-selected packaging variant. |
 | Product Add-ons | `cart:line-item-add-requested` | Cart and Checkout | Payload: `{ variantId, quantity, metadata? }`. Product Add-ons calls once for the main line and, after resolving its returned parent id, optionally again for linked packaging; Cart owns each Medusa mutation and authoritative response. |
 | Product Add-ons | `cart:item-added` | Analytics Consent | Payload: `{ productId, sku?, name, price, currencyCode, quantity }`. Emitted once after Medusa accepts the primary product mutation and before optional linked packaging; Analytics forwards it only with granted consent and never changes cart state. |
+| Catalog Browsing | `catalog:product-detail-observed` | Analytics Consent | Payload: `{ productId, sku?, name, price, currencyCode, quantity: 1 }`. Exposed once for each distinct resolved SKU in a mounted PDP; Analytics forwards Yandex `detail` only with granted consent and never changes catalog/cart state. |
+| Cart and Checkout | `order:ecommerce-purchase-confirmed` | Analytics Consent | Payload: `{ orderId, currencyCode, revenue, products: [{ productId?, sku?, name, price, quantity }] }`. Exposed only from a valid Medusa completed-order response whose lines all have SKU or product id, before local clear/navigation; Analytics forwards one Yandex `purchase` per immutable order id only with granted consent. |
 | Cart and Checkout | `order:placed` | Customer Cabinet | Payload: `{ orderId, cartId, customerId? }`. Placing an order registers it in the customer's account orders list. |
 | Cart and Checkout | `order:placed` | Admin Operations | Payload: `{ orderId, cartId, customerId? }`; order appears in Medusa admin/order management. |
 | CI/CD | None | Commerce flows | Infrastructure-only v0; it does not emit or consume commerce domain events. |
@@ -105,7 +109,7 @@ flowchart LR
 | Catalog Localization | `catalog:locale-routing-map` | SEO Readiness | Read-only shared data: `{ locales, defaultLocale, localeMarketDefaults, stableProductHandles }`. Canonical/language alternates use configured prefixes; v0 locale market defaults affect catalog region resolution only when no explicit country is supplied. |
 | Site Content | None | Commerce flows | Presentation-only localized overrides; checked-in defaults remain available and no commerce-domain event is emitted. |
 | Storefront Navigation | None | Commerce flows | Local presentation/navigation state only; locale-prefixed destinations remain code-owned and no commerce-domain event is emitted. |
-| Analytics Consent | None | Commerce flows | Receives `cart:item-added` only as observational input; browser-local consent gates Yandex ecommerce/goal telemetry and analytics never blocks or mutates commerce state. |
+| Analytics Consent | None | Commerce flows | Receives `catalog:product-detail-observed`, `cart:item-added`, and `order:ecommerce-purchase-confirmed` only as observational inputs; browser-local consent gates Yandex `detail`, `add`, `purchase`, and the existing add goal, while analytics never blocks or mutates commerce state. |
 
 ## Non-negotiables
 

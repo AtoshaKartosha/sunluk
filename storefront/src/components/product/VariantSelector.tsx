@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import type {
   ProductOption,
   ProductVariant,
@@ -15,7 +15,11 @@ import {
   resolveVariantByOptions,
 } from "@/lib/price";
 import { getBadgeCta } from "@/lib/badge-behavior";
-import { trackMetrikaAddToCart } from "@/components/analytics/analytics-consent";
+import {
+  METRIKA_CONSENT_GRANTED_EVENT,
+  trackMetrikaAddToCart,
+  trackMetrikaProductDetail,
+} from "@/components/analytics/analytics-consent";
 
 export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
@@ -123,6 +127,7 @@ export function VariantSelector({
   );
   const [quantity, setQuantity] = useState(1);
   const [addingInProgress, setAddingInProgress] = useState(false);
+  const emittedDetailKeysRef = useRef(new Set<string>());
 
   const { addItem } = useCart();
 
@@ -140,6 +145,29 @@ export function VariantSelector({
   const quantityValid = Number.isInteger(quantity) && quantity > 0;
 
   const valid = allOptionsSelected && resolved != null && quantityValid;
+
+  useEffect(() => {
+    const emitDetail = () => {
+      const price = resolved?.calculated_price;
+      const key = `${productId}:${resolved?.sku || productId}`;
+      if (
+        !resolved ||
+        emittedDetailKeysRef.current.has(key) ||
+        !trackMetrikaProductDetail({
+          productId,
+          sku: resolved.sku,
+          name: productName,
+          price: price?.calculated_amount ?? 0,
+          currencyCode: price?.currency_code ?? "",
+        })
+      ) return;
+      emittedDetailKeysRef.current.add(key);
+    };
+
+    emitDetail();
+    window.addEventListener(METRIKA_CONSENT_GRANTED_EVENT, emitDetail);
+    return () => window.removeEventListener(METRIKA_CONSENT_GRANTED_EVENT, emitDetail);
+  }, [productId, productName, resolved]);
 
   // Notify parent on changes.
   const stableCallback = useCallback(

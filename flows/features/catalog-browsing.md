@@ -14,6 +14,7 @@ Success criteria:
 - Product media prefers tracked WebP bytes and exposes a same-stem PNG fallback; browsers without WebP support render the PNG without a retry script.
 - Catalog cards use the canonical handle order `lagoon`, `azure`, `amethyst`, `luna`, `dune`, `silk`; Dune and Silk remain visible but unavailable because Medusa inventory is zero.
 - Variant selection produces a concrete `{ productId, variantId, quantity, regionId }` handoff.
+- Each resolved product-detail SKU exposes one consent-observed telemetry handoff with SKU-preferred identity, localized name, selected-variant Medusa price/currency, and view `quantity: 1` without affecting catalog or cart state.
 - Missing region, unavailable product, or invalid variant selection is rejected before cart mutation.
 
 ## 2. Scope
@@ -85,7 +86,8 @@ flowchart TD
   ProductView --> Variant
   Variant -->|no| DisableAdd[Keep add-to-cart disabled and explain missing choice]
   Variant -->|yes| MerchState[Update price, stock, delivery, and CTA from selected variant]
-  MerchState --> Quantity{Quantity valid?}
+  MerchState --> Observe[Expose catalog:product-detail-observed]
+  Observe --> Quantity{Quantity valid?}
   Quantity -->|no| RejectQty[Reject quantity]
   Quantity -->|yes| Handoff[Emit cart:item-selected to Product Add-ons]
 ```
@@ -113,6 +115,7 @@ stateDiagram-v2
   VariantIncomplete --> VariantSelected: all options resolve to variant
   ProductViewing --> VariantSelected: default selection resolves to variant
   VariantSelected --> MerchandisingReady: price, stock, delivery, metadata, and CTA derived from selected variant
+  MerchandisingReady --> MerchandisingReady: expose each distinct resolved SKU once to Analytics Consent
   MerchandisingReady --> ReadyForCart: quantity valid
   ReadyForCart --> [*]: cart:item-selected to Product Add-ons
   CatalogError --> CatalogLoading: retry
@@ -139,6 +142,8 @@ flowchart LR
   Backend --> UI
   UI --> Selection[Local variant and quantity selection]
   Selection --> Projection[Selected variant drives price, stock, delivery, CTA, and metadata projection]
+  Projection --> DetailEvent[catalog:product-detail-observed]
+  DetailEvent --> Analytics[Analytics Consent]
   Projection --> Event[cart:item-selected]
   Event --> Addons[Product Add-ons]
   UI --> Related[Related products query]
@@ -174,6 +179,7 @@ Storefront projection:
 | Internal | `catalog:product-opened` | None | `{ productHandle, regionId }` | Region known and published product handle is sales-channel visible | Missing region, unpublished product, or product not sales-channel visible |
 | Internal | `catalog:variant-projected` | None | `{ productId, variantId, price, currencyCode, availability, deliveryPromise }` | Variant selection resolves to a sellable or backorderable variant | Missing variant |
 | Outgoing | `cart:item-selected` | Product Add-ons | `{ productId, variantId, quantity, regionId }` | Variant is valid, quantity is positive, and cart UI is enabled | Missing variant, invalid quantity, unavailable product |
+| Outgoing | `catalog:product-detail-observed` | Analytics Consent | `{ productId, sku?, name, price, currencyCode, quantity: 1 }` | Published PDP has a resolved variant with valid product fields; each distinct SKU is exposed once per mounted PDP and the current SKU may be re-observed when consent becomes granted in place | Unresolved variant, invalid fields, or same SKU already observed for the mounted PDP |
 | Outgoing shared data | `catalog:indexable-route-projection` | SEO Readiness | `{ locale, path, productHandle?, product? }` | The route is public and the product, when present, is published and sales-channel visible; zero stock does not remove indexability | Private route, unpublished/missing product, or unresolved region |
 
 ## 7. Edge Cases
@@ -187,6 +193,9 @@ Storefront projection:
 - Selected variant is out of stock but backorderable: show backorder messaging, keep CTA enabled, and surface the delivery promise near the CTA.
 - Selected variant has low stock: show urgency messaging near the CTA without changing price behavior.
 - Product/variant becomes unavailable between detail load and cart handoff: cart flow must revalidate through Medusa.
+- Product detail rerenders or React development replays its effect: expose no duplicate for the same SKU in the mounted PDP.
+- Visitor selects another resolved SKU: expose that SKU once with its own Medusa calculated price/currency and view `quantity: 1`. Switching back to a SKU already observed during the same mounted PDP does not expose it again.
+- Consent is absent or denied: Analytics Consent sends nothing and catalog behavior is unchanged. Granting consent while the same PDP remains mounted permits one observation of its current SKU; earlier unconsented SKU selections are not replayed.
 - Store API request fails: show retryable error without mutating cart state.
 - Gallery has one image only: hide non-functional gallery controls and lightbox rail affordances.
 - Requested locale has partial or missing translations: render the fallback content produced by catalog-localization and keep catalog pricing/variant behavior unchanged.
@@ -213,6 +222,7 @@ Storefront projection:
 - Landing-page collection CTAs navigate to `/{locale}/products`; the destination breadcrumb says `КОЛЛЕКЦИЯ` / `COLLECTION`.
 - Product media selection is browser-native: WebP is preferred and PNG is the capability fallback at every product rendering path, including listing, detail, packaging, cart, checkout, and order history.
 - `cart:item-selected` hands the validated main selection to Product Add-ons; Product Add-ons coordinates one main and an optional linked `cart:line-item-add-requested` Cart mutation.
+- `catalog:product-detail-observed` is observational only; Analytics Consent maps it to Yandex `ecommerce.detail` when granted and cannot change selected variant, navigation, stock, pricing, quantity, or cart state.
 - Clean database seeding restores the recovered thumbnail and ordered gallery mapping, while backend rebuilds retain the tracked immutable bytes.
 - Production schema migration never replays catalog seed/update scripts; the focused Dune/Silk updater remains a separate, explicit, convergent post-deploy operation.
 
@@ -232,6 +242,8 @@ Expected implementation files for this release:
 - `storefront/src/components/product/ProductInfoBlock.tsx`.
 - `storefront/src/components/product/ProductRelatedProducts.tsx`.
 - `storefront/src/components/product/VariantSelector.tsx`.
+- `storefront/src/components/analytics/analytics-consent.tsx`: consent-gated Yandex `detail` projection consumed by the Ecommerce funnel.
+- `storefront/src/lib/__tests__/product-detail-analytics.test.tsx`: resolved-SKU, consent timing, variant-switch, and duplicate contract.
 - `storefront/src/components/product/PriceDisplay.tsx`.
 - `storefront/src/components/landing/CollectionSection.tsx`.
 - `storefront/src/components/cart/CartDrawer.tsx`.
@@ -264,6 +276,8 @@ Current files that inform the flow:
 | Storefront UI/integration | Product gallery thumbnails switch the hero image and lightbox navigation remains available on mobile/desktop | To add with product detail implementation | Pending implementation |
 | Storefront UI/integration | Sticky mobile CTA reflects selected variant price/availability and remains disabled for invalid selections | To add with product detail implementation | Pending implementation |
 | Storefront UI/integration | Product detail renders breadcrumb and related products when catalog context is available | To add with product detail implementation | Pending implementation |
+| Storefront integration | Resolved product-detail SKU is exposed once with SKU-preferred id, localized name, selected-variant price/currency, and `quantity: 1`; rerender does not duplicate and another SKU emits once | `storefront/src/lib/__tests__/product-detail-analytics.test.tsx` | Passed 2026-08-28 |
+| Storefront integration | Denied consent preserves PDP behavior without telemetry; persisted or in-place granted consent emits the current PDP SKU once | `storefront/src/lib/__tests__/product-detail-analytics.test.tsx` | Passed 2026-08-28 |
 | Storefront browser smoke | Product detail renders localized subtitle plus Wear It Your Way and included-kit metadata accordions | `/ru/products/azure` and `/en/products/azure` | Passed 2026-07-15 |
 | Storefront browser smoke | Related-product continuation preserves `/en` and `/ru` while changing the handle | `/en/products/azure` and `/ru/products/azure` | Passed 2026-07-15 |
 | Backend/Store API smoke | Every recovered media URL returns HTTP 200 and each seeded handle exposes the recovered thumbnail/gallery order | Production Store API plus `/static/*` responses | Passed 2026-07-27 |
@@ -298,10 +312,11 @@ Current files that inform the flow:
 13. Restrict gallery zoom to mouse input, reset zoom when media changes, and show the complete image on phone/tablet.
 14. Route landing CTAs to localized product lists and update the catalog breadcrumb and card typography.
 15. Move manual data seed/update scripts out of Medusa's auto-discovered migration directory and update every explicit operator command.
+16. Expose each resolved PDP SKU once to the existing Analytics Consent boundary; reuse the selected-variant projection and add no catalog-owned analytics state machine.
 
 ## 12. Implementation Trace
 
-Current status: complete for the 2026-08-11 release. Manual data scripts build under `/app/src/scripts/` while `/app/src/migration-scripts/` is empty; production schema migration completed without replaying catalog data, and the explicit Dune/Silk inventory updater converged on its second run.
+Current status: complete for the 2026-08-11 catalog release and the 2026-08-28 observational product-detail analytics boundary. Manual data scripts build under `/app/src/scripts/` while `/app/src/migration-scripts/` is empty; production schema migration completed without replaying catalog data, and the explicit Dune/Silk inventory updater converged on its second run.
 
 Current implementation files:
 
@@ -394,6 +409,7 @@ Notes:
 - [x] WebP preference, PNG capability fallback, atomic paired deployment, and non-paired formats are explicit.
 - [x] Touch/coarse-pointer rejection and zoom reset paths are explicit.
 - [x] Catalog-to-add-on cross-flow payload matches the architecture map.
+- [x] Catalog Browsing → Analytics Consent `catalog:product-detail-observed` is consent-observed, SKU-consistent, duplicate-safe, and cannot mutate commerce state.
 
 Flow review v3 (2026-08-11): **APPROVED**. Canonical ordering, visible zero-stock products, paired WebP/PNG media, touch-safe gallery behavior, localized catalog navigation, exact schemas/tests, SEO projection, and cross-flow payloads clear the Approval Bar.
 Flow review v1 (2026-07-27): **APPROVED**. Media authority, durability, missing-source rejection, exact schemas, non-destructive production update, and Store API/browser verification are explicit; no cross-flow event or permission boundary changes.
@@ -404,4 +420,8 @@ Flow review v2 (2026-07-27): **APPROVED**. The explicit owner decision, neutral/
 
 Flow-code sync v2 (2026-07-28): **IN SYNC**. Commit `ebe5af9` is deployed; the approved 1200x1200 neutral placeholder is durable in the runtime image and clean seed, the live product references it non-destructively, and Store API plus browser rendering checks passed.
 
+
+Flow review v4 (2026-08-28): **APPROVED**. The resolved-SKU detail observation, fixed view quantity, consent timing, per-mounted-PDP deduplication, exact files/tests, and Catalog Browsing → Analytics Consent boundary clear the Approval Bar.
 Flow-code sync v4 (2026-08-24): **IN SYNC**. Luna's two approved paired media additions are durable in the backend runtime image and clean seed, production Medusa references both without resetting commerce data, the temporary sync job is removed, and production browser rendering passed.
+
+Flow-code sync v5 (2026-08-28): **IN SYNC**. The mounted PDP emits each resolved product+SKU identity once with fixed view quantity, persisted/in-place consent is handled without replay, existing variant/cart behavior is unchanged, focused tests passed, and the Catalog Browsing → Analytics Consent contract matches the architecture map.
