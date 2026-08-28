@@ -7,6 +7,8 @@ import {
   ANALYTICS_CONSENT_STORAGE_KEY,
   METRIKA_COUNTER_ID,
   METRIKA_TAG_SRC,
+  initMetrika,
+  trackMetrikaAddToCart,
   resetMetrikaStateForTesting,
 } from "../../components/analytics/analytics-consent";
 
@@ -57,6 +59,45 @@ describe("analytics consent and Yandex Metrika lifecycle", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("loads the counter-bound tag URL and keeps ym callable for queued methods", () => {
+    initMetrika();
+
+    expect(METRIKA_TAG_SRC).toBe("https://mc.yandex.ru/metrika/tag.js?id=111719197");
+    expect(document.querySelector<HTMLScriptElement>(`script[src="${METRIKA_TAG_SRC}"]`)?.src).toBe(METRIKA_TAG_SRC);
+    expect(window.ym).toBeTypeOf("function");
+    window.ym!(METRIKA_COUNTER_ID, "reachGoal", "add_to_cart");
+    expect(window.ym?.a).toContainEqual([METRIKA_COUNTER_ID, "reachGoal", "add_to_cart"]);
+  });
+
+  it("keeps tracking through retained references when tag.js deletes globals", () => {
+    initMetrika();
+    const command = window.ym!;
+    const dataLayer = window.dataLayer!;
+    delete window.ym;
+    delete window.dataLayer;
+
+    trackMetrikaAddToCart({
+      productId: "prod_123",
+      sku: "sku_123",
+      name: "Test Product",
+      price: 1000,
+      quantity: 1,
+      currencyCode: "rub",
+    });
+
+    expect(dataLayer).toEqual([
+      {
+        ecommerce: {
+          currencyCode: "RUB",
+          add: {
+            products: [{ id: "sku_123", name: "Test Product", price: 1000, quantity: 1 }],
+          },
+        },
+      },
+    ]);
+    expect(command.a).toContainEqual([METRIKA_COUNTER_ID, "reachGoal", "add_to_cart"]);
   });
 
   it("unknown consent shows banner, privacy link, and controls without loading tag.js or calling Metrika", () => {

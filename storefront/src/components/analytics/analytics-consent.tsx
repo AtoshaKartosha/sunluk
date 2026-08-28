@@ -14,7 +14,19 @@ export type ConsentState = "unknown" | "granted" | "denied";
 
 declare global {
   interface Window {
-    dataLayer?: unknown[];
+    dataLayer?: Array<{
+      ecommerce: {
+        currencyCode: string;
+        add: {
+          products: Array<{
+            id: string;
+            name: string;
+            price: number;
+            quantity: number;
+          }>;
+        };
+      };
+    }>;
     ym?: {
       (...args: unknown[]): void;
       a?: unknown[][];
@@ -106,21 +118,25 @@ export function clearYandexStorage(): void {
 }
 
 let isMetrikaInitialized = false;
+let metrikaCommand: NonNullable<Window["ym"]> | null = null;
+let metrikaDataLayer: NonNullable<Window["dataLayer"]> | null = null;
+
 
 export function initMetrika(counterId = METRIKA_COUNTER_ID): void {
   if (typeof window === "undefined") return;
   if (isMetrikaInitialized) return;
 
-  // dataLayer container
-  window.dataLayer = window.dataLayer || [];
+  const dataLayer = window.dataLayer || [];
+  window.dataLayer = dataLayer;
 
-  // ym stub queue
-  window.ym =
-    window.ym ||
+  const ym: NonNullable<Window["ym"]> = window.ym ||
     function (...args: unknown[]) {
-      (window.ym!.a = window.ym!.a || []).push(args);
+      (ym.a = ym.a || []).push(args);
     };
-  window.ym.l = 1 * new Date().getTime();
+  window.ym = ym;
+  ym.l = 1 * new Date().getTime();
+  metrikaCommand = ym;
+  metrikaDataLayer = dataLayer;
 
   // Inject tag.js script tag if not already injected
   if (!document.querySelector(`script[src="${METRIKA_TAG_SRC}"]`)) {
@@ -140,7 +156,7 @@ export function initMetrika(counterId = METRIKA_COUNTER_ID): void {
   }
 
   // Init counter with approved configuration
-  window.ym(counterId, "init", {
+  ym(counterId, "init", {
     defer: true,
     clickmap: true,
     trackLinks: true,
@@ -154,17 +170,16 @@ export function initMetrika(counterId = METRIKA_COUNTER_ID): void {
 }
 
 export function destructMetrika(counterId = METRIKA_COUNTER_ID): void {
-  if (typeof window === "undefined") return;
   if (isMetrikaInitialized) {
     try {
-      if (typeof window.ym === "function") {
-        window.ym(counterId, "destruct");
-      }
+      metrikaCommand?.(counterId, "destruct");
     } catch {
       // Safe no-op on failure
     }
   }
   isMetrikaInitialized = false;
+  metrikaCommand = null;
+  metrikaDataLayer = null;
   clearYandexStorage();
 }
 
@@ -173,14 +188,56 @@ export function hitMetrika(
   referer?: string,
   counterId = METRIKA_COUNTER_ID
 ): void {
-  if (typeof window === "undefined") return;
+  const command = metrikaCommand;
+  if (!command) return;
   try {
-    if (typeof window.ym === "function") {
-      window.ym(counterId, "hit", url, {
-        title: typeof document !== "undefined" ? document.title : "",
-        referer: referer ?? (typeof document !== "undefined" ? document.referrer : undefined),
-      });
-    }
+    command(counterId, "hit", url, {
+      title: typeof document !== "undefined" ? document.title : "",
+      referer: referer ?? (typeof document !== "undefined" ? document.referrer : undefined),
+    });
+  } catch {
+    // Safe no-op on failure
+  }
+}
+
+export function trackMetrikaAddToCart({
+  productId,
+  sku,
+  name,
+  price,
+  quantity,
+  currencyCode,
+}: {
+  productId: string;
+  sku?: string | null;
+  name: string;
+  price: number;
+  quantity: number;
+  currencyCode: string;
+}): void {
+  if (
+    !isMetrikaInitialized ||
+    !metrikaCommand ||
+    !metrikaDataLayer ||
+    typeof productId !== "string" ||
+    !productId.trim() ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    !Number.isFinite(price) ||
+    price < 0 ||
+    !Number.isInteger(quantity) ||
+    quantity <= 0 ||
+    typeof currencyCode !== "string" ||
+    !/^[A-Za-z]{3}$/.test(currencyCode)
+  ) return;
+  try {
+    metrikaDataLayer.push({
+      ecommerce: {
+        currencyCode: currencyCode.toUpperCase(),
+        add: { products: [{ id: sku || productId, name, price, quantity }] },
+      },
+    });
+    metrikaCommand(METRIKA_COUNTER_ID, "reachGoal", "add_to_cart");
   } catch {
     // Safe no-op on failure
   }
@@ -193,6 +250,8 @@ export function openAnalyticsConsentSettings(): void {
 
 export function resetMetrikaStateForTesting(): void {
   isMetrikaInitialized = false;
+  metrikaCommand = null;
+  metrikaDataLayer = null;
 }
 
 function RouteHitTracker({ consent }: { consent: ConsentState }) {

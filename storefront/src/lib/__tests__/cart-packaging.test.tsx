@@ -3,6 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { VariantSelector } from "../../components/product/VariantSelector";
 import CartDrawer from "../../components/cart/CartDrawer";
+import {
+  destructMetrika,
+  initMetrika,
+  resetMetrikaStateForTesting,
+  setStoredConsent,
+} from "../../components/analytics/analytics-consent";
 import type { StoreCart, StoreCartLineItem } from "../../components/cart/types";
 
 // Mock the cart context hook
@@ -55,6 +61,9 @@ const mockLabels = {
 describe("VariantSelector Packaging Metadata", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMetrikaStateForTesting();
+    delete window.ym;
+    delete window.dataLayer;
     activeCart = null;
     mockMutating = false;
   });
@@ -83,6 +92,7 @@ describe("VariantSelector Packaging Metadata", () => {
       id: "var_123",
       title: "Test Variant",
       manage_inventory: false,
+      sku: "sku_123",
       inventory_quantity: 10,
       allow_backorder: true,
       prices: [],
@@ -93,12 +103,18 @@ describe("VariantSelector Packaging Metadata", () => {
         currency_code: "rub",
       },
     };
+    const ym = vi.fn();
+    window.ym = ym;
+    initMetrika();
+    ym.mockClear();
 
     render(
       <VariantSelector
         options={[]}
         variants={[mockVariant]}
         labels={mockLabels}
+        productId="prod_123"
+        productName="Test Product"
         selectedPackagingVariantId="pkg_box_123"
       />
     );
@@ -123,12 +139,25 @@ describe("VariantSelector Packaging Metadata", () => {
     expect(mockAddItem).toHaveBeenCalledWith("pkg_box_123", 1, {
       parent_line_item_id: "item_main_123",
     });
+    expect(window.dataLayer).toEqual([
+      {
+        ecommerce: {
+          currencyCode: "RUB",
+          add: {
+            products: [{ id: "sku_123", name: "Test Product", price: 1000, quantity: 1 }],
+          },
+        },
+      },
+    ]);
+    expect(ym).toHaveBeenCalledTimes(1);
+    expect(ym).toHaveBeenCalledWith(111719197, "reachGoal", "add_to_cart");
   });
 
   it("omits packaging_variant_id when no packaging is selected", async () => {
     const mockVariant = {
       id: "var_123",
       title: "Test Variant",
+      sku: "",
       manage_inventory: false,
       inventory_quantity: 10,
       allow_backorder: true,
@@ -140,9 +169,19 @@ describe("VariantSelector Packaging Metadata", () => {
         currency_code: "rub",
       },
     };
+    const ym = vi.fn();
+    window.ym = ym;
+    initMetrika();
+    ym.mockClear();
 
     render(
-      <VariantSelector options={[]} variants={[mockVariant]} labels={mockLabels} />
+      <VariantSelector
+        options={[]}
+        variants={[mockVariant]}
+        productId="prod_123"
+        productName="Test Product"
+        labels={mockLabels}
+      />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /add to cart/i }));
@@ -150,6 +189,85 @@ describe("VariantSelector Packaging Metadata", () => {
     await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
     const [, , metadata] = mockAddItem.mock.calls[0];
     expect(metadata).not.toHaveProperty("packaging_variant_id");
+    expect(window.dataLayer).toEqual([
+      {
+        ecommerce: {
+          currencyCode: "RUB",
+          add: {
+            products: [{ id: "prod_123", name: "Test Product", price: 1000, quantity: 1 }],
+          },
+        },
+      },
+    ]);
+    expect(ym).toHaveBeenCalledTimes(1);
+    expect(ym).toHaveBeenCalledWith(111719197, "reachGoal", "add_to_cart");
+  });
+
+  it("does not track rejected primary adds or adds after consent is denied", async () => {
+    const ym = vi.fn();
+    window.ym = ym;
+    initMetrika();
+    ym.mockClear();
+    mockAddItem.mockRejectedValueOnce(new Error("unavailable"));
+
+    render(
+      <VariantSelector
+        options={[]}
+        variants={[{
+          id: "var_123",
+          manage_inventory: false,
+          options: [],
+          calculated_price: { calculated_amount: 1000, currency_code: "rub" },
+        }]}
+        productId="prod_123"
+        productName="Test Product"
+        labels={mockLabels}
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: /add to cart/i });
+    fireEvent.click(button);
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(button).not.toBeDisabled());
+    expect(window.dataLayer).toEqual([]);
+    expect(ym).not.toHaveBeenCalled();
+
+    setStoredConsent("denied");
+    destructMetrika();
+    ym.mockClear();
+    mockAddItem.mockResolvedValueOnce({ id: "cart_123", items: [] });
+    fireEvent.click(button);
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(2));
+    expect(window.dataLayer).toEqual([]);
+    expect(ym).not.toHaveBeenCalled();
+  });
+
+  it("does not track invalid currencies", async () => {
+    const ym = vi.fn();
+    window.ym = ym;
+    initMetrika();
+    ym.mockClear();
+    mockAddItem.mockResolvedValue({ id: "cart_123", items: [] });
+
+    render(
+      <VariantSelector
+        options={[]}
+        variants={[{
+          id: "var_123",
+          manage_inventory: false,
+          options: [],
+          calculated_price: { calculated_amount: 1000, currency_code: "ru" },
+        }]}
+        productId="prod_123"
+        productName="Test Product"
+        labels={mockLabels}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalledTimes(1));
+    expect(window.dataLayer).toEqual([]);
+    expect(ym).not.toHaveBeenCalled();
   });
 
   it("does not merge different packaging items and links to the correct parent variant", async () => {
@@ -201,6 +319,8 @@ describe("VariantSelector Packaging Metadata", () => {
         variants={[mockVariant]}
         labels={mockLabels}
         selectedPackagingVariantId="pkg_box_123"
+        productId="prod_123"
+        productName="Test Product"
       />
     );
 
@@ -248,6 +368,8 @@ describe("VariantSelector Packaging Metadata", () => {
           calculated_price: { calculated_amount: 1000, currency_code: "rub" },
         }]}
         labels={mockLabels}
+        productId="prod_123"
+        productName="Test Product"
         selectedPackagingVariantId="pkg_box_123"
       />,
     );
@@ -299,6 +421,8 @@ describe("VariantSelector Packaging Metadata", () => {
           options: [],
           calculated_price: { calculated_amount: 1000, currency_code: "rub" },
         }]}
+        productId="prod_123"
+        productName="Test Product"
         labels={mockLabels}
         selectedPackagingVariantId="pkg_box_123"
       />

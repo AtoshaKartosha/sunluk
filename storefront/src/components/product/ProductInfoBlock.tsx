@@ -507,6 +507,8 @@ export function ProductInfoBlock({
           <VariantSelector
             options={product.options}
             variants={product.variants}
+            productId={product.id}
+            productName={product.title}
             badge={product.metadata?.badge as string | undefined}
             hideOptionButtons={product.options?.length === 1 && product.options[0].title.toLowerCase() === "material"}
             labels={labels.variantSelector}

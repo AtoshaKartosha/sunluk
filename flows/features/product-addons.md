@@ -53,8 +53,10 @@ flowchart TD
   MainOnly --> MainAccepted{Medusa accepts main line?}
   AddMainWith --> MainAccepted
   MainAccepted -->|no| Retry[Re-enable purchase control for retry]
-  MainAccepted -->|yes, no packaging| Done[Show authoritative cart]
-  MainAccepted -->|yes, packaging selected| Parent{Returned main line found?}
+  MainAccepted -->|yes| Observe[Emit cart:item-added once]
+  Observe --> Packaging{Packaging selected?}
+  Packaging -->|no| Done[Show authoritative cart]
+  Packaging -->|yes| Parent{Returned main line found?}
   Parent -->|no| MainRemains
   Parent -->|yes| AddPackaging[Request linked packaging line]
   AddPackaging -->|accepted| Done
@@ -73,8 +75,8 @@ stateDiagram-v2
   Selecting --> MainRequested: visitor submits valid main selection
   MainOnly --> MainRequested: visitor submits valid main selection
   MainRequested --> Rejected: main mutation rejected
-  MainRequested --> Complete: no packaging selected
-  MainRequested --> PackagingRequested: main accepted and parent resolved
+  MainRequested --> Complete: main accepted; cart:item-added emitted; no packaging selected
+  MainRequested --> PackagingRequested: main accepted; cart:item-added emitted; parent resolved
   PackagingRequested --> Complete: packaging accepted
   PackagingRequested --> MainOnlyComplete: packaging rejected
   Rejected --> Selecting: purchase control re-enabled
@@ -91,6 +93,8 @@ flowchart LR
   Addons --> MainRequest[cart:line-item-add-requested for main]
   MainRequest --> Cart[Cart and Checkout]
   Cart --> ReturnedMain[Authoritative main cart]
+  ReturnedMain --> Added[cart:item-added]
+  Added --> Analytics[Analytics Consent]
   ReturnedMain -->|selected packaging and parent found| PackageRequest[cart:line-item-add-requested for linked packaging]
   PackageRequest --> Cart
   Cart --> MedusaCart[(Authoritative cart line items)]
@@ -116,6 +120,7 @@ Storefront projection:
 | Incoming | `cart:item-selected` | Product Add-ons | `{ productId, variantId, quantity, regionId }` | Catalog resolved an available main variant and positive quantity | Missing region, invalid/unavailable variant, or non-positive quantity |
 | Internal | `product-addon:selected` | None | `{ packagingVariantId: string | null }` | Option is shown, available, and priced for the active region | Unknown, stale, unavailable, or unpriced packaging option |
 | Outgoing | `cart:line-item-add-requested` | Cart and Checkout | `{ variantId, quantity, metadata? }` | Main selection is valid; emitted once for the main and again for selected packaging only after the returned parent line is found | Invalid main selection, rejected main mutation, or unresolved parent line |
+| Outgoing | `cart:item-added` | Analytics Consent | `{ productId, sku?, name, price, currencyCode, quantity }` | Primary Medusa mutation succeeded; emitted once before optional linked packaging mutation | Rejected primary mutation, linked packaging mutation, missing calculated price/currency, or duplicate callback |
 
 ## 7. Edge Cases
 
@@ -123,6 +128,8 @@ Storefront projection:
 - Selected packaging becomes unavailable before submission: Medusa rejects the affected mutation; the purchase control re-enables for retry.
 - Packaging has no calculated price or currency for the active region: disable that option; zero is a valid Medusa-owned free price.
 - Main succeeds but the linked packaging mutation fails: retain the authoritative main-only cart returned by the first mutation, do not render packaging as added, and re-enable the purchase control.
+- A successful primary mutation emits `cart:item-added` exactly once before linked packaging work; packaging success/failure never emits a second event.
+- Analytics consent is absent or denied: Analytics drops telemetry, while Product Add-ons continues to the same cart/packaging outcome.
 - Main quantity changes: update every linked packaging row to the same quantity.
 - Main removal succeeds: remove every linked packaging row; refresh and surface an error if linked cleanup fails.
 - Packaging metadata points to no active parent: render it visibly as a removable root row.
@@ -133,12 +140,14 @@ Storefront projection:
 - Query packaging products once per PDP load.
 - Submit the selected packaging id in main-line metadata so repeated main variants with different packaging do not merge.
 - Product Add-ons coordinates up to two sequential Cart `addItem` calls; Cart owns each Store API mutation and returned authoritative projection.
+- After the primary Cart promise resolves, emit one observational `cart:item-added` payload using already-resolved Medusa product/variant data; this side effect cannot block packaging or cart UI.
 - Cart quantity/removal operations synchronize linked packaging rows.
 
 ## 9. Schemas Touched
 
 - `storefront/src/components/product/ProductInfoBlock.tsx`: default packaging selection, availability/pricing projection, and selected variant id.
 - `storefront/src/components/product/VariantSelector.tsx`: main request, returned-parent resolution, and optional linked packaging request.
+- `storefront/src/components/analytics/analytics-consent.tsx`: consent-aware ecommerce and `add_to_cart` forwarding.
 - `storefront/src/components/cart/CartContext.tsx`: authoritative single-line mutation and returned cart projection.
 - `storefront/src/components/cart/CartDrawer.tsx`: nested/orphan projection and synchronized controls.
 - `storefront/src/components/cart/types.ts`: cart-line metadata projection.
@@ -151,6 +160,7 @@ Storefront projection:
 | Layer | Behavior | File | Status |
 |---|---|---|---|
 | Storefront integration | Main add includes selected packaging metadata; accepted main response supplies the parent for the linked packaging add | `storefront/src/lib/__tests__/cart-packaging.test.tsx` | Passed 2026-08-11 |
+| Storefront integration | Accepted primary add emits one product payload before optional packaging; rejected primary and linked packaging do not emit | `storefront/src/lib/__tests__/cart-packaging.test.tsx` | Passed 2026-08-28 |
 | Storefront integration | Missing returned parent and rejected linked packaging retain main-only cart and re-enable retry | `storefront/src/lib/__tests__/cart-packaging.test.tsx` | Passed 2026-08-11 |
 | Storefront component | Missing amount/currency disables packaging and omits it from cart metadata/mutation; authoritative zero remains selectable/free | `storefront/src/lib/__tests__/product-addons.test.tsx` | Passed 2026-08-11 |
 | Storefront integration | Packaging nests under its parent and orphan packaging remains visible | `storefront/src/lib/__tests__/cart-packaging.test.tsx` | Passed 2026-08-11 |
@@ -163,10 +173,11 @@ Storefront projection:
 2. Resolve the default or visitor-selected packaging locally from Medusa product data.
 3. Coordinate the existing Cart single-line mutation: add main with packaging metadata, then add linked packaging only from the returned parent line.
 4. Preserve nested quantity/removal/orphan behavior and disable unpriced packaging.
+5. Emit one consent-gated product telemetry observation after the accepted primary mutation, using existing product/variant data and without coupling analytics to `CartContext`.
 
 ## 12. Implementation Trace
 
-Current status: Implemented. Catalog hands off only the main selection; Product Add-ons coordinates the existing main/linked-line requests; Cart remains authoritative for every Medusa mutation and returned projection.
+Current status: Complete locally. Catalog hands off only the main selection, Product Add-ons coordinates the existing main/linked-line requests, emits product telemetry once after accepted primary mutation, and Cart remains authoritative.
 
 Implementation files:
 
@@ -183,13 +194,15 @@ Implementation files:
 - `backend/apps/backend/src/scripts/initial-data-seed.ts`
 - `storefront/src/lib/__tests__/cart-packaging.test.tsx`
 - `storefront/src/lib/__tests__/product-addons.test.tsx`
+- `storefront/src/components/analytics/analytics-consent.tsx`
 
 Validation: 2026-08-11 focused release-correction suite passed 5 files / 29 tests and the storefront suite passed 20 files / 124 tests before the final default-handle/cart-bound validity correction. Storefront/backend builds and global lint passed with zero errors; five `<img>` optimization warnings remained at that intermediate checkpoint.
 Validation: 2026-08-11 final packaging suite passed 2 files / 12 tests; the final storefront suite passed 20 files / 128 tests. Storefront/backend builds and global lint passed with zero errors and zero warnings.
+Validation: 2026-08-28 focused analytics/packaging suite passed 2 files / 20 tests; production build passed. Browser network smoke added Lagoon quantity 2 plus linked packaging through the real Medusa Store API and observed exactly one ecommerce payload and one `add_to_cart` goal after the primary HTTP 200.
 
 ## 13. Open Questions
 
-None. Different packaging configurations remain distinct main rows. A rejected main request leaves the prior cart unchanged; a rejected linked packaging request leaves the already-returned main-only cart visible and re-enables retry.
+None. Different packaging configurations remain distinct main rows. A rejected main request leaves the prior cart unchanged; a rejected linked packaging request leaves the already-returned main-only cart visible and re-enables retry. Product telemetry is observational, consent-gated, and cannot change either outcome.
 
 ## 14. Review Checklist
 
@@ -198,8 +211,14 @@ None. Different packaging configurations remain distinct main rows. A rejected m
 - [x] Product Add-ons → Cart payload and architecture contract match.
 - [x] Missing/unusable packaging falls back to a main-only request.
 - [x] Partial packaging mutation failure retains the authoritative main-only outcome without displaying packaging as added.
+- [x] Exactly one Product Add-ons → Analytics Consent event follows accepted primary mutation; rejection and linked packaging cannot emit it.
+- [x] Telemetry uses existing Medusa product/variant data and does not move cart or pricing authority out of Medusa.
 - [x] Nested, quantity, removal, orphan, localization, schema, and test contracts are named.
 
 Flow review v3 (2026-08-11): **APPROVED**. Implementation-aligned Cart boundaries, missing-parent and partial-failure outcomes, exact test claims, and missing-price rejection clear the Approval Bar.
 
 Flow review v4 (2026-08-11): **APPROVED**. Seeded `velvet-pouch` default, main-only metadata omission, shared cart-bound eligibility, and focused tests clear the Approval Bar.
+
+Flow review v5 (2026-08-28): **APPROVED**. The event follows only the accepted primary mutation, carries existing Medusa product data, cannot block packaging/cart outcomes, and has focused observable tests; no blockers remain.
+
+Flow-code sync v5 (2026-08-28): **IN SYNC**. The accepted-primary boundary, single observational event, linked-packaging exclusion, Medusa-owned product values, focused tests, and browser network smoke match the flow and `flows/ARCHITECTURE.md`.

@@ -15,10 +15,14 @@ import {
   resolveVariantByOptions,
 } from "@/lib/price";
 import { getBadgeCta } from "@/lib/badge-behavior";
+import { trackMetrikaAddToCart } from "@/components/analytics/analytics-consent";
 
 export interface VariantSelectorProps {
   options: ProductOption[] | null | undefined;
   variants: ProductVariant[] | null | undefined;
+  /** Parent product fields used by add-to-cart analytics. */
+  productId: string;
+  productName: string;
   /** Marketing badge from product.metadata.badge. Controls CTA behavior. */
   badge?: string | null;
   /** When true, hides the option-picking UI (options are managed externally). */
@@ -107,6 +111,8 @@ export function VariantSelector({
   hideOptionButtons = false,
   labels,
   selectedPackagingVariantId = null,
+  productId,
+  productName,
   onSelectionChange,
 }: VariantSelectorProps) {
   const safeOptions = useMemo(() => options ?? [], [options]);
@@ -213,6 +219,14 @@ export function VariantSelector({
         ...(selectedPackagingVariantId !== null
           ? { packaging_variant_id: selectedPackagingVariantId }
           : {}),
+      });
+      trackMetrikaAddToCart({
+        productId,
+        sku: resolved.sku,
+        name: productName,
+        price: resolved.calculated_price?.calculated_amount ?? 0,
+        quantity,
+        currencyCode: resolved.calculated_price?.currency_code ?? "",
       });
       if (selectedPackagingVariantId !== null && updatedCart) {
         // Find the main line item we just added/updated.
